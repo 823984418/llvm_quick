@@ -75,8 +75,9 @@ impl<T: TypeTag> Type<T> {
         &'s self,
         args: ArgTypeTuple,
     ) -> &'s Type<fun<ArgTypeTuple::Tags, T>> {
-        ArgTypeTuple::Tags::type_with_slice(args, |slice| unsafe {
-            self.fun_any(slice, false).cast_unchecked()
+        ArgTypeTuple::Tags::stack_array(|slice| unsafe {
+            self.fun_any(ArgTypeTuple::Tags::type_into_slice(args, slice), false)
+                .cast_unchecked()
         })
     }
 
@@ -85,8 +86,9 @@ impl<T: TypeTag> Type<T> {
         &'s self,
         args: ArgTypeTuple,
     ) -> &'s Type<fun<ArgTypeTuple::Tags, T, true>> {
-        ArgTypeTuple::Tags::type_with_slice(args, |slice| unsafe {
-            self.fun_any(slice, true).cast_unchecked()
+        ArgTypeTuple::Tags::stack_array(|slice| unsafe {
+            self.fun_any(ArgTypeTuple::Tags::type_into_slice(args, slice), true)
+                .cast_unchecked()
         })
     }
 

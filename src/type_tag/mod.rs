@@ -79,33 +79,17 @@ pub trait TagTuple: Copy + 'static {
 
     fn stack_array<Type: Default, Fun: FnOnce(&mut [Type]) -> Ret, Ret>(f: Fun) -> Ret;
 
-    fn type_into_slice<'s>(tuple: Self::Types<'s>, slice: &mut [Option<&'s Type<any>>]);
-
-    #[allow(clippy::needless_lifetimes)]
-    fn type_with_slice<'s, Fun: FnOnce(&[&'s Type<any>]) -> Ret, Ret>(
+    fn type_into_slice<'a, 's>(
         tuple: Self::Types<'s>,
-        fun: Fun,
-    ) -> Ret {
-        Self::stack_array(|slice| {
-            Self::type_into_slice(tuple, slice);
-            unsafe { fun(std::mem::transmute(slice)) }
-        })
-    }
+        slice: &'a mut [Option<&'s Type<any>>],
+    ) -> &'a mut [&'s Type<any>];
 
     fn type_from_slice<'s>(slice: &[&'s Type<any>]) -> Option<Self::Types<'s>>;
 
-    fn value_into_slice<'s>(tuple: Self::Values<'s>, slice: &mut [Option<&'s Value<any>>]);
-
-    #[allow(clippy::needless_lifetimes)]
-    fn value_with_slice<'s, Fun: FnOnce(&[&'s Value<any>]) -> Ret, Ret>(
+    fn value_into_slice<'a, 's>(
         tuple: Self::Values<'s>,
-        fun: Fun,
-    ) -> Ret {
-        Self::stack_array(|slice| {
-            Self::value_into_slice(tuple, slice);
-            unsafe { fun(std::mem::transmute(slice)) }
-        })
-    }
+        slice: &'a mut [Option<&'s Value<any>>],
+    ) -> &'a mut [&'s Value<any>];
 
     fn value_from_slice<'s>(slice: &[&'s Value<any>]) -> Option<Self::Values<'s>>;
 }
@@ -133,9 +117,13 @@ macro_rules! impl_tuple {
             }
 
             #[allow(non_snake_case)]
-            fn type_into_slice<'s>(tuple: Self::Types<'s>, slice: &mut [Option<&'s Type<any>>]) {
+            fn type_into_slice<'a, 's>(
+                tuple: Self::Types<'s>,
+                slice: &'a mut [Option<&'s Type<any>>],
+            ) -> &'a mut [&'s Type<any>] {
                 let ($($arg,)*) = tuple;
                 slice.copy_from_slice(&[$(Some($arg.to_any()),)*]);
+                unsafe { std::mem::transmute(slice) }
             }
 
             #[allow(non_snake_case)]
@@ -148,9 +136,13 @@ macro_rules! impl_tuple {
             }
 
             #[allow(non_snake_case)]
-            fn value_into_slice<'s>(tuple: Self::Values<'s>, slice: &mut [Option<&'s Value<any>>]) {
+            fn value_into_slice<'a, 's>(
+                tuple: Self::Values<'s>,
+                slice: &'a mut [Option<&'s Value<any>>],
+            ) -> &'a mut [&'s Value<any>] {
                 let ($($arg,)*) = tuple;
                 slice.copy_from_slice(&[$(Some($arg.to_any()),)*]);
+                unsafe { std::mem::transmute(slice) }
             }
 
             #[allow(non_snake_case)]
