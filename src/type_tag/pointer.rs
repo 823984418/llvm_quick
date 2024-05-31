@@ -1,8 +1,9 @@
-use crate::opaque::Opaque;
+use std::fmt::Formatter;
+
 use llvm_sys::core::LLVMGetPointerAddressSpace;
 use llvm_sys::LLVMTypeKind;
-use std::fmt::{Formatter, Write};
 
+use crate::opaque::Opaque;
 use crate::type_tag::{any, type_check_kind, TypeTag};
 use crate::types::Type;
 

@@ -1,5 +1,5 @@
 use std::ffi::CStr;
-use std::fmt::{Debug, Formatter, Write};
+use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 
 use llvm_sys::core::*;

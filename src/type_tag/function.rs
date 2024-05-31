@@ -1,11 +1,13 @@
 use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
+use std::mem::MaybeUninit;
 
 use llvm_sys::core::*;
+use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
 use llvm_sys::LLVMTypeKind;
 
 use crate::opaque::Opaque;
-use crate::type_tag::{any, type_check_kind, TagTuple, TypeTag, TypeTuple, ValueTuple};
+use crate::type_tag::{any, type_check_kind, Array, TagTuple, TypeTag, TypeTuple, ValueTuple};
 use crate::types::Type;
 use crate::values::Value;
 
@@ -75,6 +77,10 @@ impl<T: FunTypeTag> Type<T> {
         T::type_is_var(self)
     }
 
+    pub fn get_param_count(&self) -> u32 {
+        unsafe { LLVMCountParamTypes(self.as_ptr()) }
+    }
+
     /// Obtain the types of a function's parameters.
     pub fn get_param_type_vec_any(&self) -> Vec<&Type<any>> {
         unsafe {
@@ -89,6 +95,22 @@ impl<T: FunTypeTag> Type<T> {
     /// Obtain the Type this function Type returns.
     pub fn get_return_type_any(&self) -> &Type<any> {
         unsafe { Type::from_ref(LLVMGetReturnType(self.as_ptr())) }
+    }
+}
+
+impl<Args: TagTuple, Output: TypeTag, const VAR: bool> Type<fun<Args, Output, VAR>> {
+    #[allow(clippy::needless_lifetimes)]
+    pub fn get_params<'s>(&'s self) -> Args::Types<'s> {
+        let array = MaybeUninit::<<Args::Types<'s> as TypeTuple>::AnyArray>::uninit();
+        let count = self.get_param_count();
+        assert_eq!(
+            <Args::Types<'s> as TypeTuple>::AnyArray::LENGTH,
+            count as usize
+        );
+        unsafe {
+            LLVMGetParamTypes(self.as_ptr(), array.as_ptr() as *mut LLVMTypeRef);
+            Args::Types::<'s>::from_array_any(array.assume_init())
+        }
     }
 }
 
@@ -136,10 +158,14 @@ impl<T: FunTypeTag> Value<T> {
         unsafe { LLVMSetGC(self.as_ptr(), name.as_ptr()) }
     }
 
+    pub fn get_param_count(&self) -> u32 {
+        unsafe { LLVMCountParams(self.as_ptr()) }
+    }
+
     /// Obtain the types of a function's parameters.
     pub fn get_param_vec_any(&self) -> Vec<&Value<any>> {
         unsafe {
-            let count = LLVMCountParams(self.as_ptr()) as usize;
+            let count = self.get_param_count() as usize;
             let mut buffer = Vec::with_capacity(count);
             LLVMGetParams(self.as_ptr(), buffer.as_ptr() as _);
             buffer.set_len(count);
@@ -151,7 +177,15 @@ impl<T: FunTypeTag> Value<T> {
 impl<Args: TagTuple, Output: TypeTag, const VAR: bool> Value<fun<Args, Output, VAR>> {
     #[allow(clippy::needless_lifetimes)]
     pub fn get_params<'s>(&'s self) -> Args::Values<'s> {
-        let vec = self.get_param_vec_any();
-        Args::Values::from_slice_any(&vec).unwrap()
+        let array = MaybeUninit::<<Args::Values<'s> as ValueTuple>::AnyArray>::uninit();
+        let count = self.get_param_count();
+        assert_eq!(
+            <Args::Values<'s> as ValueTuple>::AnyArray::LENGTH,
+            count as usize
+        );
+        unsafe {
+            LLVMGetParams(self.as_ptr(), array.as_ptr() as *mut LLVMValueRef);
+            Args::Values::<'s>::from_array_any(array.assume_init())
+        }
     }
 }
