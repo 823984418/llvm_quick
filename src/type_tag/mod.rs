@@ -70,7 +70,16 @@ impl TypeTag for void {
     }
 }
 
-pub trait Array: Sized {
+mod array_seal {
+    /// We seal [`Array`], due to unsafe code in get_params
+    /// assume that it is a rust array.
+    ///
+    /// [`Array`]: crate::type_tag::Array
+    pub trait ArraySeal {}
+    impl<T, const N: usize> ArraySeal for [T; N] {}
+}
+
+pub trait Array: Sized + array_seal::ArraySeal {
     type Inner;
     const LENGTH: usize;
 

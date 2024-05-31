@@ -73,10 +73,12 @@ impl<T: FunTypeTag> Type<T> {
         unsafe { self.cast_unchecked() }
     }
 
+    /// Returns whether a function type is variadic.
     pub fn is_var(&self) -> bool {
         T::type_is_var(self)
     }
 
+    /// Obtain the number of parameters this function accepts.
     pub fn get_param_count(&self) -> u32 {
         unsafe { LLVMCountParamTypes(self.as_ptr()) }
     }
@@ -99,14 +101,12 @@ impl<T: FunTypeTag> Type<T> {
 }
 
 impl<Args: TagTuple, Output: TypeTag, const VAR: bool> Type<fun<Args, Output, VAR>> {
+    /// Obtain the types of a function's parameters.
     #[allow(clippy::needless_lifetimes)]
     pub fn get_params<'s>(&'s self) -> Args::Types<'s> {
         let array = MaybeUninit::<<Args::Types<'s> as TypeTuple>::AnyArray>::uninit();
-        let count = self.get_param_count();
-        assert_eq!(
-            <Args::Types<'s> as TypeTuple>::AnyArray::LENGTH,
-            count as usize
-        );
+        let count = self.get_param_count() as usize;
+        assert_eq!(<Args::Types<'s> as TypeTuple>::AnyArray::LENGTH, count);
         unsafe {
             LLVMGetParamTypes(self.as_ptr(), array.as_ptr() as *mut LLVMTypeRef);
             Args::Types::<'s>::from_array_any(array.assume_init())
@@ -158,6 +158,7 @@ impl<T: FunTypeTag> Value<T> {
         unsafe { LLVMSetGC(self.as_ptr(), name.as_ptr()) }
     }
 
+    /// Obtain the number of parameters in a function.
     pub fn get_param_count(&self) -> u32 {
         unsafe { LLVMCountParams(self.as_ptr()) }
     }
@@ -175,14 +176,12 @@ impl<T: FunTypeTag> Value<T> {
 }
 
 impl<Args: TagTuple, Output: TypeTag, const VAR: bool> Value<fun<Args, Output, VAR>> {
+    /// Obtain the parameters in a function.
     #[allow(clippy::needless_lifetimes)]
     pub fn get_params<'s>(&'s self) -> Args::Values<'s> {
         let array = MaybeUninit::<<Args::Values<'s> as ValueTuple>::AnyArray>::uninit();
-        let count = self.get_param_count();
-        assert_eq!(
-            <Args::Values<'s> as ValueTuple>::AnyArray::LENGTH,
-            count as usize
-        );
+        let count = self.get_param_count() as usize;
+        assert_eq!(<Args::Values<'s> as ValueTuple>::AnyArray::LENGTH, count);
         unsafe {
             LLVMGetParams(self.as_ptr(), array.as_ptr() as *mut LLVMValueRef);
             Args::Values::<'s>::from_array_any(array.assume_init())
