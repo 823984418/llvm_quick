@@ -1,9 +1,11 @@
+use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 
-use llvm_sys::core::{LLVMArrayType2, LLVMFunctionType, LLVMGetTypeContext};
+use llvm_sys::core::{LLVMArrayType2, LLVMFunctionType, LLVMGetTypeContext, LLVMPrintTypeToString};
 use llvm_sys::{LLVMType, LLVMTypeKind};
 
 use crate::context::Context;
+use crate::message::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::type_tag::array::{array, array_sized};
 use crate::type_tag::function::{fun, fun_any};
@@ -17,6 +19,12 @@ pub struct Type<T: TypeTag> {
 
 unsafe impl<T: TypeTag> Opaque for Type<T> {
     type Inner = LLVMType;
+}
+
+impl<T: TypeTag> Debug for Type<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        T::type_debug_fmt(self, f)
+    }
 }
 
 impl<T: TypeTag> Type<T> {
@@ -41,6 +49,11 @@ impl<T: TypeTag> Type<T> {
         T::type_kind(self)
     }
 
+    /// Return a string representation of the type.
+    pub fn print_to_string(&self) -> Message {
+        unsafe { Message::from_raw(LLVMPrintTypeToString(self.as_ptr())) }
+    }
+
     /// Obtain the context to which this type instance is associated.
     pub fn context(&self) -> &Context {
         unsafe { Context::from_ref(LLVMGetTypeContext(self.as_ptr())) }
@@ -50,7 +63,7 @@ impl<T: TypeTag> Type<T> {
     ///
     /// The function is defined as a tuple of a return Type, a list of parameter types,
     /// and whether the function is variadic.
-    pub fn function_any<'s>(&'s self, args: &[&'s Type<any>], var: bool) -> &'s Type<fun_any> {
+    pub fn fun_any<'s>(&'s self, args: &[&'s Type<any>], var: bool) -> &'s Type<fun_any> {
         unsafe {
             let ty = LLVMFunctionType(self.as_ptr(), args.as_ptr() as _, args.len() as _, var as _);
             Type::from_ref(ty)
@@ -58,21 +71,21 @@ impl<T: TypeTag> Type<T> {
     }
 
     /// Obtain a function type consisting of a specified signature.
-    pub fn function<'s, ArgTypeTuple: TypeTuple<'s>>(
+    pub fn fun<'s, ArgTypeTuple: TypeTuple<'s>>(
         &'s self,
         args: ArgTypeTuple,
     ) -> &'s Type<fun<ArgTypeTuple::Tags, T>> {
         let arg_vec = ArgTypeTuple::vec_any(args);
-        unsafe { self.function_any(&arg_vec, false).cast_unchecked() }
+        unsafe { self.fun_any(&arg_vec, false).cast_unchecked() }
     }
 
     /// Obtain a function type consisting of a specified signature.
-    pub fn function_var<'s, ArgTypeTuple: TypeTuple<'s>>(
+    pub fn fun_var<'s, ArgTypeTuple: TypeTuple<'s>>(
         &'s self,
         args: ArgTypeTuple,
     ) -> &'s Type<fun<ArgTypeTuple::Tags, T, true>> {
         let arg_vec = ArgTypeTuple::vec_any(args);
-        unsafe { self.function_any(&arg_vec, true).cast_unchecked() }
+        unsafe { self.fun_any(&arg_vec, true).cast_unchecked() }
     }
 
     /// Create a fixed size array type that refers to a specific type.

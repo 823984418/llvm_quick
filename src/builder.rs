@@ -9,7 +9,7 @@ use crate::context::Context;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::Dispose;
 use crate::type_tag::integer::int;
-use crate::type_tag::{any, TypeTag};
+use crate::type_tag::{any, TypeTag, void};
 use crate::values::Value;
 
 #[repr(transparent)]
@@ -45,7 +45,7 @@ impl<'s> Builder<'s> {
         }
     }
 
-    pub fn build_return<T: TypeTag>(&self, value: &'s Value<T>) -> &'s Value<any> {
+    pub fn build_return<T: TypeTag>(&self, value: &'s Value<T>) -> &'s Value<void> {
         unsafe { Value::from_ref(LLVMBuildRet(self.as_ptr(), value.as_ptr())) }
     }
 

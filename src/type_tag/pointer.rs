@@ -1,6 +1,7 @@
+use crate::opaque::Opaque;
 use llvm_sys::core::LLVMGetPointerAddressSpace;
 use llvm_sys::LLVMTypeKind;
-use crate::opaque::Opaque;
+use std::fmt::{Formatter, Write};
 
 use crate::type_tag::{any, type_check_kind, TypeTag};
 use crate::types::Type;
@@ -14,6 +15,15 @@ pub trait PtrTypeTag: TypeTag {
 pub struct ptr {}
 
 impl TypeTag for ptr {
+    fn type_debug_fmt(ty: &Type<Self>, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let address_space = ty.address_space();
+        if address_space == 0 {
+            f.write_str("ptr")
+        } else {
+            write!(f, "ptr addrspace({})", address_space)
+        }
+    }
+
     fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMPointerTypeKind
     }
@@ -34,6 +44,14 @@ impl PtrTypeTag for ptr {
 pub struct ptr_in<const ADDRESS_SPACE: u32> {}
 
 impl<const ADDRESS_SPACE: u32> TypeTag for ptr_in<ADDRESS_SPACE> {
+    fn type_debug_fmt(ty: &Type<Self>, f: &mut Formatter<'_>) -> std::fmt::Result {
+        if ADDRESS_SPACE == 0 {
+            f.write_str("ptr")
+        } else {
+            write!(f, "ptr addrspace({})", ADDRESS_SPACE)
+        }
+    }
+
     fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMPointerTypeKind
     }

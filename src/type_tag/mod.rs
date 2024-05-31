@@ -1,7 +1,9 @@
+use std::fmt::{Formatter, Write};
+
 use llvm_sys::core::LLVMGetTypeKind;
 use llvm_sys::LLVMTypeKind;
-use crate::opaque::Opaque;
 
+use crate::opaque::Opaque;
 use crate::types::Type;
 use crate::values::Value;
 
@@ -23,9 +25,17 @@ pub(crate) unsafe fn type_check_kind<T: TypeTag>(
 }
 
 pub trait TypeTag: Copy + 'static {
+    fn type_debug_fmt(ty: &Type<Self>, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(ty.print_to_string().to_str().unwrap())
+    }
+
     fn type_kind(ty: &Type<Self>) -> LLVMTypeKind;
 
     fn type_cast(ty: &Type<any>) -> Option<&Type<Self>>;
+
+    fn value_debug_fmt(val: &Value<Self>, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(val.print_to_string().to_str().unwrap())
+    }
 }
 
 #[derive(Copy, Clone)]
@@ -47,6 +57,10 @@ impl TypeTag for any {
 pub struct void {}
 
 impl TypeTag for void {
+    fn type_debug_fmt(_ty: &Type<Self>, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("void")
+    }
+
     fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMVoidTypeKind
     }

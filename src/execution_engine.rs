@@ -1,4 +1,4 @@
-use std::ffi::{CStr, CString};
+use std::ffi::CStr;
 use std::marker::PhantomData;
 use std::mem::size_of;
 use std::ptr::null_mut;
@@ -7,10 +7,20 @@ use llvm_sys::execution_engine::*;
 use llvm_sys::target_machine::LLVMCodeModel;
 
 use crate::context::Context;
+use crate::message::Message;
 use crate::module::Module;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{Dispose, Owning};
-use crate::util::c_string;
+
+#[inline(always)]
+pub fn link_in_mc_jit() {
+    unsafe { LLVMLinkInMCJIT() };
+}
+
+#[inline(always)]
+pub fn link_in_interpreter() {
+    unsafe { LLVMLinkInInterpreter() };
+}
 
 #[repr(transparent)]
 pub struct ExecutionEngine<'s> {
@@ -33,51 +43,55 @@ impl<'s> ExecutionEngine<'s> {
         unsafe { LLVMGetFunctionAddress(self.as_ptr(), name.as_ptr()) }
     }
 
-    pub fn create_execution_engine(module: Owning<Module<'s>>) -> Result<Owning<Self>, CString> {
+    pub fn create_execution_engine_for_module(
+        module: Owning<Module<'s>>,
+    ) -> Result<Owning<Self>, Message> {
         unsafe {
             let mut ptr = null_mut();
             let mut err = null_mut();
             let code = LLVMCreateExecutionEngineForModule(&mut ptr, module.into_ptr(), &mut err);
             if code != 0 {
-                return Err(c_string(err).unwrap());
+                return Err(Message::from_raw(err));
             }
             Ok(Owning::from_raw(ptr))
         }
     }
 
-    pub fn create_jit_compiler(
+    pub fn create_jit_compiler_for_module(
         module: Owning<Module<'s>>,
         opt_level: u32,
-    ) -> Result<Owning<Self>, CString> {
+    ) -> Result<Owning<Self>, Message> {
         unsafe {
             let mut ptr = null_mut();
             let mut err = null_mut();
             let code =
                 LLVMCreateJITCompilerForModule(&mut ptr, module.into_ptr(), opt_level, &mut err);
             if code != 0 {
-                return Err(c_string(err).unwrap());
+                return Err(Message::from_raw(err));
             }
             Ok(Owning::from_raw(ptr))
         }
     }
 
-    pub fn create_interpreter(module: Owning<Module<'s>>) -> Result<Owning<Self>, CString> {
+    pub fn create_interpreter_for_module(
+        module: Owning<Module<'s>>,
+    ) -> Result<Owning<Self>, Message> {
         unsafe {
             let mut ptr = null_mut();
             let mut err = null_mut();
             let code = LLVMCreateInterpreterForModule(&mut ptr, module.into_ptr(), &mut err);
             if code != 0 {
-                return Err(c_string(err).unwrap());
+                return Err(Message::from_raw(err));
             }
             Ok(Owning::from_raw(ptr))
         }
     }
 
     /// Create an MCJIT execution engine for a module, with the given options.
-    pub fn create_mc_jit_compiler(
+    pub fn create_mc_jit_compiler_for_module(
         module: Owning<Module<'s>>,
         option: MCJITCompilerOptions<'s>,
-    ) -> Result<Owning<Self>, CString> {
+    ) -> Result<Owning<Self>, Message> {
         unsafe {
             let mut ptr = null_mut();
             let mut err = null_mut();
@@ -96,7 +110,7 @@ impl<'s> ExecutionEngine<'s> {
                 &mut err,
             );
             if code != 0 {
-                return Err(c_string(err).unwrap());
+                return Err(Message::from_raw(err));
             }
             Ok(Owning::from_raw(ptr))
         }
@@ -113,12 +127,23 @@ pub struct MCJITCompilerOptions<'s> {
 
 impl<'s> Default for MCJITCompilerOptions<'s> {
     fn default() -> Self {
-        Self {
-            opt_level: 0,
-            code_model: LLVMCodeModel::LLVMCodeModelJITDefault,
-            no_frame_pointer_elim: false,
-            enable_fast_instruction_select: false,
-            mc_jit_memory_manager: None,
+        unsafe {
+            let mut o = LLVMMCJITCompilerOptions {
+                OptLevel: 0,
+                CodeModel: LLVMCodeModel::LLVMCodeModelJITDefault,
+                NoFramePointerElim: 0,
+                EnableFastISel: 0,
+                MCJMM: null_mut(),
+            };
+            LLVMInitializeMCJITCompilerOptions(&mut o, size_of::<LLVMMCJITCompilerOptions>());
+            debug_assert!(o.MCJMM.is_null());
+            Self {
+                opt_level: o.OptLevel,
+                code_model: o.CodeModel,
+                no_frame_pointer_elim: o.NoFramePointerElim != 0,
+                enable_fast_instruction_select: o.EnableFastISel != 0,
+                mc_jit_memory_manager: Owning::try_from_raw(o.MCJMM),
+            }
         }
     }
 }

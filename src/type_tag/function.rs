@@ -1,13 +1,13 @@
-use std::ffi::{CStr, CString};
+use std::ffi::{c_char, CStr, CString};
 use std::marker::PhantomData;
+use std::ptr::null;
+
+use llvm_sys::core::*;
+use llvm_sys::LLVMTypeKind;
 
 use crate::opaque::Opaque;
-use llvm_sys::core::*;
-use llvm_sys::{LLVMCallConv, LLVMTypeKind};
-
 use crate::type_tag::{any, type_check_kind, TagTuple, TypeTag, TypeTuple, ValueTuple};
 use crate::types::Type;
-use crate::util::{c_string, llvm_call_conv_from_u32};
 use crate::values::Value;
 
 pub trait FunTypeTag: TypeTag {
@@ -99,17 +99,37 @@ impl<T: FunTypeTag> Value<T> {
     }
 
     /// Obtain the calling function of a function.
-    pub fn get_call_conv(&self) -> LLVMCallConv {
-        llvm_call_conv_from_u32(unsafe { LLVMGetFunctionCallConv(self.as_ptr()) })
+    pub fn get_call_conv(&self) -> u32 {
+        unsafe { LLVMGetFunctionCallConv(self.as_ptr()) }
     }
 
     /// Set the calling convention of a function.
-    pub fn set_call_conv(&self, conv: LLVMCallConv) {
-        unsafe { LLVMSetFunctionCallConv(self.as_ptr(), conv as _) };
+    pub fn set_call_conv(&self, conv: u32) {
+        unsafe { LLVMSetFunctionCallConv(self.as_ptr(), conv) };
     }
+
+    /// Obtain the name of the garbage collector to use during code generation.
+    pub fn get_gc_raw(&self) -> *const CStr {
+        unsafe {
+            let ptr = LLVMGetGC(self.as_ptr());
+            if ptr.is_null() {
+                std::ptr::slice_from_raw_parts(ptr, 0) as *const CStr
+            } else {
+                CStr::from_ptr(ptr)
+            }
+        }
+    }
+
     /// Obtain the name of the garbage collector to use during code generation.
     pub fn get_gc(&self) -> Option<CString> {
-        unsafe { c_string(LLVMGetGC(self.as_ptr())) }
+        unsafe {
+            let ptr = self.get_gc_raw();
+            if ptr.is_null() {
+                None
+            } else {
+                Some(CString::from(&*ptr))
+            }
+        }
     }
 
     /// Define the garbage collector to use during code generation.

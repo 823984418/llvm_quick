@@ -1,3 +1,4 @@
+use std::fmt::{Debug, Formatter};
 use std::mem::forget;
 use std::ops::Deref;
 use std::ptr::{null_mut, NonNull};
@@ -23,6 +24,12 @@ impl<T: Dispose> Deref for Owning<T> {
 
     fn deref(&self) -> &Self::Target {
         unsafe { self.ptr.as_ref() }
+    }
+}
+
+impl<T: Dispose + Debug> Debug for Owning<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Debug::fmt(self.deref(), f)
     }
 }
 

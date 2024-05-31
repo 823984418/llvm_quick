@@ -1,4 +1,5 @@
 use llvm_sys::core::{LLVMGetVersion, LLVMShutdown};
+pub use llvm_sys::LLVMCallConv;
 
 /// Deallocate and destroy all ManagedStatic variables.
 pub unsafe fn shutdown() {

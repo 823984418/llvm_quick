@@ -1,10 +1,12 @@
 use std::ffi::CStr;
+use std::fmt::{Debug, Formatter, Write};
 use std::marker::PhantomData;
 
 use llvm_sys::core::*;
 use llvm_sys::LLVMModule;
 
 use crate::context::Context;
+use crate::message::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::Dispose;
 use crate::type_tag::any;
@@ -28,6 +30,12 @@ impl<'s> Dispose for Module<'s> {
     }
 }
 
+impl<'s> Debug for Module<'s> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.print_to_string().to_str().unwrap())
+    }
+}
+
 impl<'s> Module<'s> {
     /// Obtain the context to which this module is associated.
     pub fn context(&self) -> &'s Context {
@@ -42,5 +50,9 @@ impl<'s> Module<'s> {
     /// Obtain a Function value from a Module by its name.
     pub fn get_function<T: FunTypeTag>(&self, name: &CStr) -> &'s Value<T> {
         unsafe { Value::<any>::from_ref(LLVMGetNamedFunction(self.as_ptr(), name.as_ptr())).cast() }
+    }
+
+    pub fn print_to_string(&self) -> Message {
+        unsafe { Message::from_raw(LLVMPrintModuleToString(self.as_ptr())) }
     }
 }

@@ -2,7 +2,7 @@ use std::ffi::{c_void, CStr};
 use std::ptr::null_mut;
 
 use llvm_sys::core::{LLVMContextSetDiagnosticHandler, LLVMGetDiagInfoDescription};
-use llvm_sys::execution_engine::{LLVMLinkInInterpreter, LLVMLinkInMCJIT};
+use llvm_sys::execution_engine::LLVMLinkInInterpreter;
 use llvm_sys::prelude::LLVMDiagnosticInfoRef;
 use llvm_sys::target::{
     LLVM_InitializeNativeAsmParser, LLVM_InitializeNativeAsmPrinter,
@@ -12,7 +12,7 @@ use llvm_sys::target_machine::LLVMCodeModel;
 
 use llvm_quick::builder::Builder;
 use llvm_quick::context::Context;
-use llvm_quick::execution_engine::{ExecutionEngine, MCJITCompilerOptions};
+use llvm_quick::execution_engine::{link_in_mc_jit, ExecutionEngine, MCJITCompilerOptions};
 use llvm_quick::opaque::Opaque;
 use llvm_quick::owning::Owning;
 
@@ -27,7 +27,7 @@ impl<'ctx> CodeGen<'ctx> {
     fn jit_compile_sum(&self) -> Owning<ExecutionEngine> {
         let module = self.context.create_module(c"sum");
         let i64_type = self.context.i64_type();
-        let fn_type = i64_type.function((i64_type, i64_type, i64_type));
+        let fn_type = i64_type.fun((i64_type, i64_type, i64_type));
         let function = module.add_function(c"sum", fn_type);
         let basic_block = self.context.append_basic_block(function, c"entry");
 
@@ -38,9 +38,12 @@ impl<'ctx> CodeGen<'ctx> {
         let sum = self.builder.build_int_add(x, y, c"sum");
         let sum = self.builder.build_int_add(sum, z, c"sum");
 
-        self.builder.build_return(sum);
+        let r = self.builder.build_return(sum);
 
-        ExecutionEngine::create_mc_jit_compiler(
+        println!("{:?}", module);
+        println!("{:?}", function.get_name());
+
+        ExecutionEngine::create_mc_jit_compiler_for_module(
             module,
             MCJITCompilerOptions {
                 opt_level: 3,
@@ -55,10 +58,8 @@ impl<'ctx> CodeGen<'ctx> {
 }
 
 fn main() {
+    link_in_mc_jit();
     unsafe {
-        LLVMLinkInMCJIT();
-        LLVMLinkInInterpreter();
-
         LLVM_InitializeNativeTarget();
         LLVM_InitializeNativeAsmPrinter();
         LLVM_InitializeNativeAsmParser();
