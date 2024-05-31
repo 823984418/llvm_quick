@@ -3,7 +3,7 @@ use llvm_sys::core::LLVMGetIntTypeWidth;
 use llvm_sys::LLVMTypeKind;
 use std::fmt::Formatter;
 
-use crate::type_tag::{any, type_check_kind, TypeTag};
+use crate::type_tag::{any, type_check_kind, InstanceTypeTag, MathTypeTag, TypeTag};
 use crate::types::Type;
 
 pub trait IntTypeTag: TypeTag {
@@ -56,6 +56,9 @@ impl<const N: u32> TypeTag for int<N> {
         }
     }
 }
+
+impl<const N: u32> InstanceTypeTag for int<N> {}
+impl<const N: u32> MathTypeTag for int<N> {}
 
 impl<const N: u32> IntTypeTag for int<N> {
     fn type_int_width(_ty: &Type<Self>) -> u32 {

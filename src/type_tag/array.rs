@@ -2,9 +2,9 @@ use std::marker::PhantomData;
 
 use llvm_sys::core::{LLVMGetArrayLength2, LLVMGetElementType, LLVMGetTypeKind};
 use llvm_sys::LLVMTypeKind;
-use crate::opaque::Opaque;
 
-use crate::type_tag::{any, TypeTag};
+use crate::opaque::Opaque;
+use crate::type_tag::{any, InstanceTypeTag, TypeTag};
 use crate::types::Type;
 
 pub trait ArrayTypeTag: TypeTag {
@@ -64,6 +64,8 @@ impl<T: TypeTag, const N: u64> TypeTag for array_sized<T, N> {
         }
     }
 }
+
+impl<T: TypeTag, const N: u64> InstanceTypeTag for array_sized<T, N> {}
 
 impl<T: TypeTag, const N: u64> ArrayTypeTag for array_sized<T, N> {
     type ElementType = T;

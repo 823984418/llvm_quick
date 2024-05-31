@@ -38,6 +38,10 @@ pub trait TypeTag: Copy + 'static {
     }
 }
 
+pub trait InstanceTypeTag: TypeTag {}
+
+pub trait MathTypeTag: InstanceTypeTag {}
+
 #[derive(Copy, Clone)]
 #[allow(non_camel_case_types)]
 pub struct any {}
@@ -69,6 +73,8 @@ impl TypeTag for void {
         unsafe { type_check_kind(ty, LLVMTypeKind::LLVMVoidTypeKind) }
     }
 }
+
+impl InstanceTypeTag for void {}
 
 pub trait TagTuple: Copy + 'static {
     const COUNT: usize;

@@ -4,7 +4,7 @@ use llvm_sys::core::LLVMGetPointerAddressSpace;
 use llvm_sys::LLVMTypeKind;
 
 use crate::opaque::Opaque;
-use crate::type_tag::{any, type_check_kind, TypeTag};
+use crate::type_tag::{any, type_check_kind, InstanceTypeTag, TypeTag};
 use crate::types::Type;
 
 pub trait PtrTypeTag: TypeTag {
@@ -42,7 +42,7 @@ impl PtrTypeTag for ptr {
 
 #[derive(Copy, Clone)]
 #[allow(non_camel_case_types)]
-pub struct ptr_in<const ADDRESS_SPACE: u32> {}
+pub struct ptr_in<const ADDRESS_SPACE: u32 = 0> {}
 
 impl<const ADDRESS_SPACE: u32> TypeTag for ptr_in<ADDRESS_SPACE> {
     fn type_debug_fmt(_ty: &Type<Self>, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -66,6 +66,8 @@ impl<const ADDRESS_SPACE: u32> TypeTag for ptr_in<ADDRESS_SPACE> {
         }
     }
 }
+
+impl<const ADDRESS_SPACE: u32> InstanceTypeTag for ptr_in<ADDRESS_SPACE> {}
 
 impl<const ADDRESS_SPACE: u32> PtrTypeTag for ptr_in<ADDRESS_SPACE> {
     fn type_address_space(_ty: &Type<Self>) -> u32 {

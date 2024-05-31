@@ -1,7 +1,9 @@
 use std::ffi::CStr;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
+use std::ptr::null_mut;
 
+use llvm_sys::analysis::{LLVMVerifierFailureAction, LLVMVerifyModule};
 use llvm_sys::core::*;
 use llvm_sys::LLVMModule;
 
@@ -54,5 +56,15 @@ impl<'s> Module<'s> {
 
     pub fn print_to_string(&self) -> Message {
         unsafe { Message::from_raw(LLVMPrintModuleToString(self.as_ptr())) }
+    }
+
+    pub fn verify(&self, action: LLVMVerifierFailureAction) -> Result<(), Message> {
+        unsafe {
+            let mut err = null_mut();
+            if LLVMVerifyModule(self.as_ptr(), action, &mut err) != 0 {
+                return Err(Message::from_raw(err));
+            }
+            Ok(())
+        }
     }
 }

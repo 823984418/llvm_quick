@@ -8,8 +8,7 @@ use crate::basic_block::BasicBlock;
 use crate::context::Context;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::Dispose;
-use crate::type_tag::integer::int;
-use crate::type_tag::{any, TypeTag, void};
+use crate::type_tag::{any, void, MathTypeTag, TypeTag};
 use crate::values::Value;
 
 #[repr(transparent)]
@@ -33,12 +32,12 @@ impl<'s> Builder<'s> {
         unsafe { LLVMPositionBuilderAtEnd(self.as_ptr(), basic_block.as_ptr()) };
     }
 
-    pub fn build_int_add<const N: u32>(
+    pub fn build_add<T: MathTypeTag>(
         &self,
-        lhs: &'s Value<int<N>>,
-        rhs: &'s Value<int<N>>,
+        lhs: &'s Value<T>,
+        rhs: &'s Value<T>,
         name: &CStr,
-    ) -> &'s Value<int<N>> {
+    ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildAdd(self.as_ptr(), lhs.as_ptr(), rhs.as_ptr(), name.as_ptr());
             Value::from_ref(ptr)

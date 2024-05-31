@@ -49,8 +49,7 @@ impl<'s> ExecutionEngine<'s> {
         unsafe {
             let mut ptr = null_mut();
             let mut err = null_mut();
-            let code = LLVMCreateExecutionEngineForModule(&mut ptr, module.into_ptr(), &mut err);
-            if code != 0 {
+            if LLVMCreateExecutionEngineForModule(&mut ptr, module.into_ptr(), &mut err) != 0 {
                 return Err(Message::from_raw(err));
             }
             Ok(Owning::from_raw(ptr))
@@ -64,9 +63,8 @@ impl<'s> ExecutionEngine<'s> {
         unsafe {
             let mut ptr = null_mut();
             let mut err = null_mut();
-            let code =
-                LLVMCreateJITCompilerForModule(&mut ptr, module.into_ptr(), opt_level, &mut err);
-            if code != 0 {
+            if LLVMCreateJITCompilerForModule(&mut ptr, module.into_ptr(), opt_level, &mut err) != 0
+            {
                 return Err(Message::from_raw(err));
             }
             Ok(Owning::from_raw(ptr))
@@ -79,8 +77,7 @@ impl<'s> ExecutionEngine<'s> {
         unsafe {
             let mut ptr = null_mut();
             let mut err = null_mut();
-            let code = LLVMCreateInterpreterForModule(&mut ptr, module.into_ptr(), &mut err);
-            if code != 0 {
+            if LLVMCreateInterpreterForModule(&mut ptr, module.into_ptr(), &mut err) != 0 {
                 return Err(Message::from_raw(err));
             }
             Ok(Owning::from_raw(ptr))
@@ -102,14 +99,14 @@ impl<'s> ExecutionEngine<'s> {
                 EnableFastISel: option.enable_fast_instruction_select as _,
                 MCJMM: Owning::option_into_ptr(option.mc_jit_memory_manager),
             };
-            let code = LLVMCreateMCJITCompilerForModule(
+            if LLVMCreateMCJITCompilerForModule(
                 &mut ptr,
                 module.into_ptr(),
                 &mut o,
                 size_of::<LLVMMCJITCompilerOptions>(),
                 &mut err,
-            );
-            if code != 0 {
+            ) != 0
+            {
                 return Err(Message::from_raw(err));
             }
             Ok(Owning::from_raw(ptr))

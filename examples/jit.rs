@@ -34,8 +34,8 @@ impl<'ctx> CodeGen<'ctx> {
 
         let (x, y, z) = function.get_params();
 
-        let sum = self.builder.build_int_add(x, y, c"sum");
-        let sum = self.builder.build_int_add(sum, z, c"sum");
+        let sum = self.builder.build_add(x, y, c"sum");
+        let sum = self.builder.build_add(sum, z, c"sum");
 
         self.builder.build_return(sum);
 
