@@ -187,9 +187,8 @@ impl<Args: TagTuple, Output: TypeTag, const VAR: bool> Type<fun<Args, Output, VA
     /// Obtain the types of a function's parameters.
     #[allow(clippy::needless_lifetimes)]
     pub fn get_params<'s>(&'s self) -> Args::Types<'s> {
-        Args::stack_array(|array: &mut [Option<&'s Type<any>>]| {
-            Args::type_from_slice(self.get_param_into_slice(array)).unwrap()
-        })
+        self.get_param_with_slice(|slice| Args::type_from_slice(slice))
+            .unwrap()
     }
 }
 
@@ -277,8 +276,7 @@ impl<Args: TagTuple, Output: TypeTag, const VAR: bool> Value<fun<Args, Output, V
     /// Obtain the parameters in a function.
     #[allow(clippy::needless_lifetimes)]
     pub fn get_params<'s>(&'s self) -> Args::Values<'s> {
-        Args::stack_array(|array: &mut [Option<&'s Value<any>>]| {
-            Args::value_from_slice(self.get_param_into_slice(array)).unwrap()
-        })
+        self.get_param_with_slice(|slice| Args::value_from_slice(slice))
+            .unwrap()
     }
 }
