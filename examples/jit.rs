@@ -2,7 +2,6 @@ use std::ffi::{c_void, CStr};
 use std::ptr::null_mut;
 
 use llvm_sys::core::{LLVMContextSetDiagnosticHandler, LLVMGetDiagInfoDescription};
-use llvm_sys::execution_engine::LLVMLinkInInterpreter;
 use llvm_sys::prelude::LLVMDiagnosticInfoRef;
 use llvm_sys::target::{
     LLVM_InitializeNativeAsmParser, LLVM_InitializeNativeAsmPrinter,
@@ -38,7 +37,7 @@ impl<'ctx> CodeGen<'ctx> {
         let sum = self.builder.build_int_add(x, y, c"sum");
         let sum = self.builder.build_int_add(sum, z, c"sum");
 
-        let r = self.builder.build_return(sum);
+        self.builder.build_return(sum);
 
         println!("{:?}", module);
         println!("{:?}", function.get_name());

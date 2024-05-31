@@ -1,15 +1,11 @@
 use std::ffi::{CStr, CString};
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
-use std::ptr::null_mut;
 
-use crate::message::Message;
-use llvm_sys::core::{
-    LLVMGetValueName2, LLVMIsConstant, LLVMIsPoison, LLVMIsUndef, LLVMPrintTypeToString,
-    LLVMPrintValueToString, LLVMSetValueName2, LLVMTypeOf,
-};
+use llvm_sys::core::*;
 use llvm_sys::LLVMValue;
 
+use crate::message::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::type_tag::{any, TypeTag};
 use crate::types::Type;

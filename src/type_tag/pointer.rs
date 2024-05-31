@@ -44,7 +44,7 @@ impl PtrTypeTag for ptr {
 pub struct ptr_in<const ADDRESS_SPACE: u32> {}
 
 impl<const ADDRESS_SPACE: u32> TypeTag for ptr_in<ADDRESS_SPACE> {
-    fn type_debug_fmt(ty: &Type<Self>, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn type_debug_fmt(_ty: &Type<Self>, f: &mut Formatter<'_>) -> std::fmt::Result {
         if ADDRESS_SPACE == 0 {
             f.write_str("ptr")
         } else {

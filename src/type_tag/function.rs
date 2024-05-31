@@ -1,6 +1,5 @@
-use std::ffi::{c_char, CStr, CString};
+use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
-use std::ptr::null;
 
 use llvm_sys::core::*;
 use llvm_sys::LLVMTypeKind;
