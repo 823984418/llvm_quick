@@ -70,130 +70,105 @@ impl TypeTag for void {
     }
 }
 
-mod array_seal {
-    /// We seal [`Array`], due to unsafe code in get_params
-    /// assume that it is a rust array.
-    ///
-    /// [`Array`]: crate::type_tag::Array
-    pub trait ArraySeal {}
-    impl<T, const N: usize> ArraySeal for [T; N] {}
-}
-
-pub trait Array: Sized + array_seal::ArraySeal {
-    type Inner;
-    const LENGTH: usize;
-
-    fn as_slice(&self) -> &[Self::Inner];
-    fn as_mut_slice(&mut self) -> &mut [Self::Inner];
-}
-
-impl<T, const N: usize> Array for [T; N] {
-    type Inner = T;
-    const LENGTH: usize = N;
-
-    fn as_slice(&self) -> &[Self::Inner] {
-        self.as_slice()
-    }
-
-    fn as_mut_slice(&mut self) -> &mut [Self::Inner] {
-        self.as_mut_slice()
-    }
-}
-
 pub trait TagTuple: Copy + 'static {
+    const COUNT: usize;
+
     type Types<'s>: TypeTuple<'s, Tags = Self>;
+
     type Values<'s>: ValueTuple<'s, Tags = Self>;
+
+    fn stack_array<Type: Default, Fun: FnOnce(&mut [Type]) -> Ret, Ret>(f: Fun) -> Ret;
+
+    fn type_into_slice<'s>(tuple: Self::Types<'s>, slice: &mut [Option<&'s Type<any>>]);
+
+    #[allow(clippy::needless_lifetimes)]
+    fn type_with_slice<'s, Fun: FnOnce(&[&'s Type<any>]) -> Ret, Ret>(
+        tuple: Self::Types<'s>,
+        fun: Fun,
+    ) -> Ret {
+        Self::stack_array(|slice| {
+            Self::type_into_slice(tuple, slice);
+            unsafe { fun(std::mem::transmute(slice)) }
+        })
+    }
+
+    fn type_from_slice<'s>(slice: &[&'s Type<any>]) -> Option<Self::Types<'s>>;
+
+    fn value_into_slice<'s>(tuple: Self::Values<'s>, slice: &mut [Option<&'s Value<any>>]);
+
+    #[allow(clippy::needless_lifetimes)]
+    fn value_with_slice<'s, Fun: FnOnce(&[&'s Value<any>]) -> Ret, Ret>(
+        tuple: Self::Values<'s>,
+        fun: Fun,
+    ) -> Ret {
+        Self::stack_array(|slice| {
+            Self::value_into_slice(tuple, slice);
+            unsafe { fun(std::mem::transmute(slice)) }
+        })
+    }
+
+    fn value_from_slice<'s>(slice: &[&'s Value<any>]) -> Option<Self::Values<'s>>;
 }
 
 pub trait TypeTuple<'s>: Sized {
-    type AnyArray: Array<Inner = &'s Type<any>>;
     type Tags: TagTuple<Types<'s> = Self>;
-
-    fn from_slice_any(slice: &[&'s Type<any>]) -> Option<Self>;
-    fn vec_any(tuple: Self) -> Vec<&'s Type<any>>;
-    fn from_array_any(array: Self::AnyArray) -> Self;
-    fn array_any(tuple: Self) -> Self::AnyArray;
 }
 
 pub trait ValueTuple<'s>: Sized {
-    type AnyArray: Array<Inner = &'s Value<any>>;
     type Tags: TagTuple<Values<'s> = Self>;
-
-    fn from_slice_any(slice: &[&'s Value<any>]) -> Option<Self>;
-    fn vec_any(tuple: Self) -> Vec<&'s Value<any>>;
-    fn from_array_any(array: Self::AnyArray) -> Self;
-    fn array_any(tuple: Self) -> Self::AnyArray;
 }
 
 macro_rules! impl_tuple {
     ($count:literal $(,$arg:ident)*) => {
         impl<$($arg: TypeTag),*> TagTuple for ($($arg,)*) {
+            const COUNT: usize = $count;
+
             type Types<'s> = ($(&'s Type<$arg>,)*);
+
             type Values<'s> = ($(&'s Value<$arg>,)*);
+
+            fn stack_array<Type: Default, Fun: FnOnce(&mut [Type]) -> Ret, Ret>(f: Fun) -> Ret {
+                let mut alloc: [Type; $count] = std::array::from_fn(|_| Type::default());
+                f(&mut alloc)
+            }
+
+            #[allow(non_snake_case)]
+            fn type_into_slice<'s>(tuple: Self::Types<'s>, slice: &mut [Option<&'s Type<any>>]) {
+                let ($($arg,)*) = tuple;
+                slice.copy_from_slice(&[$(Some($arg.to_any()),)*]);
+            }
+
+            #[allow(non_snake_case)]
+            fn type_from_slice<'s>(slice: &[&'s Type<any>]) -> Option<Self::Types<'s>> {
+                if let &[$($arg,)*] = slice {
+                    Some(($($arg.try_cast()?,)*))
+                } else {
+                    None
+                }
+            }
+
+            #[allow(non_snake_case)]
+            fn value_into_slice<'s>(tuple: Self::Values<'s>, slice: &mut [Option<&'s Value<any>>]) {
+                let ($($arg,)*) = tuple;
+                slice.copy_from_slice(&[$(Some($arg.to_any()),)*]);
+            }
+
+            #[allow(non_snake_case)]
+            fn value_from_slice<'s>(slice: &[&'s Value<any>]) -> Option<Self::Values<'s>> {
+                if let &[$($arg,)*] = slice {
+                    Some(($($arg.try_cast()?,)*))
+                } else {
+                    None
+                }
+            }
         }
 
         impl<'s, $($arg: TypeTag),*> TypeTuple<'s> for ($(&'s Type<$arg>,)*) {
-            type AnyArray = [&'s Type<any>; $count];
             type Tags = ($($arg,)*);
-
-            #[allow(non_snake_case)]
-            fn from_slice_any(slice: &[&'s Type<any>]) -> Option<Self> {
-                if let &[$($arg,)*] = slice {
-                    Some(($($arg.cast(),)*))
-                } else {
-                    None
-                }
-            }
-
-            #[allow(non_snake_case)]
-            fn vec_any(tuple: Self) -> Vec<&'s Type<any>> {
-                let ($($arg,)*) = tuple;
-                vec![$($arg.to_any(),)*]
-            }
-
-            #[allow(non_snake_case)]
-            fn from_array_any(array: Self::AnyArray) -> Self {
-                let [$($arg,)*] = array;
-                ($($arg.cast(),)*)
-            }
-
-            #[allow(non_snake_case)]
-            fn array_any(tuple: Self) -> Self::AnyArray {
-                let ($($arg,)*) = tuple;
-                [$($arg.to_any(),)*]
-            }
         }
 
         impl<'s, $($arg: TypeTag),*> ValueTuple<'s> for ($(&'s Value<$arg>,)*) {
-            type AnyArray = [&'s Value<any>; $count];
             type Tags = ($($arg,)*);
-
-            #[allow(non_snake_case)]
-            fn from_slice_any(slice: &[&'s Value<any>]) -> Option<Self> {
-                if let &[$($arg,)*] = slice {
-                    Some(($($arg.cast(),)*))
-                } else {
-                    None
-                }
-            }
-
-            #[allow(non_snake_case)]
-            fn vec_any(tuple: Self) -> Vec<&'s Value<any>> {
-                let ($($arg,)*) = tuple;
-                vec![$($arg.to_any(),)*]
-            }
-
-            #[allow(non_snake_case)]
-            fn from_array_any(array: Self::AnyArray) -> Self {
-                let [$($arg,)*] = array;
-                ($($arg.cast(),)*)
-            }
-
-            #[allow(non_snake_case)]
-            fn array_any(tuple: Self) -> Self::AnyArray {
-                let ($($arg,)*) = tuple;
-                [$($arg.to_any(),)*]
-            }
         }
     };
 }

@@ -9,7 +9,7 @@ use crate::message::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::type_tag::array::{array, array_sized};
 use crate::type_tag::function::{fun, fun_any};
-use crate::type_tag::{any, TypeTag, TypeTuple};
+use crate::type_tag::{any, TagTuple, TypeTag, TypeTuple};
 
 #[repr(transparent)]
 pub struct Type<T: TypeTag> {
@@ -75,8 +75,9 @@ impl<T: TypeTag> Type<T> {
         &'s self,
         args: ArgTypeTuple,
     ) -> &'s Type<fun<ArgTypeTuple::Tags, T>> {
-        let arg_vec = ArgTypeTuple::vec_any(args);
-        unsafe { self.fun_any(&arg_vec, false).cast_unchecked() }
+        ArgTypeTuple::Tags::type_with_slice(args, |slice| unsafe {
+            self.fun_any(slice, false).cast_unchecked()
+        })
     }
 
     /// Obtain a function type consisting of a specified signature.
@@ -84,8 +85,9 @@ impl<T: TypeTag> Type<T> {
         &'s self,
         args: ArgTypeTuple,
     ) -> &'s Type<fun<ArgTypeTuple::Tags, T, true>> {
-        let arg_vec = ArgTypeTuple::vec_any(args);
-        unsafe { self.fun_any(&arg_vec, true).cast_unchecked() }
+        ArgTypeTuple::Tags::type_with_slice(args, |slice| unsafe {
+            self.fun_any(slice, true).cast_unchecked()
+        })
     }
 
     /// Create a fixed size array type that refers to a specific type.
