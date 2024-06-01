@@ -1,6 +1,6 @@
 use std::ffi::CStr;
 
-use llvm_sys::core::{LLVMGetVersion, LLVMShutdown};
+use llvm_sys::core::{LLVMGetVersion, LLVMIsMultithreaded, LLVMShutdown};
 use llvm_sys::support::*;
 
 /// This functions permanently adds the symbol symbolName with the value symbolValue.
@@ -41,4 +41,9 @@ pub fn search_for_address_of_symbol(name: &CStr) -> *mut () {
 /// Deallocate and destroy all ManagedStatic variables.
 pub unsafe fn shutdown() {
     unsafe { LLVMShutdown() }
+}
+
+/// Check whether LLVM is executing in thread-safe mode or not.
+pub fn is_multithreaded() -> bool {
+    unsafe { LLVMIsMultithreaded() != 0 }
 }

@@ -76,6 +76,26 @@ impl TypeTag for void {
 
 impl InstanceTypeTag for void {}
 
+#[derive(Copy, Clone)]
+#[allow(non_camel_case_types)]
+pub struct label {}
+
+impl TypeTag for label {
+    fn type_debug_fmt(_ty: &Type<Self>, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("label")
+    }
+
+    fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
+        LLVMTypeKind::LLVMLabelTypeKind
+    }
+
+    fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
+        unsafe { type_check_kind(ty, LLVMTypeKind::LLVMLabelTypeKind) }
+    }
+}
+
+impl InstanceTypeTag for label {}
+
 pub trait TagTuple: Copy + 'static {
     const COUNT: usize;
 
