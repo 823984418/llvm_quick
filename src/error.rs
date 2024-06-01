@@ -9,10 +9,14 @@ use llvm_sys::error::*;
 use llvm_sys::error_handling::*;
 
 use crate::opaque::{Opaque, PhantomOpaque};
-use crate::owning::Dispose;
+use crate::owning::{Dispose, Owning};
 
 pub fn install_fatal_error_handler<T: Fn(&CStr) + 'static>(handle: T) {
-    assert_eq!(size_of::<T>(), 0, "Fatal error handler can't capture anything.");
+    assert_eq!(
+        size_of::<T>(),
+        0,
+        "Fatal error handler can't capture anything."
+    );
     forget(handle);
     extern "C" fn handler_raw<T: Fn(&CStr) + 'static>(reason: *const c_char) {
         unsafe {
@@ -69,6 +73,14 @@ impl Dispose for Error {
 }
 
 impl Error {
+    pub unsafe fn check(ptr: *mut LLVMOpaqueError) -> Result<(), Owning<Self>> {
+        if let Some(e) = unsafe { Owning::try_from_raw(ptr) } {
+            Err(e)
+        } else {
+            Ok(())
+        }
+    }
+
     pub fn get_type_id(&self) -> LLVMErrorTypeId {
         unsafe { LLVMGetErrorTypeId(self.as_ptr()) }
     }
