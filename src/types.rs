@@ -1,8 +1,8 @@
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 
-use llvm_sys::core::{LLVMArrayType2, LLVMFunctionType, LLVMGetTypeContext, LLVMPrintTypeToString};
-use llvm_sys::{LLVMType, LLVMTypeKind};
+use llvm_sys::core::*;
+use llvm_sys::*;
 
 use crate::context::Context;
 use crate::message::Message;
@@ -13,8 +13,8 @@ use crate::type_tag::{any, TagTuple, TypeTag, TypeTuple};
 
 #[repr(transparent)]
 pub struct Type<T: TypeTag> {
-    opaque: PhantomOpaque,
-    marker: PhantomData<fn(T) -> T>,
+    _opaque: PhantomOpaque,
+    _marker: PhantomData<fn(T) -> T>,
 }
 
 unsafe impl<T: TypeTag> Opaque for Type<T> {

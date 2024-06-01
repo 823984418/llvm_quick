@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 
 [dependencies.llvm-sys]
-version = "~180.0.0"
+version = "^180.0.0"
 
 [dev-dependencies.inkwell]
 git = "https://github.com/TheDan64/inkwell"

@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 
 use llvm_sys::analysis::*;
 use llvm_sys::core::*;
-use llvm_sys::LLVMTypeKind;
+use llvm_sys::*;
 
 use crate::opaque::Opaque;
 use crate::type_tag::{any, type_check_kind, TagTuple, TypeTag};

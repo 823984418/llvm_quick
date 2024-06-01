@@ -1,11 +1,11 @@
-use llvm_sys::core::{LLVMGetDiagInfoDescription, LLVMGetDiagInfoSeverity};
-use llvm_sys::{LLVMDiagnosticInfo, LLVMDiagnosticSeverity};
+use llvm_sys::core::*;
+use llvm_sys::*;
 
 use crate::message::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
 
 pub struct DiagnosticInfo {
-    opaque: PhantomOpaque,
+    _opaque: PhantomOpaque,
 }
 
 unsafe impl Opaque for DiagnosticInfo {

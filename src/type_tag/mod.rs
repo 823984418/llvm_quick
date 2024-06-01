@@ -1,11 +1,12 @@
 use std::fmt::Formatter;
 
-use llvm_sys::core::LLVMGetTypeKind;
-use llvm_sys::LLVMTypeKind;
+use llvm_sys::core::*;
+use llvm_sys::*;
 
 use crate::opaque::Opaque;
 use crate::type_tag::array_tag::array_sized;
 use crate::type_tag::float_tag::{bfloat, double, float, fp128, half, ppc_fp128, x86_fp80};
+use crate::type_tag::function_tag::fun;
 use crate::type_tag::integer_tag::int;
 use crate::type_tag::pointer_tag::ptr_in;
 use crate::types::Type;
@@ -55,6 +56,10 @@ impl InstanceTypeTag for ppc_fp128 {}
 impl InstanceTypeTag for bfloat {}
 impl<const N: u32> InstanceTypeTag for int<N> {}
 impl<const ADDRESS_SPACE: u32> InstanceTypeTag for ptr_in<ADDRESS_SPACE> {}
+impl<Args: InstanceTagTuple, Output: InstanceTypeTag, const VAR: bool> InstanceTypeTag
+    for fun<Args, Output, VAR>
+{
+}
 
 pub trait IntMathTypeTag: InstanceTypeTag {}
 impl<const N: u32> IntMathTypeTag for int<N> {}
@@ -142,6 +147,8 @@ pub trait TagTuple: Copy + 'static {
     fn value_from_slice<'s>(slice: &[&'s Value<any>]) -> Option<Self::Values<'s>>;
 }
 
+pub trait InstanceTagTuple: TagTuple {}
+
 pub trait TypeTuple<'s>: Sized {
     type Tags: TagTuple<Types<'s> = Self>;
 }
@@ -202,6 +209,8 @@ macro_rules! impl_tuple {
                 }
             }
         }
+
+        impl<$($arg: InstanceTypeTag),*> InstanceTagTuple for ($($arg,)*) {}
 
         impl<'s, $($arg: TypeTag),*> TypeTuple<'s> for ($(&'s Type<$arg>,)*) {
             type Tags = ($($arg,)*);

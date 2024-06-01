@@ -1,7 +1,7 @@
 use std::ffi::CStr;
 
 use llvm_sys::core::*;
-use llvm_sys::LLVMContext;
+use llvm_sys::*;
 
 use crate::basic_block::BasicBlock;
 use crate::builder::Builder;
@@ -18,7 +18,7 @@ use crate::values::Value;
 
 #[repr(transparent)]
 pub struct Context {
-    opaque: PhantomOpaque,
+    _opaque: PhantomOpaque,
 }
 
 unsafe impl Opaque for Context {

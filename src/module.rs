@@ -3,9 +3,9 @@ use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 use std::ptr::null_mut;
 
-use llvm_sys::analysis::{LLVMVerifierFailureAction, LLVMVerifyModule};
+use llvm_sys::analysis::*;
 use llvm_sys::core::*;
-use llvm_sys::LLVMModule;
+use llvm_sys::*;
 
 use crate::context::Context;
 use crate::message::Message;
@@ -18,8 +18,8 @@ use crate::values::Value;
 
 #[repr(transparent)]
 pub struct Module<'s> {
-    opaque: PhantomOpaque,
-    marker: PhantomData<&'s Context>,
+    _opaque: PhantomOpaque,
+    _marker: PhantomData<&'s Context>,
 }
 
 unsafe impl<'s> Opaque for Module<'s> {

@@ -1,34 +1,38 @@
-pub use llvm_sys::LLVMAtomicOrdering;
-pub use llvm_sys::LLVMAtomicRMWBinOp;
-pub use llvm_sys::LLVMCallConv;
-pub use llvm_sys::LLVMDLLStorageClass;
-pub use llvm_sys::LLVMDiagnosticSeverity;
-pub use llvm_sys::LLVMInlineAsmDialect;
-pub use llvm_sys::LLVMIntPredicate;
-pub use llvm_sys::LLVMLandingPadClauseTy;
-pub use llvm_sys::LLVMLinkage;
-pub use llvm_sys::LLVMModuleFlagBehavior;
-pub use llvm_sys::LLVMOpcode;
-pub use llvm_sys::LLVMRealPredicate;
-pub use llvm_sys::LLVMTailCallKind;
-pub use llvm_sys::LLVMThreadLocalMode;
-pub use llvm_sys::LLVMTypeKind;
-pub use llvm_sys::LLVMUnnamedAddr;
-pub use llvm_sys::LLVMValueKind;
-pub use llvm_sys::LLVMVisibility;
+pub use llvm_sys;
+use llvm_sys::core::*;
 
 pub mod basic_block;
 pub mod builder;
 pub mod context;
 pub mod diagnostic_info;
+pub mod error;
+pub mod error_handle;
 pub mod execution_engine;
-pub mod llvm;
 pub mod memory_buffer;
 pub mod message;
 pub mod metadata;
 pub mod module;
 pub mod opaque;
 pub mod owning;
+pub mod support;
+pub mod target_machine;
 pub mod type_tag;
 pub mod types;
 pub mod values;
+
+/// Return the major, minor, and patch version of LLVM.
+pub fn get_version() -> (u32, u32, u32) {
+    let mut r = (0, 0, 0);
+    unsafe { LLVMGetVersion(&mut r.0, &mut r.1, &mut r.2) };
+    r
+}
+
+/// Deallocate and destroy all ManagedStatic variables.
+pub unsafe fn shutdown() {
+    unsafe { LLVMShutdown() }
+}
+
+/// Check whether LLVM is executing in thread-safe mode or not.
+pub fn is_multithreaded() -> bool {
+    unsafe { LLVMIsMultithreaded() != 0 }
+}

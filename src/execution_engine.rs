@@ -4,7 +4,7 @@ use std::mem::size_of;
 use std::ptr::null_mut;
 
 use llvm_sys::execution_engine::*;
-use llvm_sys::target_machine::LLVMCodeModel;
+use llvm_sys::target_machine::*;
 
 use crate::context::Context;
 use crate::message::Message;
@@ -24,8 +24,8 @@ pub fn link_in_interpreter() {
 
 #[repr(transparent)]
 pub struct ExecutionEngine<'s> {
-    opaque: PhantomOpaque,
-    marker: PhantomData<&'s Context>,
+    _opaque: PhantomOpaque,
+    _marker: PhantomData<&'s Context>,
 }
 
 unsafe impl<'s> Opaque for ExecutionEngine<'s> {
@@ -146,8 +146,8 @@ impl<'s> Default for MCJITCompilerOptions<'s> {
 }
 
 pub struct McJitMemoryManager<'s> {
-    opaque: PhantomOpaque,
-    marker: PhantomData<&'s Context>,
+    _opaque: PhantomOpaque,
+    _marker: PhantomData<&'s Context>,
 }
 
 unsafe impl<'s> Opaque for McJitMemoryManager<'s> {

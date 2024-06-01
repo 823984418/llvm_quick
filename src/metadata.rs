@@ -3,7 +3,7 @@ use llvm_sys::LLVMOpaqueMetadata;
 use crate::opaque::{Opaque, PhantomOpaque};
 
 pub struct Metadata {
-    opaque: PhantomOpaque,
+    _opaque: PhantomOpaque,
 }
 
 unsafe impl Opaque for Metadata {

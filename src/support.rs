@@ -1,19 +1,11 @@
 use std::ffi::CStr;
 
-use llvm_sys::core::{LLVMGetVersion, LLVMIsMultithreaded, LLVMShutdown};
 use llvm_sys::support::*;
 
 /// This functions permanently adds the symbol symbolName with the value symbolValue.
 /// These symbols are searched before any libraries.
 pub fn add_symbol(name: &CStr, value: *mut ()) {
     unsafe { LLVMAddSymbol(name.as_ptr(), value.cast()) }
-}
-
-/// Return the major, minor, and patch version of LLVM.
-pub fn get_version() -> (u32, u32, u32) {
-    let mut r = (0, 0, 0);
-    unsafe { LLVMGetVersion(&mut r.0, &mut r.1, &mut r.2) };
-    r
 }
 
 /// This function permanently loads the dynamic library at the given path.
@@ -36,14 +28,4 @@ pub fn parse_command_line_options(args: &[*const u8], over: &CStr) {
 /// If it is found, the address of that symbol is returned. If not, null is returned.
 pub fn search_for_address_of_symbol(name: &CStr) -> *mut () {
     unsafe { LLVMSearchForAddressOfSymbol(name.as_ptr()).cast() }
-}
-
-/// Deallocate and destroy all ManagedStatic variables.
-pub unsafe fn shutdown() {
-    unsafe { LLVMShutdown() }
-}
-
-/// Check whether LLVM is executing in thread-safe mode or not.
-pub fn is_multithreaded() -> bool {
-    unsafe { LLVMIsMultithreaded() != 0 }
 }

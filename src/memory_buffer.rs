@@ -2,7 +2,6 @@ use std::ffi::CStr;
 use std::ptr::null_mut;
 
 use llvm_sys::core::*;
-use llvm_sys::prelude::LLVMBool;
 use llvm_sys::LLVMMemoryBuffer;
 
 use crate::message::Message;
@@ -10,7 +9,7 @@ use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{Dispose, Owning};
 
 pub struct MemoryBuffer {
-    opaque: PhantomOpaque,
+    _opaque: PhantomOpaque,
 }
 
 unsafe impl Opaque for MemoryBuffer {
@@ -45,7 +44,7 @@ impl MemoryBuffer {
                 data.cast(),
                 data.len(),
                 name.as_ptr(),
-                requires_null_terminator as LLVMBool,
+                requires_null_terminator as _,
             );
             Owning::from_raw(ptr)
         }

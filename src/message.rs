@@ -4,7 +4,7 @@ use std::fmt::{Debug, Formatter};
 use std::ops::Deref;
 use std::ptr::NonNull;
 
-use llvm_sys::core::{LLVMCreateMessage, LLVMDisposeMessage};
+use llvm_sys::core::*;
 
 pub struct Message {
     ptr: NonNull<CStr>,

@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
-use llvm_sys::core::{LLVMGetArrayLength2, LLVMGetElementType, LLVMGetTypeKind};
-use llvm_sys::LLVMTypeKind;
+use llvm_sys::core::*;
+use llvm_sys::*;
 
 use crate::opaque::Opaque;
 use crate::type_tag::{any, TypeTag};

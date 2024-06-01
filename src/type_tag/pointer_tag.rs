@@ -1,7 +1,7 @@
 use std::fmt::Formatter;
 
-use llvm_sys::core::LLVMGetPointerAddressSpace;
-use llvm_sys::LLVMTypeKind;
+use llvm_sys::core::*;
+use llvm_sys::*;
 
 use crate::opaque::Opaque;
 use crate::type_tag::{any, type_check_kind, TypeTag};
