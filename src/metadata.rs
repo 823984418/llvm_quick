@@ -1,4 +1,4 @@
-use llvm_sys::LLVMOpaqueMetadata;
+use llvm_sys::*;
 
 use crate::opaque::{Opaque, PhantomOpaque};
 
@@ -9,3 +9,5 @@ pub struct Metadata {
 unsafe impl Opaque for Metadata {
     type Inner = LLVMOpaqueMetadata;
 }
+
+// TODO: more

@@ -1,5 +1,5 @@
 use llvm_sys::core::*;
-use llvm_sys::LLVMBasicBlock;
+use llvm_sys::*;
 
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::type_tag::label;

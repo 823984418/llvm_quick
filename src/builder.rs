@@ -504,4 +504,6 @@ impl<'s> Builder<'s> {
     pub fn not<T: IntMathTypeTag>(&self, v: &'s Value<T>, name: &CStr) -> &'s Value<T> {
         unsafe { Value::from_ref(LLVMBuildNot(self.as_ptr(), v.as_ptr(), name.as_ptr())) }
     }
+
+    // TODO: more
 }

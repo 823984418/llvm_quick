@@ -13,6 +13,10 @@ pub struct PhantomOpaque {
 pub unsafe trait Opaque: Sized {
     type Inner;
 
+    unsafe fn try_from_ref<'s>(ptr: *mut Self::Inner) -> Option<&'s Self> {
+        unsafe { (ptr as *mut Self).as_ref() }
+    }
+
     unsafe fn from_ref<'s>(ptr: *mut Self::Inner) -> &'s Self {
         unsafe { &*(ptr as *mut Self) }
     }
