@@ -12,7 +12,7 @@ use crate::message::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::Dispose;
 use crate::type_tag::any;
-use crate::type_tag::function::FunTypeTag;
+use crate::type_tag::function_tag::FunTypeTag;
 use crate::types::Type;
 use crate::values::Value;
 

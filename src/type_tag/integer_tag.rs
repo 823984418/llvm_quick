@@ -1,9 +1,10 @@
-use crate::opaque::Opaque;
-use llvm_sys::core::LLVMGetIntTypeWidth;
-use llvm_sys::LLVMTypeKind;
 use std::fmt::Formatter;
 
-use crate::type_tag::{any, type_check_kind, InstanceTypeTag, MathTypeTag, TypeTag};
+use llvm_sys::core::LLVMGetIntTypeWidth;
+use llvm_sys::LLVMTypeKind;
+
+use crate::opaque::Opaque;
+use crate::type_tag::{any, type_check_kind, TypeTag};
 use crate::types::Type;
 
 pub trait IntTypeTag: TypeTag {
@@ -57,9 +58,6 @@ impl<const N: u32> TypeTag for int<N> {
     }
 }
 
-impl<const N: u32> InstanceTypeTag for int<N> {}
-impl<const N: u32> MathTypeTag for int<N> {}
-
 impl<const N: u32> IntTypeTag for int<N> {
     fn type_int_width(_ty: &Type<Self>) -> u32 {
         N
@@ -75,3 +73,21 @@ impl<T: IntTypeTag> Type<T> {
         unsafe { self.cast_unchecked() }
     }
 }
+
+#[allow(non_camel_case_types)]
+pub type int1 = int<1>;
+
+#[allow(non_camel_case_types)]
+pub type int8 = int<8>;
+
+#[allow(non_camel_case_types)]
+pub type int16 = int<16>;
+
+#[allow(non_camel_case_types)]
+pub type int32 = int<32>;
+
+#[allow(non_camel_case_types)]
+pub type int64 = int<64>;
+
+#[allow(non_camel_case_types)]
+pub type int128 = int<128>;

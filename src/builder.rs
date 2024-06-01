@@ -9,7 +9,8 @@ use crate::context::Context;
 use crate::metadata::Metadata;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::Dispose;
-use crate::type_tag::{void, MathTypeTag, TypeTag};
+use crate::type_tag::integer_tag::{int, IntTypeTag};
+use crate::type_tag::{label, void, FloatMathTypeTag, IntMathTypeTag, TypeTag};
 use crate::values::Value;
 
 #[repr(transparent)]
@@ -72,7 +73,7 @@ impl<'s> Builder<'s> {
         unsafe { LLVMAddMetadataToInst(self.as_ptr(), inst.as_ptr()) };
     }
 
-    /// Get the dafult floating-point math metadata for a given builder.
+    /// Get the default floating-point math metadata for a given builder.
     pub fn get_default_fp_math_tag(&self) -> &'s Metadata {
         unsafe { Metadata::from_ref(LLVMBuilderGetDefaultFPMathTag(self.as_ptr())) }
     }
@@ -82,15 +83,15 @@ impl<'s> Builder<'s> {
         unsafe { LLVMBuilderSetDefaultFPMathTag(self.as_ptr(), fp_math_tag.as_ptr()) };
     }
 
-    pub fn build_return_void(&self) -> &'s Value<void> {
+    pub fn return_void(&self) -> &'s Value<void> {
         unsafe { Value::from_ref(LLVMBuildRetVoid(self.as_ptr())) }
     }
 
-    pub fn build_return<T: TypeTag>(&self, value: &'s Value<T>) -> &'s Value<void> {
+    pub fn return_value<T: TypeTag>(&self, value: &'s Value<T>) -> &'s Value<void> {
         unsafe { Value::from_ref(LLVMBuildRet(self.as_ptr(), value.as_ptr())) }
     }
 
-    pub fn build_aggregate_ret<'a, T: TypeTag>(
+    pub fn return_aggregate<'a, T: TypeTag>(
         &self,
         ret_vals: &'a [&'s Value<T>],
     ) -> &'s Value<void> {
@@ -103,10 +104,11 @@ impl<'s> Builder<'s> {
         }
     }
 
-    pub fn build_br(&self, dest: &'s BasicBlock) -> &'s Value<void> {
+    pub fn branch(&self, dest: &'s BasicBlock) -> &'s Value<void> {
         unsafe { Value::from_ref(LLVMBuildBr(self.as_ptr(), dest.as_ptr())) }
     }
-    pub fn build_cond_br<T: TypeTag>(
+
+    pub fn cond_branch<T: IntTypeTag>(
         &self,
         cond: &'s Value<T>,
         then: &'s BasicBlock,
@@ -122,23 +124,38 @@ impl<'s> Builder<'s> {
         }
     }
 
-    pub fn build_switch<T>(
+    pub fn switch<'a, const N: u32>(
         &self,
-        v: &'s Value<T>,
+        v: &'s Value<int<N>>,
         els: &BasicBlock,
-        num_cases: u32,
+        cases: &'a [(&'s Value<int<N>>, &'s BasicBlock)],
     ) -> &'s Value<void> {
         unsafe {
-            Value::from_ref(LLVMBuildSwitch(
-                self.as_ptr(),
-                v.as_prt(),
-                els.as_ptr(),
-                num_cases,
-            ))
+            let value =
+                LLVMBuildSwitch(self.as_ptr(), v.as_ptr(), els.as_ptr(), cases.len() as u32);
+            for &(case, basic_block) in cases {
+                LLVMAddCase(value, case.as_ptr(), basic_block.as_ptr());
+            }
+            Value::from_ref(value)
         }
     }
 
-    pub fn build_add<T: MathTypeTag>(
+    pub fn indirect_branch<'a>(
+        &self,
+        addr: &'s Value<label>,
+        destinations: &'a [&'s BasicBlock],
+    ) -> &'s Value<void> {
+        unsafe {
+            let value =
+                LLVMBuildIndirectBr(self.as_ptr(), addr.as_ptr(), destinations.len() as u32);
+            for &destination in destinations {
+                LLVMAddDestination(value, destination.as_ptr());
+            }
+            Value::from_ref(value)
+        }
+    }
+
+    pub fn iadd<T: IntMathTypeTag>(
         &self,
         lhs: &'s Value<T>,
         rhs: &'s Value<T>,
@@ -146,6 +163,18 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildAdd(self.as_ptr(), lhs.as_ptr(), rhs.as_ptr(), name.as_ptr());
+            Value::from_ref(ptr)
+        }
+    }
+
+    pub fn fadd<T: FloatMathTypeTag>(
+        &self,
+        lhs: &'s Value<T>,
+        rhs: &'s Value<T>,
+        name: &CStr,
+    ) -> &'s Value<T> {
+        unsafe {
+            let ptr = LLVMBuildFAdd(self.as_ptr(), lhs.as_ptr(), rhs.as_ptr(), name.as_ptr());
             Value::from_ref(ptr)
         }
     }

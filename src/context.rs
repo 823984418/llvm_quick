@@ -8,9 +8,10 @@ use crate::builder::Builder;
 use crate::module::Module;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{Dispose, Owning};
-use crate::type_tag::function::FunTypeTag;
-use crate::type_tag::integer::int;
-use crate::type_tag::pointer::{ptr, ptr_in};
+use crate::type_tag::float_tag::float;
+use crate::type_tag::function_tag::FunTypeTag;
+use crate::type_tag::integer_tag::{int, int1, int128, int16, int32, int64, int8};
+use crate::type_tag::pointer_tag::{ptr, ptr_in};
 use crate::type_tag::void;
 use crate::types::Type;
 use crate::values::Value;
@@ -42,27 +43,32 @@ impl Context {
     }
 
     /// Obtain an integer type from a context with specified bit width.
-    pub fn i8_type(&self) -> &Type<int<8>> {
+    pub fn i1_type(&self) -> &Type<int1> {
+        unsafe { Type::from_ref(LLVMInt1TypeInContext(self.as_ptr())) }
+    }
+
+    /// Obtain an integer type from a context with specified bit width.
+    pub fn i8_type(&self) -> &Type<int8> {
         unsafe { Type::from_ref(LLVMInt8TypeInContext(self.as_ptr())) }
     }
 
     /// Obtain an integer type from a context with specified bit width.
-    pub fn i16_type(&self) -> &Type<int<16>> {
+    pub fn i16_type(&self) -> &Type<int16> {
         unsafe { Type::from_ref(LLVMInt16TypeInContext(self.as_ptr())) }
     }
 
     /// Obtain an integer type from a context with specified bit width.
-    pub fn i32_type(&self) -> &Type<int<32>> {
+    pub fn i32_type(&self) -> &Type<int32> {
         unsafe { Type::from_ref(LLVMInt32TypeInContext(self.as_ptr())) }
     }
 
     /// Obtain an integer type from a context with specified bit width.
-    pub fn i64_type(&self) -> &Type<int<64>> {
+    pub fn i64_type(&self) -> &Type<int64> {
         unsafe { Type::from_ref(LLVMInt64TypeInContext(self.as_ptr())) }
     }
 
     /// Obtain an integer type from a context with specified bit width.
-    pub fn i128_type(&self) -> &Type<int<128>> {
+    pub fn i128_type(&self) -> &Type<int128> {
         unsafe { Type::from_ref(LLVMInt128TypeInContext(self.as_ptr())) }
     }
 
@@ -84,6 +90,11 @@ impl Context {
     /// Create a void type in a context.
     pub fn void_type(&self) -> &Type<void> {
         unsafe { Type::from_ref(LLVMVoidTypeInContext(self.as_ptr())) }
+    }
+
+    /// Create a float type in a context.
+    pub fn float_type(&self) -> &Type<float> {
+        unsafe { Type::from_ref(LLVMFloatTypeInContext(self.as_ptr())) }
     }
 
     /// Create a new, empty module in a specific context.

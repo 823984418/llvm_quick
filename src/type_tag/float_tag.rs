@@ -1,7 +1,9 @@
 use llvm_sys::LLVMTypeKind;
 
-use crate::type_tag::{any, type_check_kind, InstanceTypeTag, MathTypeTag, TypeTag};
+use crate::type_tag::{any, type_check_kind, InstanceTypeTag, TypeTag};
 use crate::types::Type;
+
+pub trait FloatTypeTag: InstanceTypeTag {}
 
 #[derive(Copy, Clone)]
 #[allow(non_camel_case_types)]
@@ -17,8 +19,7 @@ impl TypeTag for half {
     }
 }
 
-impl InstanceTypeTag for half {}
-impl MathTypeTag for half {}
+impl FloatTypeTag for half {}
 
 #[derive(Copy, Clone)]
 #[allow(non_camel_case_types)]
@@ -34,8 +35,7 @@ impl TypeTag for float {
     }
 }
 
-impl InstanceTypeTag for float {}
-impl MathTypeTag for float {}
+impl FloatTypeTag for float {}
 
 #[derive(Copy, Clone)]
 #[allow(non_camel_case_types)]
@@ -51,8 +51,7 @@ impl TypeTag for double {
     }
 }
 
-impl InstanceTypeTag for double {}
-impl MathTypeTag for double {}
+impl FloatTypeTag for double {}
 
 #[derive(Copy, Clone)]
 #[allow(non_camel_case_types)]
@@ -68,8 +67,7 @@ impl TypeTag for x86_fp80 {
     }
 }
 
-impl InstanceTypeTag for x86_fp80 {}
-impl MathTypeTag for x86_fp80 {}
+impl FloatTypeTag for x86_fp80 {}
 
 #[derive(Copy, Clone)]
 #[allow(non_camel_case_types)]
@@ -85,8 +83,7 @@ impl TypeTag for fp128 {
     }
 }
 
-impl InstanceTypeTag for fp128 {}
-impl MathTypeTag for fp128 {}
+impl FloatTypeTag for fp128 {}
 
 #[derive(Copy, Clone)]
 #[allow(non_camel_case_types)]
@@ -102,8 +99,7 @@ impl TypeTag for ppc_fp128 {
     }
 }
 
-impl InstanceTypeTag for ppc_fp128 {}
-impl MathTypeTag for ppc_fp128 {}
+impl FloatTypeTag for ppc_fp128 {}
 
 #[derive(Copy, Clone)]
 #[allow(non_camel_case_types)]
@@ -119,5 +115,4 @@ impl TypeTag for bfloat {
     }
 }
 
-impl InstanceTypeTag for bfloat {}
-impl MathTypeTag for bfloat {}
+impl FloatTypeTag for bfloat {}

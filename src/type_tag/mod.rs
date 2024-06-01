@@ -4,14 +4,18 @@ use llvm_sys::core::LLVMGetTypeKind;
 use llvm_sys::LLVMTypeKind;
 
 use crate::opaque::Opaque;
+use crate::type_tag::array_tag::array_sized;
+use crate::type_tag::float_tag::{bfloat, double, float, fp128, half, ppc_fp128, x86_fp80};
+use crate::type_tag::integer_tag::int;
+use crate::type_tag::pointer_tag::ptr_in;
 use crate::types::Type;
 use crate::values::Value;
 
-pub mod array;
-pub mod float;
-pub mod function;
-pub mod integer;
-pub mod pointer;
+pub mod array_tag;
+pub mod float_tag;
+pub mod function_tag;
+pub mod integer_tag;
+pub mod pointer_tag;
 
 pub(crate) unsafe fn type_check_kind<T: TypeTag>(
     ty: &Type<any>,
@@ -39,8 +43,30 @@ pub trait TypeTag: Copy + 'static {
 }
 
 pub trait InstanceTypeTag: TypeTag {}
+impl InstanceTypeTag for void {}
+impl InstanceTypeTag for label {}
+impl<T: InstanceTypeTag, const N: u64> InstanceTypeTag for array_sized<T, N> {}
+impl InstanceTypeTag for half {}
+impl InstanceTypeTag for float {}
+impl InstanceTypeTag for double {}
+impl InstanceTypeTag for x86_fp80 {}
+impl InstanceTypeTag for fp128 {}
+impl InstanceTypeTag for ppc_fp128 {}
+impl InstanceTypeTag for bfloat {}
+impl<const N: u32> InstanceTypeTag for int<N> {}
+impl<const ADDRESS_SPACE: u32> InstanceTypeTag for ptr_in<ADDRESS_SPACE> {}
 
-pub trait MathTypeTag: InstanceTypeTag {}
+pub trait IntMathTypeTag: InstanceTypeTag {}
+impl<const N: u32> IntMathTypeTag for int<N> {}
+
+pub trait FloatMathTypeTag: InstanceTypeTag {}
+impl FloatMathTypeTag for half {}
+impl FloatMathTypeTag for float {}
+impl FloatMathTypeTag for double {}
+impl FloatMathTypeTag for x86_fp80 {}
+impl FloatMathTypeTag for fp128 {}
+impl FloatMathTypeTag for ppc_fp128 {}
+impl FloatMathTypeTag for bfloat {}
 
 #[derive(Copy, Clone)]
 #[allow(non_camel_case_types)]
@@ -74,8 +100,6 @@ impl TypeTag for void {
     }
 }
 
-impl InstanceTypeTag for void {}
-
 #[derive(Copy, Clone)]
 #[allow(non_camel_case_types)]
 pub struct label {}
@@ -93,8 +117,6 @@ impl TypeTag for label {
         unsafe { type_check_kind(ty, LLVMTypeKind::LLVMLabelTypeKind) }
     }
 }
-
-impl InstanceTypeTag for label {}
 
 pub trait TagTuple: Copy + 'static {
     const COUNT: usize;

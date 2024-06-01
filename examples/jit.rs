@@ -15,7 +15,7 @@ use llvm_quick::execution_engine::{link_in_mc_jit, ExecutionEngine, MCJITCompile
 use llvm_quick::opaque::Opaque;
 use llvm_quick::owning::Owning;
 
-type SumFunc = unsafe extern "C" fn(u64, u64, u64) -> u64;
+type SumFunc = unsafe extern "C" fn(i64, i64, i64) -> i64;
 
 struct CodeGen<'ctx> {
     context: &'ctx Context,
@@ -34,10 +34,10 @@ impl<'ctx> CodeGen<'ctx> {
 
         let (x, y, z) = function.get_params();
 
-        let sum = self.builder.build_add(x, y, c"sum");
-        let sum = self.builder.build_add(sum, z, c"sum");
+        let sum = self.builder.iadd(x, y, c"sum");
+        let sum = self.builder.iadd(sum, z, c"sum");
 
-        self.builder.build_return(sum);
+        self.builder.return_value(sum);
 
         println!("{:?}", module);
         println!("{:?}", function.get_name());
@@ -88,9 +88,9 @@ fn main() {
     let sum: Option<SumFunc> = unsafe { std::mem::transmute(f as usize) };
     let sum = sum.unwrap();
 
-    let x = 1u64;
-    let y = 2u64;
-    let z = 3u64;
+    let x = 1i64;
+    let y = 2i64;
+    let z = 3i64;
 
     unsafe {
         println!("{} + {} + {} = {}", x, y, z, sum(x, y, z));

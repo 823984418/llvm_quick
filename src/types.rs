@@ -7,8 +7,8 @@ use llvm_sys::{LLVMType, LLVMTypeKind};
 use crate::context::Context;
 use crate::message::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
-use crate::type_tag::array::{array, array_sized};
-use crate::type_tag::function::{fun, fun_any};
+use crate::type_tag::array_tag::{array, array_sized};
+use crate::type_tag::function_tag::{fun, fun_any};
 use crate::type_tag::{any, TagTuple, TypeTag, TypeTuple};
 
 #[repr(transparent)]
