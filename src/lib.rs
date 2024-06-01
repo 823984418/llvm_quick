@@ -1,6 +1,7 @@
 pub use llvm_sys;
 use llvm_sys::core::*;
 
+pub mod analysis;
 pub mod basic_block;
 pub mod builder;
 pub mod context;

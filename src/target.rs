@@ -4,7 +4,6 @@ use llvm_sys::LLVMPassManager;
 
 use crate::context::Context;
 use crate::message::Message;
-use crate::module::Module;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::Dispose;
 use crate::type_tag::integer_tag::int_any;
@@ -126,24 +125,12 @@ impl TargetData {
     // Todo: LLVMOffsetOfElement
 }
 
-impl Context {}
-
 pub struct TargetLibraryInfo {
     _opaque: PhantomOpaque,
 }
 
 unsafe impl Opaque for TargetLibraryInfo {
     type Inner = LLVMOpaqueTargetLibraryInfotData;
-}
-
-impl<'s> Module<'s> {
-    pub fn get_data_layout(&self) -> &TargetData {
-        unsafe { TargetData::from_ref(LLVMGetModuleDataLayout(self.as_ptr())) }
-    }
-
-    pub fn set_data_layout(&self, v: &TargetData) {
-        unsafe { LLVMSetModuleDataLayout(self.as_ptr(), v.as_ptr()) };
-    }
 }
 
 pub struct PassManager {

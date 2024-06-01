@@ -1,16 +1,20 @@
 use std::ffi::CStr;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
-use std::ptr::null_mut;
 
-use llvm_sys::analysis::*;
 use llvm_sys::core::*;
+use llvm_sys::target::{LLVMGetModuleDataLayout, LLVMSetModuleDataLayout};
+use llvm_sys::transforms::pass_builder::LLVMRunPasses;
 use llvm_sys::*;
 
 use crate::context::Context;
+use crate::error::Error;
 use crate::message::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
-use crate::owning::Dispose;
+use crate::owning::{Dispose, Owning};
+use crate::pass_builder::PassBuilderOptions;
+use crate::target::TargetData;
+use crate::target_machine::TargetMachine;
 use crate::type_tag::any;
 use crate::type_tag::function_tag::FunTypeTag;
 use crate::types::Type;
@@ -58,13 +62,27 @@ impl<'s> Module<'s> {
         unsafe { Message::from_raw(LLVMPrintModuleToString(self.as_ptr())) }
     }
 
-    pub fn verify(&self, action: LLVMVerifierFailureAction) -> Result<(), Message> {
+    pub fn get_data_layout(&self) -> &TargetData {
+        unsafe { TargetData::from_ref(LLVMGetModuleDataLayout(self.as_ptr())) }
+    }
+
+    pub fn set_data_layout(&self, v: &TargetData) {
+        unsafe { LLVMSetModuleDataLayout(self.as_ptr(), v.as_ptr()) };
+    }
+
+    pub fn run_pass(
+        &self,
+        passes: &CStr,
+        target_machine: &TargetMachine,
+        options: &PassBuilderOptions,
+    ) -> Result<(), Owning<Error>> {
         unsafe {
-            let mut err = null_mut();
-            if LLVMVerifyModule(self.as_ptr(), action, &mut err) != 0 {
-                return Err(Message::from_raw(err));
-            }
-            Ok(())
+            Error::check(LLVMRunPasses(
+                self.as_ptr(),
+                passes.as_ptr(),
+                target_machine.as_ptr(),
+                options.as_ptr(),
+            ))
         }
     }
 }

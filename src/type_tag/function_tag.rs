@@ -1,7 +1,6 @@
 use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
 
-use llvm_sys::analysis::*;
 use llvm_sys::core::*;
 use llvm_sys::*;
 
@@ -270,18 +269,6 @@ impl<T: FunTypeTag> Value<T> {
             buffer.set_len(count);
             buffer
         }
-    }
-
-    pub fn view_cfg(&self) {
-        unsafe { LLVMViewFunctionCFG(self.as_ptr()) }
-    }
-
-    pub fn view_cfg_only(&self) {
-        unsafe { LLVMViewFunctionCFGOnly(self.as_ptr()) }
-    }
-
-    pub fn verify(&self, action: LLVMVerifierFailureAction) -> bool {
-        unsafe { LLVMVerifyFunction(self.as_ptr(), action) != 0 }
     }
 }
 
