@@ -1,10 +1,11 @@
-use std::ffi::CStr;
+use std::ffi::{c_void, CStr};
 
 use llvm_sys::core::*;
 use llvm_sys::*;
 
 use crate::basic_block::BasicBlock;
 use crate::builder::Builder;
+use crate::diagnostic::DiagnosticInfo;
 use crate::module::Module;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{Dispose, Owning};
@@ -40,6 +41,24 @@ impl Context {
     /// Create a new context.
     pub fn create() -> Owning<Self> {
         unsafe { Owning::from_raw(LLVMContextCreate() as _) }
+    }
+
+    pub fn set_diagnostic_handler_raw(&self, handle: LLVMDiagnosticHandler, handle_ctx: *mut ()) {
+        unsafe { LLVMContextSetDiagnosticHandler(self.as_ptr(), handle, handle_ctx as _) };
+    }
+
+    pub fn set_diagnostic_handler<T: Fn(&DiagnosticInfo) + 'static>(&self, handle: T) {
+        extern "C" fn handler_raw<T: Fn(&DiagnosticInfo) + 'static>(
+            info: *mut LLVMDiagnosticInfo,
+            handle: *mut c_void,
+        ) {
+            let handle = handle as *mut T;
+            unsafe { (*handle)(DiagnosticInfo::from_ref(info)) }
+        }
+        self.set_diagnostic_handler_raw(
+            Some(handler_raw::<T>),
+            Box::into_raw(Box::new(handle)) as _,
+        );
     }
 
     /// Obtain an integer type from a context with specified bit width.

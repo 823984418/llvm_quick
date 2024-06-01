@@ -1,8 +1,3 @@
-use std::ffi::{c_void, CStr};
-use std::ptr::null_mut;
-
-use llvm_sys::core::{LLVMContextSetDiagnosticHandler, LLVMGetDiagInfoDescription};
-use llvm_sys::prelude::LLVMDiagnosticInfoRef;
 use llvm_sys::target::{
     LLVM_InitializeNativeAsmParser, LLVM_InitializeNativeAsmPrinter,
     LLVM_InitializeNativeDisassembler, LLVM_InitializeNativeTarget,
@@ -12,7 +7,6 @@ use llvm_sys::target_machine::LLVMCodeModel;
 use llvm_quick::builder::Builder;
 use llvm_quick::context::Context;
 use llvm_quick::execution_engine::{link_in_mc_jit, ExecutionEngine, MCJITCompilerOptions};
-use llvm_quick::opaque::Opaque;
 use llvm_quick::owning::Owning;
 
 type SumFunc = unsafe extern "C" fn(i64, i64, i64) -> i64;
@@ -67,16 +61,10 @@ fn main() {
 
     let context = Context::create();
 
-    unsafe {
-        extern "C" fn handle(info: LLVMDiagnosticInfoRef, _this: *mut c_void) {
-            unsafe {
-                let des = LLVMGetDiagInfoDescription(info);
-                println!("{}", CStr::from_ptr(des).to_str().unwrap());
-            }
-        }
+    context.set_diagnostic_handler(|info| {
+        println!("{:?}", info.get_description());
+    });
 
-        LLVMContextSetDiagnosticHandler(context.as_ptr(), Some(handle), null_mut());
-    }
     let codegen = CodeGen {
         context: &context,
         builder: context.create_builder(),
