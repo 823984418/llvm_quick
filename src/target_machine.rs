@@ -41,6 +41,7 @@ impl Dispose for TargetMachineOptions {
     }
 }
 
+#[repr(transparent)]
 pub struct Target {
     _opaque: PhantomOpaque,
 }

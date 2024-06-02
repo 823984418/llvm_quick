@@ -6,6 +6,7 @@ pub mod error;
 pub mod error_handling;
 pub mod execution_engine;
 pub mod opaque;
+pub mod orc2;
 pub mod owning;
 pub mod support;
 pub mod target;

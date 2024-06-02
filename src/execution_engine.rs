@@ -410,7 +410,7 @@ impl McJitMemoryManager {
         }
 
         Self::create_simple_raw(
-            opaque as *mut c_void,
+            opaque as _,
             allocate_code_section_raw::<T>,
             allocate_data_section_raw::<T>,
             finalize_memory_raw::<T>,
