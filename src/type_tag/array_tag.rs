@@ -3,9 +3,9 @@ use std::marker::PhantomData;
 use llvm_sys::core::*;
 use llvm_sys::*;
 
+use crate::core::types::Type;
 use crate::opaque::Opaque;
 use crate::type_tag::{any, TypeTag};
-use crate::types::Type;
 
 pub trait ArrayTypeTag: TypeTag {
     type ElementType: TypeTag;

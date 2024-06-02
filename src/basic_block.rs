@@ -1,9 +1,9 @@
 use llvm_sys::core::*;
 use llvm_sys::*;
 
+use crate::core::values::Value;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::type_tag::label;
-use crate::values::Value;
 
 #[repr(transparent)]
 pub struct BasicBlock {

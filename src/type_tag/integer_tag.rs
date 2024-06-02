@@ -3,9 +3,9 @@ use std::fmt::Formatter;
 use llvm_sys::core::*;
 use llvm_sys::*;
 
+use crate::core::types::Type;
 use crate::opaque::Opaque;
 use crate::type_tag::{any, type_check_kind, TypeTag};
-use crate::types::Type;
 
 pub trait IntTypeTag: TypeTag {
     fn type_int_width(ty: &Type<Self>) -> u32;

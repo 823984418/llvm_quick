@@ -4,10 +4,10 @@ use std::marker::PhantomData;
 use llvm_sys::core::*;
 use llvm_sys::*;
 
+use crate::core::types::Type;
+use crate::core::values::Value;
 use crate::opaque::Opaque;
 use crate::type_tag::{any, type_check_kind, TagTuple, TypeTag};
-use crate::types::Type;
-use crate::values::Value;
 
 pub trait FunTypeTag: TypeTag {
     fn type_get_param_count(ty: &Type<Self>) -> u32;

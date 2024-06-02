@@ -1,15 +1,15 @@
-use llvm_sys::core::LLVMDisposePassManager;
+use llvm_sys::core::*;
 use llvm_sys::target::*;
-use llvm_sys::LLVMPassManager;
+use llvm_sys::*;
 
-use crate::context::Context;
+use crate::core::context::Context;
+use crate::core::types::Type;
+use crate::core::values::Value;
 use crate::message::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::Dispose;
 use crate::type_tag::integer_tag::int_any;
 use crate::type_tag::TypeTag;
-use crate::types::Type;
-use crate::values::Value;
 
 pub fn initialize_all_target_infos() {
     unsafe { LLVM_InitializeAllTargetInfos() };

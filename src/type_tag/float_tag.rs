@@ -1,7 +1,7 @@
 use llvm_sys::*;
 
+use crate::core::types::Type;
 use crate::type_tag::{any, type_check_kind, InstanceTypeTag, TypeTag};
-use crate::types::Type;
 
 pub trait FloatTypeTag: InstanceTypeTag {}
 

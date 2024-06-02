@@ -6,9 +6,9 @@ use std::ptr::null_mut;
 use llvm_sys::execution_engine::*;
 use llvm_sys::target_machine::*;
 
-use crate::context::Context;
+use crate::core::context::Context;
+use crate::core::module::Module;
 use crate::message::Message;
-use crate::module::Module;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{Dispose, Owning};
 

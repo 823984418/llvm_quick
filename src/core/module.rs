@@ -3,22 +3,18 @@ use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 
 use llvm_sys::core::*;
-use llvm_sys::target::{LLVMGetModuleDataLayout, LLVMSetModuleDataLayout};
-use llvm_sys::transforms::pass_builder::LLVMRunPasses;
+use llvm_sys::target::*;
 use llvm_sys::*;
 
-use crate::context::Context;
-use crate::error::Error;
+use crate::core::context::Context;
+use crate::core::types::Type;
+use crate::core::values::Value;
 use crate::message::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
-use crate::owning::{Dispose, Owning};
-use crate::pass_builder::PassBuilderOptions;
+use crate::owning::Dispose;
 use crate::target::TargetData;
-use crate::target_machine::TargetMachine;
 use crate::type_tag::any;
 use crate::type_tag::function_tag::FunTypeTag;
-use crate::types::Type;
-use crate::values::Value;
 
 #[repr(transparent)]
 pub struct Module<'s> {
@@ -68,21 +64,5 @@ impl<'s> Module<'s> {
 
     pub fn set_data_layout(&self, v: &TargetData) {
         unsafe { LLVMSetModuleDataLayout(self.as_ptr(), v.as_ptr()) };
-    }
-
-    pub fn run_pass(
-        &self,
-        passes: &CStr,
-        target_machine: &TargetMachine,
-        options: &PassBuilderOptions,
-    ) -> Result<(), Owning<Error>> {
-        unsafe {
-            Error::check(LLVMRunPasses(
-                self.as_ptr(),
-                passes.as_ptr(),
-                target_machine.as_ptr(),
-                options.as_ptr(),
-            ))
-        }
     }
 }

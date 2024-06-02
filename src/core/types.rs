@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 use llvm_sys::core::*;
 use llvm_sys::*;
 
-use crate::context::Context;
+use crate::core::context::Context;
 use crate::message::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::type_tag::array_tag::{array, array_sized};

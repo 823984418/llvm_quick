@@ -5,13 +5,13 @@ use llvm_sys::core::*;
 use llvm_sys::*;
 
 use crate::basic_block::BasicBlock;
-use crate::context::Context;
+use crate::core::context::Context;
+use crate::core::values::Value;
 use crate::metadata::Metadata;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::Dispose;
 use crate::type_tag::integer_tag::{int, IntTypeTag};
 use crate::type_tag::{label, void, FloatMathTypeTag, InstanceTypeTag, IntMathTypeTag, TypeTag};
-use crate::values::Value;
 
 /// Return a constant that specifies that the result of a ShuffleVectorInst is undefined.
 pub fn get_undef_mask_elem() -> i32 {

@@ -5,10 +5,10 @@ use std::marker::PhantomData;
 use llvm_sys::core::*;
 use llvm_sys::*;
 
+use crate::core::types::Type;
 use crate::message::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::type_tag::{any, TypeTag};
-use crate::types::Type;
 
 #[repr(transparent)]
 pub struct Value<T: TypeTag> {

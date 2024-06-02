@@ -4,23 +4,20 @@ use llvm_sys::core::*;
 pub mod analysis;
 pub mod basic_block;
 pub mod builder;
-pub mod context;
+pub mod core;
 pub mod diagnostic;
 pub mod error;
 pub mod execution_engine;
 pub mod memory_buffer;
 pub mod message;
 pub mod metadata;
-pub mod module;
 pub mod opaque;
 pub mod owning;
-pub mod pass_builder;
 pub mod support;
 pub mod target;
 pub mod target_machine;
+pub mod transforms;
 pub mod type_tag;
-pub mod types;
-pub mod values;
 
 /// Return the major, minor, and patch version of LLVM.
 pub fn get_version() -> (u32, u32, u32) {

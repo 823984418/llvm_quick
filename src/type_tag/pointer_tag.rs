@@ -3,9 +3,9 @@ use std::fmt::Formatter;
 use llvm_sys::core::*;
 use llvm_sys::*;
 
+use crate::core::types::Type;
 use crate::opaque::Opaque;
 use crate::type_tag::{any, type_check_kind, TypeTag};
-use crate::types::Type;
 
 pub trait PtrTypeTag: TypeTag {
     fn type_address_space(ty: &Type<Self>) -> u32;
@@ -13,9 +13,9 @@ pub trait PtrTypeTag: TypeTag {
 
 #[derive(Copy, Clone)]
 #[allow(non_camel_case_types)]
-pub struct ptr {}
+pub struct ptr_any {}
 
-impl TypeTag for ptr {
+impl TypeTag for ptr_any {
     fn type_debug_fmt(ty: &Type<Self>, f: &mut Formatter<'_>) -> std::fmt::Result {
         let address_space = ty.address_space();
         if address_space == 0 {
@@ -34,7 +34,7 @@ impl TypeTag for ptr {
     }
 }
 
-impl PtrTypeTag for ptr {
+impl PtrTypeTag for ptr_any {
     fn type_address_space(ty: &Type<Self>) -> u32 {
         unsafe { LLVMGetPointerAddressSpace(ty.as_ptr()) }
     }
@@ -42,9 +42,9 @@ impl PtrTypeTag for ptr {
 
 #[derive(Copy, Clone)]
 #[allow(non_camel_case_types)]
-pub struct ptr_in<const ADDRESS_SPACE: u32 = 0> {}
+pub struct ptr<const ADDRESS_SPACE: u32 = 0> {}
 
-impl<const ADDRESS_SPACE: u32> TypeTag for ptr_in<ADDRESS_SPACE> {
+impl<const ADDRESS_SPACE: u32> TypeTag for ptr<ADDRESS_SPACE> {
     fn type_debug_fmt(_ty: &Type<Self>, f: &mut Formatter<'_>) -> std::fmt::Result {
         if ADDRESS_SPACE == 0 {
             f.write_str("ptr")
@@ -58,7 +58,7 @@ impl<const ADDRESS_SPACE: u32> TypeTag for ptr_in<ADDRESS_SPACE> {
     }
 
     fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
-        let ty = ptr::type_cast(ty)?;
+        let ty = ptr_any::type_cast(ty)?;
         if ty.address_space() == ADDRESS_SPACE {
             Some(unsafe { ty.cast_unchecked() })
         } else {
@@ -67,7 +67,7 @@ impl<const ADDRESS_SPACE: u32> TypeTag for ptr_in<ADDRESS_SPACE> {
     }
 }
 
-impl<const ADDRESS_SPACE: u32> PtrTypeTag for ptr_in<ADDRESS_SPACE> {
+impl<const ADDRESS_SPACE: u32> PtrTypeTag for ptr<ADDRESS_SPACE> {
     fn type_address_space(_ty: &Type<Self>) -> u32 {
         ADDRESS_SPACE
     }

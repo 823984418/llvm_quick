@@ -1,7 +1,12 @@
+use std::ffi::CStr;
+
 use llvm_sys::transforms::pass_builder::*;
 
+use crate::core::module::Module;
+use crate::error::Error;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{Dispose, Owning};
+use crate::target_machine::TargetMachine;
 
 pub struct PassBuilderOptions {
     _opaque: PhantomOpaque,
@@ -68,5 +73,23 @@ impl PassBuilderOptions {
 
     pub fn set_inliner_threshold(&self, v: i32) {
         unsafe { LLVMPassBuilderOptionsSetInlinerThreshold(self.as_ptr(), v) };
+    }
+}
+
+impl<'s> Module<'s> {
+    pub fn run_pass(
+        &self,
+        passes: &CStr,
+        target_machine: &TargetMachine,
+        options: &PassBuilderOptions,
+    ) -> Result<(), Owning<Error>> {
+        unsafe {
+            Error::check(LLVMRunPasses(
+                self.as_ptr(),
+                passes.as_ptr(),
+                target_machine.as_ptr(),
+                options.as_ptr(),
+            ))
+        }
     }
 }

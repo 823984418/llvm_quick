@@ -1,13 +1,14 @@
-use llvm_sys::target::{
-    LLVM_InitializeNativeAsmParser, LLVM_InitializeNativeAsmPrinter,
-    LLVM_InitializeNativeDisassembler, LLVM_InitializeNativeTarget,
-};
 use llvm_sys::target_machine::LLVMCodeModel;
 
 use llvm_quick::builder::Builder;
-use llvm_quick::context::Context;
+use llvm_quick::core::context::Context;
 use llvm_quick::execution_engine::{link_in_mc_jit, ExecutionEngine, MCJITCompilerOptions};
 use llvm_quick::owning::Owning;
+use llvm_quick::target::{
+    initialize_all_target_infos, initialize_native_asm_parser, initialize_native_asm_printer,
+    initialize_native_disassembler, initialize_native_target,
+};
+use llvm_quick::target_machine::Target;
 
 type SumFunc = unsafe extern "C" fn(i64, i64, i64) -> i64;
 
@@ -52,11 +53,14 @@ impl<'ctx> CodeGen<'ctx> {
 
 fn main() {
     link_in_mc_jit();
-    unsafe {
-        LLVM_InitializeNativeTarget();
-        LLVM_InitializeNativeAsmPrinter();
-        LLVM_InitializeNativeAsmParser();
-        LLVM_InitializeNativeDisassembler();
+    initialize_native_target();
+    initialize_native_asm_printer();
+    initialize_native_asm_parser();
+    initialize_native_disassembler();
+
+    initialize_all_target_infos();
+    for i in Target::iter_all() {
+        println!("{:?}", i.get_name());
     }
 
     let context = Context::create();

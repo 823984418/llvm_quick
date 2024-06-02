@@ -5,17 +5,17 @@ use llvm_sys::*;
 
 use crate::basic_block::BasicBlock;
 use crate::builder::Builder;
+use crate::core::module::Module;
+use crate::core::types::Type;
+use crate::core::values::Value;
 use crate::diagnostic::DiagnosticInfo;
-use crate::module::Module;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{Dispose, Owning};
 use crate::type_tag::float_tag::float;
 use crate::type_tag::function_tag::FunTypeTag;
 use crate::type_tag::integer_tag::{int, int1, int128, int16, int32, int64, int8};
-use crate::type_tag::pointer_tag::{ptr, ptr_in};
+use crate::type_tag::pointer_tag::{ptr, ptr_any};
 use crate::type_tag::void;
-use crate::types::Type;
-use crate::values::Value;
 
 #[repr(transparent)]
 pub struct Context {
@@ -97,13 +97,13 @@ impl Context {
     }
 
     /// Create an opaque pointer type in a context.
-    pub fn pointer_type(&self, address_space: u32) -> &Type<ptr> {
+    pub fn pointer_type_in(&self, address_space: u32) -> &Type<ptr_any> {
         unsafe { Type::from_ref(LLVMPointerTypeInContext(self.as_ptr(), address_space)) }
     }
 
     /// Create an opaque pointer type in a context.
-    pub fn pointer_type_in<const ADDRESS_SPACE: u32>(&self) -> &Type<ptr_in<ADDRESS_SPACE>> {
-        unsafe { self.pointer_type(ADDRESS_SPACE).cast_unchecked() }
+    pub fn pointer_type<const ADDRESS_SPACE: u32>(&self) -> &Type<ptr<ADDRESS_SPACE>> {
+        unsafe { self.pointer_type_in(ADDRESS_SPACE).cast_unchecked() }
     }
 
     /// Create a void type in a context.

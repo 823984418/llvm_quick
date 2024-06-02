@@ -1,16 +1,16 @@
 use std::fmt::Formatter;
 
-use llvm_sys::core::*;
 use llvm_sys::*;
+use llvm_sys::core::*;
 
+use crate::core::types::Type;
+use crate::core::values::Value;
 use crate::opaque::Opaque;
 use crate::type_tag::array_tag::array_sized;
 use crate::type_tag::float_tag::{bfloat, double, float, fp128, half, ppc_fp128, x86_fp80};
 use crate::type_tag::function_tag::fun;
 use crate::type_tag::integer_tag::int;
-use crate::type_tag::pointer_tag::ptr_in;
-use crate::types::Type;
-use crate::values::Value;
+use crate::type_tag::pointer_tag::ptr;
 
 pub mod array_tag;
 pub mod float_tag;
@@ -55,7 +55,7 @@ impl InstanceTypeTag for fp128 {}
 impl InstanceTypeTag for ppc_fp128 {}
 impl InstanceTypeTag for bfloat {}
 impl<const N: u32> InstanceTypeTag for int<N> {}
-impl<const ADDRESS_SPACE: u32> InstanceTypeTag for ptr_in<ADDRESS_SPACE> {}
+impl<const ADDRESS_SPACE: u32> InstanceTypeTag for ptr<ADDRESS_SPACE> {}
 impl<Args: InstanceTagTuple, Output: InstanceTypeTag, const VAR: bool> InstanceTypeTag
     for fun<Args, Output, VAR>
 {
