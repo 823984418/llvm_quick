@@ -4,9 +4,9 @@ use std::mem::size_of;
 use std::ptr::{null, null_mut};
 
 use llvm_sys::execution_engine::*;
-use llvm_sys::prelude::LLVMBool;
+use llvm_sys::prelude::*;
 use llvm_sys::target_machine::*;
-use llvm_sys::LLVMOpaqueJITEventListener;
+use llvm_sys::*;
 
 use crate::core::context::Context;
 use crate::core::module::Module;

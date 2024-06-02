@@ -7,10 +7,31 @@ pub trait FloatTypeTag: TypeTag {}
 
 #[derive(Copy, Clone)]
 #[allow(non_camel_case_types)]
+pub struct float_any {}
+
+impl TypeTag for float_any {
+    fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
+        match ty.get_kind() {
+            LLVMTypeKind::LLVMHalfTypeKind
+            | LLVMTypeKind::LLVMFloatTypeKind
+            | LLVMTypeKind::LLVMDoubleTypeKind
+            | LLVMTypeKind::LLVMX86_FP80TypeKind
+            | LLVMTypeKind::LLVMFP128TypeKind
+            | LLVMTypeKind::LLVMPPC_FP128TypeKind
+            | LLVMTypeKind::LLVMBFloatTypeKind => Some(unsafe { ty.cast_unchecked() }),
+            _ => None,
+        }
+    }
+}
+
+impl FloatTypeTag for float_any {}
+
+#[derive(Copy, Clone)]
+#[allow(non_camel_case_types)]
 pub struct half {}
 
 impl TypeTag for half {
-    fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
+    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMHalfTypeKind
     }
 
@@ -26,7 +47,7 @@ impl FloatTypeTag for half {}
 pub struct float {}
 
 impl TypeTag for float {
-    fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
+    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMFloatTypeKind
     }
 
@@ -42,7 +63,7 @@ impl FloatTypeTag for float {}
 pub struct double {}
 
 impl TypeTag for double {
-    fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
+    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMDoubleTypeKind
     }
 
@@ -58,7 +79,7 @@ impl FloatTypeTag for double {}
 pub struct x86_fp80 {}
 
 impl TypeTag for x86_fp80 {
-    fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
+    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMX86_FP80TypeKind
     }
 
@@ -74,7 +95,7 @@ impl FloatTypeTag for x86_fp80 {}
 pub struct fp128 {}
 
 impl TypeTag for fp128 {
-    fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
+    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMFP128TypeKind
     }
 
@@ -90,7 +111,7 @@ impl FloatTypeTag for fp128 {}
 pub struct ppc_fp128 {}
 
 impl TypeTag for ppc_fp128 {
-    fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
+    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMPPC_FP128TypeKind
     }
 
@@ -106,7 +127,7 @@ impl FloatTypeTag for ppc_fp128 {}
 pub struct bfloat {}
 
 impl TypeTag for bfloat {
-    fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
+    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMBFloatTypeKind
     }
 

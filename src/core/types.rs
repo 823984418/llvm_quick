@@ -45,8 +45,8 @@ impl<T: TypeTag> Type<T> {
     }
 
     /// Obtain the enumerated type of a Type instance.
-    pub fn kind(&self) -> LLVMTypeKind {
-        T::type_kind(self)
+    pub fn get_kind(&self) -> LLVMTypeKind {
+        T::type_get_kind(self)
     }
 
     /// Return a string representation of the type.

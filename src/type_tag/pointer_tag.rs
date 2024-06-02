@@ -25,7 +25,7 @@ impl TypeTag for ptr_any {
         }
     }
 
-    fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
+    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMPointerTypeKind
     }
 
@@ -53,7 +53,7 @@ impl<const ADDRESS_SPACE: u32> TypeTag for ptr<ADDRESS_SPACE> {
         }
     }
 
-    fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
+    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMPointerTypeKind
     }
 

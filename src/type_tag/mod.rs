@@ -22,7 +22,7 @@ pub(crate) unsafe fn type_check_kind<T: TypeTag>(
     ty: &Type<any>,
     kind: LLVMTypeKind,
 ) -> Option<&Type<T>> {
-    if ty.kind() == kind {
+    if ty.get_kind() == kind {
         Some(unsafe { ty.cast_unchecked() })
     } else {
         None
@@ -34,7 +34,9 @@ pub trait TypeTag: Copy + 'static {
         f.write_str(ty.print_to_string().to_str().unwrap())
     }
 
-    fn type_kind(ty: &Type<Self>) -> LLVMTypeKind;
+    fn type_get_kind(ty: &Type<Self>) -> LLVMTypeKind {
+        unsafe { LLVMGetTypeKind(ty.as_ptr()) }
+    }
 
     fn type_cast(ty: &Type<any>) -> Option<&Type<Self>>;
 
@@ -78,10 +80,6 @@ impl FloatMathTypeTag for bfloat {}
 pub struct any {}
 
 impl TypeTag for any {
-    fn type_kind(ty: &Type<Self>) -> LLVMTypeKind {
-        unsafe { LLVMGetTypeKind(ty.as_ptr()) }
-    }
-
     fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
         Some(ty)
     }
@@ -96,7 +94,7 @@ impl TypeTag for void {
         f.write_str("void")
     }
 
-    fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
+    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMVoidTypeKind
     }
 
@@ -114,7 +112,7 @@ impl TypeTag for label {
         f.write_str("label")
     }
 
-    fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
+    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMLabelTypeKind
     }
 

@@ -20,7 +20,7 @@ impl TypeTag for int_any {
         write!(f, "i{}", ty.int_width())
     }
 
-    fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
+    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMIntegerTypeKind
     }
 
@@ -44,7 +44,7 @@ impl<const N: u32> TypeTag for int<N> {
         write!(f, "i{}", N)
     }
 
-    fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
+    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMIntegerTypeKind
     }
 

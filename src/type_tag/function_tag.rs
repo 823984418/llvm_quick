@@ -34,7 +34,7 @@ pub trait FunTypeTag: TypeTag {
 pub struct fun_any {}
 
 impl TypeTag for fun_any {
-    fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
+    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMFunctionTypeKind
     }
 
@@ -84,7 +84,7 @@ pub struct fun<Args: TagTuple, Output: TypeTag, const VAR: bool = false> {
 }
 
 impl<Args: TagTuple, Output: TypeTag, const VAR: bool> TypeTag for fun<Args, Output, VAR> {
-    fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
+    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMFunctionTypeKind
     }
 

@@ -20,13 +20,13 @@ pub struct array<T: TypeTag> {
 }
 
 impl<T: TypeTag> TypeTag for array<T> {
-    fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
+    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMArrayTypeKind
     }
 
     fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
         unsafe {
-            if LLVMGetTypeKind(ty.as_ptr()) == LLVMTypeKind::LLVMArrayTypeKind {
+            if ty.get_kind() == LLVMTypeKind::LLVMArrayTypeKind {
                 if T::type_cast(Type::from_ref(LLVMGetElementType(ty.as_ptr()))).is_some() {
                     return Some(ty.cast_unchecked());
                 }
@@ -51,7 +51,7 @@ pub struct array_sized<T: TypeTag, const N: u64> {
 }
 
 impl<T: TypeTag, const N: u64> TypeTag for array_sized<T, N> {
-    fn type_kind(_ty: &Type<Self>) -> LLVMTypeKind {
+    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
         LLVMTypeKind::LLVMArrayTypeKind
     }
 
