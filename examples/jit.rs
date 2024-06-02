@@ -1,6 +1,6 @@
 use llvm_sys::target_machine::LLVMCodeModel;
 
-use llvm_quick::builder::Builder;
+use llvm_quick::core::builder::Builder;
 use llvm_quick::core::context::Context;
 use llvm_quick::execution_engine::{link_in_mc_jit, ExecutionEngine, MCJITCompilerOptions};
 use llvm_quick::owning::Owning;

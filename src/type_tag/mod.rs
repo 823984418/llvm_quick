@@ -1,7 +1,7 @@
 use std::fmt::Formatter;
 
-use llvm_sys::*;
 use llvm_sys::core::*;
+use llvm_sys::*;
 
 use crate::core::types::Type;
 use crate::core::values::Value;

@@ -29,3 +29,5 @@ pub fn parse_command_line_options(args: &[*const u8], over: &CStr) {
 pub fn search_for_address_of_symbol(name: &CStr) -> *mut () {
     unsafe { LLVMSearchForAddressOfSymbol(name.as_ptr()).cast() }
 }
+
+// Mission completed

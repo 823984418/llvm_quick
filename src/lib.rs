@@ -2,15 +2,10 @@ pub use llvm_sys;
 use llvm_sys::core::*;
 
 pub mod analysis;
-pub mod basic_block;
-pub mod builder;
 pub mod core;
-pub mod diagnostic;
 pub mod error;
+pub mod error_handling;
 pub mod execution_engine;
-pub mod memory_buffer;
-pub mod message;
-pub mod metadata;
 pub mod opaque;
 pub mod owning;
 pub mod support;

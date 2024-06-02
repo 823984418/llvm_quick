@@ -1,7 +1,7 @@
 use llvm_sys::core::*;
 use llvm_sys::*;
 
-use crate::message::Message;
+use crate::core::message::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
 
 pub struct DiagnosticInfo {

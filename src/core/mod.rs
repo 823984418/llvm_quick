@@ -1,4 +1,11 @@
+pub mod basic_block;
+pub mod builder;
 pub mod context;
+pub mod diagnostic;
+pub mod memory_buffer;
+pub mod message;
+pub mod metadata;
+pub mod module;
+pub mod pass_manager;
 pub mod types;
 pub mod values;
-pub mod module;

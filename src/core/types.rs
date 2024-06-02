@@ -5,7 +5,7 @@ use llvm_sys::core::*;
 use llvm_sys::*;
 
 use crate::core::context::Context;
-use crate::message::Message;
+use crate::core::message::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::type_tag::array_tag::{array, array_sized};
 use crate::type_tag::function_tag::{fun, fun_any};

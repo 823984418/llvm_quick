@@ -5,8 +5,9 @@ use std::marker::PhantomData;
 use llvm_sys::core::*;
 use llvm_sys::*;
 
+use crate::core::message::Message;
+use crate::core::metadata::Metadata;
 use crate::core::types::Type;
-use crate::message::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::type_tag::{any, TypeTag};
 
@@ -133,5 +134,9 @@ impl<T: TypeTag> Value<T> {
     /// Sets the flags for which fast-math-style optimizations are allowed for this value.
     pub fn set_fast_math_flags(&self, set: LLVMFastMathFlags) {
         unsafe { LLVMSetFastMathFlags(self.as_ptr(), set) };
+    }
+
+    pub fn as_metadata(&self) -> &Metadata {
+        unsafe { Metadata::from_ref(LLVMValueAsMetadata(self.as_ptr())) }
     }
 }

@@ -3,12 +3,12 @@ use std::ffi::{c_void, CStr};
 use llvm_sys::core::*;
 use llvm_sys::*;
 
-use crate::basic_block::BasicBlock;
-use crate::builder::Builder;
+use crate::core::basic_block::BasicBlock;
+use crate::core::builder::Builder;
+use crate::core::diagnostic::DiagnosticInfo;
 use crate::core::module::Module;
 use crate::core::types::Type;
 use crate::core::values::Value;
-use crate::diagnostic::DiagnosticInfo;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{Dispose, Owning};
 use crate::type_tag::float_tag::float;
@@ -34,7 +34,7 @@ impl Dispose for Context {
 
 impl Context {
     /// Obtain the global context instance.
-    pub fn get_global<'a>() -> &'a Self {
+    pub fn global() -> &'static Self {
         unsafe { Self::from_ref(LLVMGetGlobalContext()) }
     }
 

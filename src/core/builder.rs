@@ -4,10 +4,10 @@ use std::marker::PhantomData;
 use llvm_sys::core::*;
 use llvm_sys::*;
 
-use crate::basic_block::BasicBlock;
+use crate::core::basic_block::BasicBlock;
 use crate::core::context::Context;
+use crate::core::metadata::Metadata;
 use crate::core::values::Value;
-use crate::metadata::Metadata;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::Dispose;
 use crate::type_tag::integer_tag::{int, IntTypeTag};

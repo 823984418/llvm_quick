@@ -1,47 +1,17 @@
-use llvm_sys::core::*;
+use std::ffi::CStr;
+
 use llvm_sys::target::*;
-use llvm_sys::*;
 
 use crate::core::context::Context;
+use crate::core::message::Message;
+use crate::core::module::Module;
+use crate::core::pass_manager::PassManager;
 use crate::core::types::Type;
 use crate::core::values::Value;
-use crate::message::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
-use crate::owning::Dispose;
+use crate::owning::{Dispose, Owning};
 use crate::type_tag::integer_tag::int_any;
 use crate::type_tag::TypeTag;
-
-pub fn initialize_all_target_infos() {
-    unsafe { LLVM_InitializeAllTargetInfos() };
-}
-pub fn initialize_all_targets() {
-    unsafe { LLVM_InitializeAllTargets() };
-}
-pub fn initialize_all_target_mcs() {
-    unsafe { LLVM_InitializeAllTargetMCs() };
-}
-pub fn initialize_all_asm_printers() {
-    unsafe { LLVM_InitializeAllAsmPrinters() };
-}
-pub fn initialize_all_asm_parsers() {
-    unsafe { LLVM_InitializeAllAsmParsers() };
-}
-pub fn initialize_all_disassemblers() {
-    unsafe { LLVM_InitializeAllDisassemblers() };
-}
-
-pub fn initialize_native_target() -> bool {
-    unsafe { LLVM_InitializeNativeTarget() != 0 }
-}
-pub fn initialize_native_asm_parser() -> bool {
-    unsafe { LLVM_InitializeNativeAsmParser() != 0 }
-}
-pub fn initialize_native_asm_printer() -> bool {
-    unsafe { LLVM_InitializeNativeAsmPrinter() != 0 }
-}
-pub fn initialize_native_disassembler() -> bool {
-    unsafe { LLVM_InitializeNativeDisassembler() != 0 }
-}
 
 pub struct TargetData {
     _opaque: PhantomOpaque,
@@ -54,6 +24,36 @@ unsafe impl Opaque for TargetData {
 impl Dispose for TargetData {
     unsafe fn dispose(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeTargetData(ptr) };
+    }
+}
+
+pub struct TargetLibraryInfo {
+    _opaque: PhantomOpaque,
+}
+
+unsafe impl Opaque for TargetLibraryInfo {
+    type Inner = LLVMOpaqueTargetLibraryInfotData;
+}
+
+impl<'s> Module<'s> {
+    pub fn get_data_layout(&self) -> &TargetData {
+        unsafe { TargetData::from_ref(LLVMGetModuleDataLayout(self.as_ptr())) }
+    }
+
+    pub fn set_data_layout(&self, v: &TargetData) {
+        unsafe { LLVMSetModuleDataLayout(self.as_ptr(), v.as_ptr()) };
+    }
+}
+
+impl TargetData {
+    pub fn create(rep: &CStr) -> Owning<Self> {
+        unsafe { Owning::from_raw(LLVMCreateTargetData(rep.as_ptr())) }
+    }
+}
+
+impl PassManager {
+    pub fn add_target_library_info(&self, info: &TargetLibraryInfo) {
+        unsafe { LLVMAddTargetLibraryInfo(info.as_ptr(), self.as_ptr()) }
     }
 }
 
@@ -121,34 +121,38 @@ impl TargetData {
     pub fn get_preferred_alignment_of_global<T: TypeTag>(&self, ty: &Value<T>) -> u32 {
         unsafe { LLVMPreferredAlignmentOfGlobal(self.as_ptr(), ty.as_ptr()) }
     }
-    // Todo: LLVMElementAtOffset
-    // Todo: LLVMOffsetOfElement
+    // TODO: LLVMElementAtOffset
+    // TODO: LLVMOffsetOfElement
 }
 
-pub struct TargetLibraryInfo {
-    _opaque: PhantomOpaque,
+pub fn initialize_all_target_infos() {
+    unsafe { LLVM_InitializeAllTargetInfos() };
+}
+pub fn initialize_all_targets() {
+    unsafe { LLVM_InitializeAllTargets() };
+}
+pub fn initialize_all_target_mcs() {
+    unsafe { LLVM_InitializeAllTargetMCs() };
+}
+pub fn initialize_all_asm_printers() {
+    unsafe { LLVM_InitializeAllAsmPrinters() };
+}
+pub fn initialize_all_asm_parsers() {
+    unsafe { LLVM_InitializeAllAsmParsers() };
+}
+pub fn initialize_all_disassemblers() {
+    unsafe { LLVM_InitializeAllDisassemblers() };
 }
 
-unsafe impl Opaque for TargetLibraryInfo {
-    type Inner = LLVMOpaqueTargetLibraryInfotData;
+pub fn initialize_native_target() -> bool {
+    unsafe { LLVM_InitializeNativeTarget() != 0 }
 }
-
-pub struct PassManager {
-    _opaque: PhantomOpaque,
+pub fn initialize_native_asm_parser() -> bool {
+    unsafe { LLVM_InitializeNativeAsmParser() != 0 }
 }
-
-unsafe impl Opaque for PassManager {
-    type Inner = LLVMPassManager;
+pub fn initialize_native_asm_printer() -> bool {
+    unsafe { LLVM_InitializeNativeAsmPrinter() != 0 }
 }
-
-impl Dispose for PassManager {
-    unsafe fn dispose(ptr: *mut Self::Inner) {
-        unsafe { LLVMDisposePassManager(ptr) };
-    }
-}
-
-impl PassManager {
-    pub fn add_target_library_info(&self, info: &TargetLibraryInfo) {
-        unsafe { LLVMAddTargetLibraryInfo(info.as_ptr(), self.as_ptr()) }
-    }
+pub fn initialize_native_disassembler() -> bool {
+    unsafe { LLVM_InitializeNativeDisassembler() != 0 }
 }

@@ -3,16 +3,14 @@ use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 
 use llvm_sys::core::*;
-use llvm_sys::target::*;
 use llvm_sys::*;
 
 use crate::core::context::Context;
+use crate::core::message::Message;
 use crate::core::types::Type;
 use crate::core::values::Value;
-use crate::message::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::Dispose;
-use crate::target::TargetData;
 use crate::type_tag::any;
 use crate::type_tag::function_tag::FunTypeTag;
 
@@ -56,13 +54,5 @@ impl<'s> Module<'s> {
 
     pub fn print_to_string(&self) -> Message {
         unsafe { Message::from_raw(LLVMPrintModuleToString(self.as_ptr())) }
-    }
-
-    pub fn get_data_layout(&self) -> &TargetData {
-        unsafe { TargetData::from_ref(LLVMGetModuleDataLayout(self.as_ptr())) }
-    }
-
-    pub fn set_data_layout(&self, v: &TargetData) {
-        unsafe { LLVMSetModuleDataLayout(self.as_ptr(), v.as_ptr()) };
     }
 }

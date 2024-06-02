@@ -7,8 +7,8 @@ use llvm_sys::execution_engine::*;
 use llvm_sys::target_machine::*;
 
 use crate::core::context::Context;
+use crate::core::message::Message;
 use crate::core::module::Module;
-use crate::message::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{Dispose, Owning};
 

@@ -2,9 +2,9 @@ use std::ffi::CStr;
 use std::ptr::null_mut;
 
 use llvm_sys::core::*;
-use llvm_sys::LLVMMemoryBuffer;
+use llvm_sys::*;
 
-use crate::message::Message;
+use crate::core::message::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{Dispose, Owning};
 
