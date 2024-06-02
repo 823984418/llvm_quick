@@ -55,16 +55,15 @@ impl<'s> Dispose for ExecutionEngine<'s> {
 }
 
 #[repr(transparent)]
-pub struct McJitMemoryManager<'s> {
+pub struct McJitMemoryManager {
     _opaque: PhantomOpaque,
-    _marker: PhantomData<&'s Context>,
 }
 
-unsafe impl<'s> Opaque for McJitMemoryManager<'s> {
+unsafe impl<'s> Opaque for McJitMemoryManager {
     type Inner = LLVMOpaqueMCJITMemoryManager;
 }
 
-impl<'s> Dispose for McJitMemoryManager<'s> {
+impl<'s> Dispose for McJitMemoryManager {
     unsafe fn dispose(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeMCJITMemoryManager(ptr) }
     }
@@ -79,15 +78,15 @@ unsafe impl Opaque for JitEventListener {
     type Inner = LLVMOpaqueJITEventListener;
 }
 
-pub struct MCJITCompilerOptions<'s> {
+pub struct MCJITCompilerOptions {
     pub opt_level: u32,
     pub code_model: LLVMCodeModel,
     pub no_frame_pointer_elim: bool,
     pub enable_fast_instruction_select: bool,
-    pub mc_jit_memory_manager: Option<Owning<McJitMemoryManager<'s>>>,
+    pub mc_jit_memory_manager: Option<Owning<McJitMemoryManager>>,
 }
 
-impl<'s> Default for MCJITCompilerOptions<'s> {
+impl Default for MCJITCompilerOptions {
     fn default() -> Self {
         unsafe {
             let mut o = LLVMMCJITCompilerOptions {
@@ -194,7 +193,7 @@ impl<'s> ExecutionEngine<'s> {
     /// Create an MCJIT execution engine for a module, with the given options.
     pub fn create_mc_jit_compiler_for_module(
         module: Owning<Module<'s>>,
-        option: MCJITCompilerOptions<'s>,
+        option: MCJITCompilerOptions,
     ) -> Result<Owning<Self>, Message> {
         unsafe {
             let mut ptr = null_mut();
@@ -365,7 +364,7 @@ impl McJitMemoryManager {
             section_name: *const c_char,
         ) -> *mut u8 {
             unsafe {
-                (*(this as *const T)).allocate_code_section_raw(
+                (*(this as *const T)).allocate_code_section(
                     size,
                     alignment,
                     section_id,
@@ -405,11 +404,13 @@ impl McJitMemoryManager {
             }
         }
         extern "C" fn destroy_raw<T: SimpleMcJitMemoryManager>(this: *mut c_void) {
-            unsafe { Box::from_raw(this as *mut T) };
+            unsafe {
+                let _ = Box::from_raw(this as *mut T);
+            }
         }
 
         Self::create_simple_raw(
-            opaque,
+            opaque as *mut c_void,
             allocate_code_section_raw::<T>,
             allocate_data_section_raw::<T>,
             finalize_memory_raw::<T>,
@@ -418,7 +419,7 @@ impl McJitMemoryManager {
     }
 
     pub fn create_simple_raw(
-        opaque: *mut (),
+        opaque: *mut c_void,
         allocate_code_section: LLVMMemoryManagerAllocateCodeSectionCallback,
         allocate_data_section: LLVMMemoryManagerAllocateDataSectionCallback,
         finalize_memory: LLVMMemoryManagerFinalizeMemoryCallback,
@@ -426,7 +427,7 @@ impl McJitMemoryManager {
     ) -> Owning<Self> {
         unsafe {
             Owning::from_raw(LLVMCreateSimpleMCJITMemoryManager(
-                opaque as _,
+                opaque,
                 allocate_code_section,
                 allocate_data_section,
                 finalize_memory,
