@@ -4,6 +4,7 @@ use llvm_sys::*;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::Dispose;
 
+#[repr(transparent)]
 pub struct PassManager {
     _opaque: PhantomOpaque,
 }

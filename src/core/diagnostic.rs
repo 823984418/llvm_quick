@@ -1,9 +1,10 @@
 use llvm_sys::core::*;
 use llvm_sys::*;
 
-use crate::core::message::Message;
+use crate::core::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
 
+#[repr(transparent)]
 pub struct DiagnosticInfo {
     _opaque: PhantomOpaque,
 }

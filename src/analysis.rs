@@ -2,7 +2,7 @@ use std::ptr::null_mut;
 
 use llvm_sys::analysis::*;
 
-use crate::core::message::Message;
+use crate::core::Message;
 use crate::core::module::Module;
 use crate::core::values::Value;
 use crate::opaque::Opaque;
@@ -33,5 +33,3 @@ impl<T: FunTypeTag> Value<T> {
         unsafe { LLVMViewFunctionCFGOnly(self.as_ptr()) }
     }
 }
-
-// Mission completed

@@ -42,13 +42,13 @@ impl<T: Dispose> Owning<T> {
         unsafe { Self::try_from_raw(ptr).unwrap() }
     }
 
-    pub unsafe fn into_ptr(self) -> *mut T::Inner {
+    pub unsafe fn into_raw(self) -> *mut T::Inner {
         let ptr = self.as_ptr();
         forget(self);
         ptr
     }
 
-    pub unsafe fn option_into_ptr(this: Option<Self>) -> *mut T::Inner {
-        this.map(|x| unsafe { x.into_ptr() }).unwrap_or(null_mut())
+    pub unsafe fn option_into_raw(this: Option<Self>) -> *mut T::Inner {
+        this.map(|x| unsafe { x.into_raw() }).unwrap_or(null_mut())
     }
 }

@@ -13,6 +13,7 @@ pub fn string_error_type_id() -> LLVMErrorTypeId {
     unsafe { LLVMGetStringErrorTypeId() }
 }
 
+#[repr(transparent)]
 pub struct Error {
     _opaque: PhantomOpaque,
 }

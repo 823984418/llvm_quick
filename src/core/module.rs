@@ -6,7 +6,7 @@ use llvm_sys::core::*;
 use llvm_sys::*;
 
 use crate::core::context::Context;
-use crate::core::message::Message;
+use crate::core::Message;
 use crate::core::types::Type;
 use crate::core::values::Value;
 use crate::opaque::{Opaque, PhantomOpaque};

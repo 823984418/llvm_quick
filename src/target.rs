@@ -3,7 +3,7 @@ use std::ffi::CStr;
 use llvm_sys::target::*;
 
 use crate::core::context::Context;
-use crate::core::message::Message;
+use crate::core::Message;
 use crate::core::module::Module;
 use crate::core::pass_manager::PassManager;
 use crate::core::types::Type;
@@ -13,6 +13,7 @@ use crate::owning::{Dispose, Owning};
 use crate::type_tag::integer_tag::int_any;
 use crate::type_tag::TypeTag;
 
+#[repr(transparent)]
 pub struct TargetData {
     _opaque: PhantomOpaque,
 }
@@ -27,6 +28,7 @@ impl Dispose for TargetData {
     }
 }
 
+#[repr(transparent)]
 pub struct TargetLibraryInfo {
     _opaque: PhantomOpaque,
 }

@@ -4,13 +4,14 @@ use std::ptr::null_mut;
 use llvm_sys::target_machine::*;
 
 use crate::core::memory_buffer::MemoryBuffer;
-use crate::core::message::Message;
+use crate::core::Message;
 use crate::core::module::Module;
 use crate::core::pass_manager::PassManager;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{Dispose, Owning};
 use crate::target::TargetData;
 
+#[repr(transparent)]
 pub struct TargetMachine {
     _opaque: PhantomOpaque,
 }
@@ -25,6 +26,7 @@ impl Dispose for TargetMachine {
     }
 }
 
+#[repr(transparent)]
 pub struct TargetMachineOptions {
     _opaque: PhantomOpaque,
 }
@@ -272,5 +274,3 @@ impl PassManager {
         unsafe { LLVMAddAnalysisPasses(v.as_ptr(), self.as_ptr()) }
     }
 }
-
-// Mission completed

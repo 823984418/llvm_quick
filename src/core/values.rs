@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 use llvm_sys::core::*;
 use llvm_sys::*;
 
-use crate::core::message::Message;
+use crate::core::Message;
 use crate::core::metadata::Metadata;
 use crate::core::types::Type;
 use crate::opaque::{Opaque, PhantomOpaque};

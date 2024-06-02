@@ -4,10 +4,11 @@ use std::ptr::null_mut;
 use llvm_sys::core::*;
 use llvm_sys::*;
 
-use crate::core::message::Message;
+use crate::core::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{Dispose, Owning};
 
+#[repr(transparent)]
 pub struct MemoryBuffer {
     _opaque: PhantomOpaque,
 }

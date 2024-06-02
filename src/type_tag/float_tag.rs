@@ -1,9 +1,9 @@
 use llvm_sys::*;
 
 use crate::core::types::Type;
-use crate::type_tag::{any, type_check_kind, InstanceTypeTag, TypeTag};
+use crate::type_tag::{any, type_check_kind, TypeTag};
 
-pub trait FloatTypeTag: InstanceTypeTag {}
+pub trait FloatTypeTag: TypeTag {}
 
 #[derive(Copy, Clone)]
 #[allow(non_camel_case_types)]

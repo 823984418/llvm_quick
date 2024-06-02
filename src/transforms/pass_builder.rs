@@ -8,6 +8,7 @@ use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{Dispose, Owning};
 use crate::target_machine::TargetMachine;
 
+#[repr(transparent)]
 pub struct PassBuilderOptions {
     _opaque: PhantomOpaque,
 }

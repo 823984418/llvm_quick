@@ -2,6 +2,7 @@ use llvm_sys::*;
 
 use crate::opaque::{Opaque, PhantomOpaque};
 
+#[repr(transparent)]
 pub struct Metadata {
     _opaque: PhantomOpaque,
 }

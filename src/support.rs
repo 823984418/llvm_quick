@@ -2,12 +2,6 @@ use std::ffi::CStr;
 
 use llvm_sys::support::*;
 
-/// This functions permanently adds the symbol symbolName with the value symbolValue.
-/// These symbols are searched before any libraries.
-pub fn add_symbol(name: &CStr, value: *mut ()) {
-    unsafe { LLVMAddSymbol(name.as_ptr(), value.cast()) }
-}
-
 /// This function permanently loads the dynamic library at the given path.
 ///
 /// It is safe to call this function multiple times for the same library.
@@ -30,4 +24,8 @@ pub fn search_for_address_of_symbol(name: &CStr) -> *mut () {
     unsafe { LLVMSearchForAddressOfSymbol(name.as_ptr()).cast() }
 }
 
-// Mission completed
+/// This functions permanently adds the symbol symbolName with the value symbolValue.
+/// These symbols are searched before any libraries.
+pub fn add_symbol(name: &CStr, value: *mut ()) {
+    unsafe { LLVMAddSymbol(name.as_ptr(), value.cast()) }
+}

@@ -149,10 +149,10 @@ impl<T: FunTypeTag> Type<T> {
 
     /// Obtain the types of a function's parameters.
     #[allow(clippy::mut_from_ref)]
-    pub fn get_param_into_slice<'s>(
+    pub fn get_param_into_slice<'s, 'a>(
         &'s self,
-        slice: &mut [Option<&'s Type<any>>],
-    ) -> &mut [&'s Type<any>] {
+        slice: &'a mut [Option<&'s Type<any>>],
+    ) -> &'a mut [&'s Type<any>] {
         assert_eq!(slice.len(), self.get_param_count() as usize);
         unsafe {
             LLVMGetParamTypes(self.as_ptr(), slice.as_ptr() as _);
