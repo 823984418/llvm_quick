@@ -14,7 +14,7 @@ use crate::core::types::Type;
 use crate::core::values::Value;
 use crate::core::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
-use crate::owning::{Dispose, Owning};
+use crate::owning::{OpaqueDrop, Owning};
 use crate::target::TargetData;
 use crate::target_machine::TargetMachine;
 use crate::type_tag::float_tag::FloatTypeTag;
@@ -32,8 +32,8 @@ unsafe impl Opaque for GenericValue {
     type Inner = LLVMOpaqueGenericValue;
 }
 
-impl Dispose for GenericValue {
-    unsafe fn dispose(ptr: *mut Self::Inner) {
+impl OpaqueDrop for GenericValue {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeGenericValue(ptr) }
     }
 }
@@ -48,8 +48,8 @@ unsafe impl<'s> Opaque for ExecutionEngine<'s> {
     type Inner = LLVMOpaqueExecutionEngine;
 }
 
-impl<'s> Dispose for ExecutionEngine<'s> {
-    unsafe fn dispose(ptr: *mut Self::Inner) {
+impl<'s> OpaqueDrop for ExecutionEngine<'s> {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeExecutionEngine(ptr) };
     }
 }
@@ -63,8 +63,8 @@ unsafe impl<'s> Opaque for McJitMemoryManager {
     type Inner = LLVMOpaqueMCJITMemoryManager;
 }
 
-impl<'s> Dispose for McJitMemoryManager {
-    unsafe fn dispose(ptr: *mut Self::Inner) {
+impl<'s> OpaqueDrop for McJitMemoryManager {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeMCJITMemoryManager(ptr) }
     }
 }

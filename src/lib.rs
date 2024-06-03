@@ -1,13 +1,24 @@
 pub use llvm_sys;
 
 pub mod analysis;
+pub mod bit_reader;
+pub mod bit_writer;
+pub mod blake3;
+pub mod comdat;
 pub mod core;
+pub mod debuginfo;
+pub mod disassembler;
 pub mod error;
 pub mod error_handling;
 pub mod execution_engine;
+pub mod ir_reader;
+pub mod linker;
+pub mod lto;
+pub mod object;
 pub mod opaque;
 pub mod orc2;
 pub mod owning;
+pub mod remark;
 pub mod support;
 pub mod target;
 pub mod target_machine;

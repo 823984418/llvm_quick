@@ -6,12 +6,4 @@ edition = "2021"
 [dependencies]
 
 [dependencies.llvm-sys]
-version = "^180.0.0"
-
-[dev-dependencies.inkwell]
-git = "https://github.com/TheDan64/inkwell"
-branch = "master"
-default-features = false
-features = [
-    "llvm18-0",
-]
+version = "^181.0.0"

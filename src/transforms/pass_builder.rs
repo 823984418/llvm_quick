@@ -5,7 +5,7 @@ use llvm_sys::transforms::pass_builder::*;
 use crate::core::module::Module;
 use crate::error::Error;
 use crate::opaque::{Opaque, PhantomOpaque};
-use crate::owning::{Dispose, Owning};
+use crate::owning::{OpaqueDrop, Owning};
 use crate::target_machine::TargetMachine;
 
 #[repr(transparent)]
@@ -17,8 +17,8 @@ unsafe impl Opaque for PassBuilderOptions {
     type Inner = LLVMOpaquePassBuilderOptions;
 }
 
-impl Dispose for PassBuilderOptions {
-    unsafe fn dispose(ptr: *mut Self::Inner) {
+impl OpaqueDrop for PassBuilderOptions {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposePassBuilderOptions(ptr) };
     }
 }

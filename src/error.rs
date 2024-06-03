@@ -7,7 +7,7 @@ use std::ptr::NonNull;
 use llvm_sys::error::*;
 
 use crate::opaque::{Opaque, PhantomOpaque};
-use crate::owning::{Dispose, Owning};
+use crate::owning::{OpaqueDrop, Owning};
 
 pub fn string_error_type_id() -> LLVMErrorTypeId {
     unsafe { LLVMGetStringErrorTypeId() }
@@ -22,8 +22,8 @@ unsafe impl Opaque for Error {
     type Inner = LLVMOpaqueError;
 }
 
-impl Dispose for Error {
-    unsafe fn dispose(ptr: *mut Self::Inner) {
+impl OpaqueDrop for Error {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMConsumeError(ptr) };
     }
 }

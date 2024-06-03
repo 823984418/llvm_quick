@@ -9,7 +9,7 @@ use crate::core::context::Context;
 use crate::core::metadata::Metadata;
 use crate::core::values::Value;
 use crate::opaque::{Opaque, PhantomOpaque};
-use crate::owning::Dispose;
+use crate::owning::OpaqueDrop;
 use crate::type_tag::integer_tag::{int, IntTypeTag};
 use crate::type_tag::{label, void, FloatMathTypeTag, InstanceTypeTag, IntMathTypeTag, TypeTag};
 
@@ -28,8 +28,8 @@ unsafe impl<'s> Opaque for Builder<'s> {
     type Inner = LLVMBuilder;
 }
 
-impl<'s> Dispose for Builder<'s> {
-    unsafe fn dispose(ptr: *mut Self::Inner) {
+impl<'s> OpaqueDrop for Builder<'s> {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeBuilder(ptr) };
     }
 }
@@ -506,4 +506,50 @@ impl<'s> Builder<'s> {
     }
 
     // TODO: more
+}
+
+impl<T: TypeTag> Value<T> {
+    pub fn get_nuw(&self) -> bool {
+        unsafe { LLVMGetNUW(self.as_ptr()) != 0 }
+    }
+
+    pub fn set_nuw(&self, set: bool) {
+        unsafe { LLVMSetNUW(self.as_ptr(), set as _) };
+    }
+
+    pub fn get_nsw(&self) -> bool {
+        unsafe { LLVMGetNSW(self.as_ptr()) != 0 }
+    }
+
+    pub fn set_nsw(&self, set: bool) {
+        unsafe { LLVMSetNSW(self.as_ptr(), set as _) };
+    }
+
+    pub fn get_exact(&self) -> bool {
+        unsafe { LLVMGetExact(self.as_ptr()) != 0 }
+    }
+
+    pub fn set_exact(&self, set: bool) {
+        unsafe { LLVMSetExact(self.as_ptr(), set as _) };
+    }
+
+    /// Gets if the instruction has the non-negative flag set.
+    pub fn get_non_neg(&self) -> bool {
+        unsafe { LLVMGetNNeg(self.as_ptr()) != 0 }
+    }
+
+    /// Sets the non-negative flag for the instruction.
+    pub fn set_non_neg(&self, set: bool) {
+        unsafe { LLVMSetNNeg(self.as_ptr(), set as _) };
+    }
+
+    /// Get the flags for which fast-math-style optimizations are allowed for this value.
+    pub fn get_fast_math_flags(&self) -> LLVMFastMathFlags {
+        unsafe { LLVMGetFastMathFlags(self.as_ptr()) }
+    }
+
+    /// Sets the flags for which fast-math-style optimizations are allowed for this value.
+    pub fn set_fast_math_flags(&self, set: LLVMFastMathFlags) {
+        unsafe { LLVMSetFastMathFlags(self.as_ptr(), set) };
+    }
 }

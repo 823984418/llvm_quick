@@ -3,13 +3,13 @@ use std::ffi::CStr;
 use llvm_sys::target::*;
 
 use crate::core::context::Context;
-use crate::core::Message;
 use crate::core::module::Module;
 use crate::core::pass_manager::PassManager;
 use crate::core::types::Type;
 use crate::core::values::Value;
+use crate::core::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
-use crate::owning::{Dispose, Owning};
+use crate::owning::{OpaqueDrop, Owning};
 use crate::type_tag::integer_tag::int_any;
 use crate::type_tag::TypeTag;
 
@@ -22,8 +22,8 @@ unsafe impl Opaque for TargetData {
     type Inner = LLVMOpaqueTargetData;
 }
 
-impl Dispose for TargetData {
-    unsafe fn dispose(ptr: *mut Self::Inner) {
+impl OpaqueDrop for TargetData {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeTargetData(ptr) };
     }
 }

@@ -6,11 +6,11 @@ use llvm_sys::core::*;
 use llvm_sys::*;
 
 use crate::core::context::Context;
-use crate::core::Message;
 use crate::core::types::Type;
 use crate::core::values::Value;
+use crate::core::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
-use crate::owning::Dispose;
+use crate::owning::OpaqueDrop;
 use crate::type_tag::any;
 use crate::type_tag::function_tag::FunTypeTag;
 
@@ -24,8 +24,8 @@ unsafe impl<'s> Opaque for Module<'s> {
     type Inner = LLVMModule;
 }
 
-impl<'s> Dispose for Module<'s> {
-    unsafe fn dispose(ptr: *mut Self::Inner) {
+impl<'s> OpaqueDrop for Module<'s> {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeModule(ptr) };
     }
 }

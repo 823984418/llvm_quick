@@ -2,7 +2,7 @@ use llvm_sys::core::*;
 use llvm_sys::*;
 
 use crate::opaque::{Opaque, PhantomOpaque};
-use crate::owning::Dispose;
+use crate::owning::OpaqueDrop;
 
 #[repr(transparent)]
 pub struct PassManager {
@@ -13,8 +13,8 @@ unsafe impl Opaque for PassManager {
     type Inner = LLVMPassManager;
 }
 
-impl Dispose for PassManager {
-    unsafe fn dispose(ptr: *mut Self::Inner) {
+impl OpaqueDrop for PassManager {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposePassManager(ptr) };
     }
 }

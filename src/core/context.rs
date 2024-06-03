@@ -10,7 +10,7 @@ use crate::core::module::Module;
 use crate::core::types::Type;
 use crate::core::values::Value;
 use crate::opaque::{Opaque, PhantomOpaque};
-use crate::owning::{Dispose, Owning};
+use crate::owning::{OpaqueDrop, Owning};
 use crate::type_tag::float_tag::float;
 use crate::type_tag::function_tag::FunTypeTag;
 use crate::type_tag::integer_tag::{int, int1, int128, int16, int32, int64, int8};
@@ -26,8 +26,8 @@ unsafe impl Opaque for Context {
     type Inner = LLVMContext;
 }
 
-impl Dispose for Context {
-    unsafe fn dispose(ptr: *mut Self::Inner) {
+impl OpaqueDrop for Context {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMContextDispose(ptr) };
     }
 }

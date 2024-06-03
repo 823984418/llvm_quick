@@ -6,7 +6,7 @@ use llvm_sys::*;
 
 use crate::core::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
-use crate::owning::{Dispose, Owning};
+use crate::owning::{OpaqueDrop, Owning};
 
 #[repr(transparent)]
 pub struct MemoryBuffer {
@@ -17,8 +17,8 @@ unsafe impl Opaque for MemoryBuffer {
     type Inner = LLVMMemoryBuffer;
 }
 
-impl Dispose for MemoryBuffer {
-    unsafe fn dispose(ptr: *mut Self::Inner) {
+impl OpaqueDrop for MemoryBuffer {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeMemoryBuffer(ptr) }
     }
 }

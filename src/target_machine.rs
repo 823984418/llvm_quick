@@ -4,11 +4,11 @@ use std::ptr::null_mut;
 use llvm_sys::target_machine::*;
 
 use crate::core::memory_buffer::MemoryBuffer;
-use crate::core::Message;
 use crate::core::module::Module;
 use crate::core::pass_manager::PassManager;
+use crate::core::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
-use crate::owning::{Dispose, Owning};
+use crate::owning::{OpaqueDrop, Owning};
 use crate::target::TargetData;
 
 #[repr(transparent)]
@@ -20,8 +20,8 @@ unsafe impl Opaque for TargetMachine {
     type Inner = LLVMOpaqueTargetMachine;
 }
 
-impl Dispose for TargetMachine {
-    unsafe fn dispose(ptr: *mut Self::Inner) {
+impl OpaqueDrop for TargetMachine {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeTargetMachine(ptr) };
     }
 }
@@ -35,8 +35,8 @@ unsafe impl Opaque for TargetMachineOptions {
     type Inner = LLVMOpaqueTargetMachineOptions;
 }
 
-impl Dispose for TargetMachineOptions {
-    unsafe fn dispose(ptr: *mut Self::Inner) {
+impl OpaqueDrop for TargetMachineOptions {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeTargetMachineOptions(ptr) };
     }
 }

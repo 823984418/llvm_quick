@@ -2,9 +2,9 @@ use std::ptr::null_mut;
 
 use llvm_sys::analysis::*;
 
-use crate::core::Message;
 use crate::core::module::Module;
 use crate::core::values::Value;
+use crate::core::Message;
 use crate::opaque::Opaque;
 use crate::type_tag::function_tag::FunTypeTag;
 

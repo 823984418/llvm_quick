@@ -5,21 +5,31 @@ use std::ptr::{null_mut, NonNull};
 
 use crate::opaque::Opaque;
 
-pub trait Dispose: Opaque {
-    unsafe fn dispose(ptr: *mut Self::Inner);
+pub trait OpaqueDrop: Opaque {
+    unsafe fn drop_raw(ptr: *mut Self::Inner);
 }
 
-pub struct Owning<T: Dispose> {
+pub trait OpaqueClone: OpaqueDrop {
+    unsafe fn clone_raw(ptr: *mut Self::Inner) -> *mut Self::Inner;
+}
+
+pub struct Owning<T: OpaqueDrop> {
     ptr: NonNull<T>,
 }
 
-impl<T: Dispose> Drop for Owning<T> {
-    fn drop(&mut self) {
-        unsafe { T::dispose(self.as_ptr()) };
+impl<T: OpaqueClone> Clone for Owning<T> {
+    fn clone(&self) -> Self {
+        unsafe { Self::from_raw(T::clone_raw(self.as_ptr())) }
     }
 }
 
-impl<T: Dispose> Deref for Owning<T> {
+impl<T: OpaqueDrop> Drop for Owning<T> {
+    fn drop(&mut self) {
+        unsafe { T::drop_raw(self.as_ptr()) };
+    }
+}
+
+impl<T: OpaqueDrop> Deref for Owning<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -27,13 +37,13 @@ impl<T: Dispose> Deref for Owning<T> {
     }
 }
 
-impl<T: Dispose + Debug> Debug for Owning<T> {
+impl<T: OpaqueDrop + Debug> Debug for Owning<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         Debug::fmt(self.deref(), f)
     }
 }
 
-impl<T: Dispose> Owning<T> {
+impl<T: OpaqueDrop> Owning<T> {
     pub unsafe fn try_from_raw(ptr: *mut T::Inner) -> Option<Self> {
         NonNull::new(ptr as *mut T).map(|ptr| Self { ptr })
     }
