@@ -57,7 +57,7 @@ impl Target {
             std::iter::from_fn(move || {
                 let ret = ptr;
                 if let Some(v) = ptr {
-                    ptr = Self::try_from_ref(LLVMGetNextTarget(v.as_ptr()));
+                    ptr = Self::try_from_ref(LLVMGetNextTarget(v.as_raw()));
                 }
                 ret
             })
@@ -80,23 +80,23 @@ impl Target {
     }
 
     pub fn get_name(&self) -> &CStr {
-        unsafe { CStr::from_ptr(LLVMGetTargetName(self.as_ptr())) }
+        unsafe { CStr::from_ptr(LLVMGetTargetName(self.as_raw())) }
     }
 
     pub fn get_description(&self) -> &CStr {
-        unsafe { CStr::from_ptr(LLVMGetTargetDescription(self.as_ptr())) }
+        unsafe { CStr::from_ptr(LLVMGetTargetDescription(self.as_raw())) }
     }
 
     pub fn has_jit(&self) -> bool {
-        unsafe { LLVMTargetHasJIT(self.as_ptr()) != 0 }
+        unsafe { LLVMTargetHasJIT(self.as_raw()) != 0 }
     }
 
     pub fn has_target_machine(&self) -> bool {
-        unsafe { LLVMTargetHasTargetMachine(self.as_ptr()) != 0 }
+        unsafe { LLVMTargetHasTargetMachine(self.as_raw()) != 0 }
     }
 
     pub fn has_asm_backend(&self) -> bool {
-        unsafe { LLVMTargetHasAsmBackend(self.as_ptr()) != 0 }
+        unsafe { LLVMTargetHasAsmBackend(self.as_raw()) != 0 }
     }
 }
 
@@ -106,27 +106,27 @@ impl TargetMachineOptions {
     }
 
     pub fn set_cpu(&self, v: &CStr) {
-        unsafe { LLVMTargetMachineOptionsSetCPU(self.as_ptr(), v.as_ptr()) }
+        unsafe { LLVMTargetMachineOptionsSetCPU(self.as_raw(), v.as_ptr()) }
     }
 
     pub fn set_features(&self, v: &CStr) {
-        unsafe { LLVMTargetMachineOptionsSetFeatures(self.as_ptr(), v.as_ptr()) }
+        unsafe { LLVMTargetMachineOptionsSetFeatures(self.as_raw(), v.as_ptr()) }
     }
 
     pub fn set_abi(&self, v: &CStr) {
-        unsafe { LLVMTargetMachineOptionsSetABI(self.as_ptr(), v.as_ptr()) }
+        unsafe { LLVMTargetMachineOptionsSetABI(self.as_raw(), v.as_ptr()) }
     }
 
     pub fn set_code_gen_opt_level(&self, v: LLVMCodeGenOptLevel) {
-        unsafe { LLVMTargetMachineOptionsSetCodeGenOptLevel(self.as_ptr(), v) }
+        unsafe { LLVMTargetMachineOptionsSetCodeGenOptLevel(self.as_raw(), v) }
     }
 
     pub fn set_reloc_mode(&self, v: LLVMRelocMode) {
-        unsafe { LLVMTargetMachineOptionsSetRelocMode(self.as_ptr(), v) }
+        unsafe { LLVMTargetMachineOptionsSetRelocMode(self.as_raw(), v) }
     }
 
     pub fn set_code_mode(&self, v: LLVMCodeModel) {
-        unsafe { LLVMTargetMachineOptionsSetCodeModel(self.as_ptr(), v) }
+        unsafe { LLVMTargetMachineOptionsSetCodeModel(self.as_raw(), v) }
     }
 }
 
@@ -138,9 +138,9 @@ impl Target {
     ) -> Owning<TargetMachine> {
         unsafe {
             Owning::from_raw(LLVMCreateTargetMachineWithOptions(
-                self.as_ptr(),
+                self.as_raw(),
                 triple.as_ptr(),
-                options.as_ptr(),
+                options.as_raw(),
             ))
         }
     }
@@ -156,7 +156,7 @@ impl Target {
     ) -> Owning<TargetMachine> {
         unsafe {
             Owning::from_raw(LLVMCreateTargetMachine(
-                self.as_ptr(),
+                self.as_raw(),
                 triple.as_ptr(),
                 cpu.as_ptr(),
                 features.as_ptr(),
@@ -170,43 +170,43 @@ impl Target {
 
 impl TargetMachine {
     pub fn get_target(&self) -> &Target {
-        unsafe { Target::from_ref(LLVMGetTargetMachineTarget(self.as_ptr())) }
+        unsafe { Target::from_ref(LLVMGetTargetMachineTarget(self.as_raw())) }
     }
 
     pub fn get_triple(&self) -> Message {
-        unsafe { Message::from_raw(LLVMGetTargetMachineTriple(self.as_ptr())) }
+        unsafe { Message::from_raw(LLVMGetTargetMachineTriple(self.as_raw())) }
     }
 
     pub fn get_cpu(&self) -> Message {
-        unsafe { Message::from_raw(LLVMGetTargetMachineCPU(self.as_ptr())) }
+        unsafe { Message::from_raw(LLVMGetTargetMachineCPU(self.as_raw())) }
     }
 
     pub fn get_features_string(&self) -> Message {
-        unsafe { Message::from_raw(LLVMGetTargetMachineFeatureString(self.as_ptr())) }
+        unsafe { Message::from_raw(LLVMGetTargetMachineFeatureString(self.as_raw())) }
     }
 
     pub fn create_data_layout(&self) -> Owning<TargetData> {
-        unsafe { Owning::from_raw(LLVMCreateTargetDataLayout(self.as_ptr())) }
+        unsafe { Owning::from_raw(LLVMCreateTargetDataLayout(self.as_raw())) }
     }
 
     pub fn set_asm_verbosity(&self, v: bool) {
-        unsafe { LLVMSetTargetMachineAsmVerbosity(self.as_ptr(), v as _) }
+        unsafe { LLVMSetTargetMachineAsmVerbosity(self.as_raw(), v as _) }
     }
 
     pub fn set_fast_instruction_select(&self, v: bool) {
-        unsafe { LLVMSetTargetMachineFastISel(self.as_ptr(), v as _) }
+        unsafe { LLVMSetTargetMachineFastISel(self.as_raw(), v as _) }
     }
 
     pub fn set_global_instruction_select(&self, v: bool) {
-        unsafe { LLVMSetTargetMachineGlobalISel(self.as_ptr(), v as _) }
+        unsafe { LLVMSetTargetMachineGlobalISel(self.as_raw(), v as _) }
     }
 
     pub fn set_global_instruction_select_abort(&self, v: LLVMGlobalISelAbortMode) {
-        unsafe { LLVMSetTargetMachineGlobalISelAbort(self.as_ptr(), v) }
+        unsafe { LLVMSetTargetMachineGlobalISelAbort(self.as_raw(), v) }
     }
 
     pub fn set_outliner(&self, v: bool) {
-        unsafe { LLVMSetTargetMachineMachineOutliner(self.as_ptr(), v as _) }
+        unsafe { LLVMSetTargetMachineMachineOutliner(self.as_raw(), v as _) }
     }
 
     pub fn emit_to_file(
@@ -218,8 +218,8 @@ impl TargetMachine {
         unsafe {
             let mut err = null_mut();
             if LLVMTargetMachineEmitToFile(
-                self.as_ptr(),
-                module.as_ptr(),
+                self.as_raw(),
+                module.as_raw(),
                 filename.as_ptr() as _,
                 codegen,
                 &mut err,
@@ -240,8 +240,8 @@ impl TargetMachine {
             let mut err = null_mut();
             let mut mem = null_mut();
             if LLVMTargetMachineEmitToMemoryBuffer(
-                self.as_ptr(),
-                module.as_ptr(),
+                self.as_raw(),
+                module.as_raw(),
                 codegen,
                 &mut err,
                 &mut mem,
@@ -272,6 +272,6 @@ pub fn get_host_cpu_features() -> Message {
 
 impl PassManager {
     pub fn add_analysis_passes(&self, v: &TargetMachine) {
-        unsafe { LLVMAddAnalysisPasses(v.as_ptr(), self.as_ptr()) }
+        unsafe { LLVMAddAnalysisPasses(v.as_raw(), self.as_raw()) }
     }
 }

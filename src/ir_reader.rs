@@ -14,7 +14,7 @@ impl Context {
         unsafe {
             let mut ptr = null_mut();
             let mut err = null_mut();
-            if LLVMParseIRInContext(self.as_ptr(), mem_buf.as_ptr(), &mut ptr, &mut err) != 0 {
+            if LLVMParseIRInContext(self.as_raw(), mem_buf.as_raw(), &mut ptr, &mut err) != 0 {
                 Err(Message::from_raw(err))
             } else {
                 Ok(Owning::from_raw(ptr))

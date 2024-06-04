@@ -1,7 +1,7 @@
 use llvm_sys::execution_engine::*;
 use llvm_sys::orc2::ee::*;
 
-use crate::execution_engine::JitEventListener;
+use crate::execution_engine::JITEventListener;
 use crate::opaque::Opaque;
 use crate::orc2::{OrcExecutionSession, OrcObjectLayer};
 use crate::owning::Owning;
@@ -12,12 +12,12 @@ impl OrcObjectLayer {
     ) -> Owning<OrcObjectLayer> {
         unsafe {
             Owning::from_raw(
-                LLVMOrcCreateRTDyldObjectLinkingLayerWithSectionMemoryManager(es.as_ptr()),
+                LLVMOrcCreateRTDyldObjectLinkingLayerWithSectionMemoryManager(es.as_raw()),
             )
         }
     }
 
-    // FIXME: error api
+    // FIXME: error api?
     pub fn orc_create_rt_dyld_object_linking_layer_with_mc_jit_memory_manager_like_callbacks(
         es: &OrcExecutionSession,
         create_context: LLVMMemoryManagerCreateContextCallback,
@@ -30,7 +30,7 @@ impl OrcObjectLayer {
         unsafe {
             Owning::from_raw(
                 LLVMOrcCreateRTDyldObjectLinkingLayerWithMCJITMemoryManagerLikeCallbacks(
-                    es.as_ptr(),
+                    es.as_raw(),
                     create_context,
                     notify_terminating,
                     allocate_code_section,
@@ -45,12 +45,12 @@ impl OrcObjectLayer {
     // FIXME: owner?
     pub fn orc_rt_dyld_object_linking_layer_register_jit_event_listener(
         &self,
-        listener: &JitEventListener,
+        listener: &JITEventListener,
     ) {
         unsafe {
             LLVMOrcRTDyldObjectLinkingLayerRegisterJITEventListener(
-                self.as_ptr(),
-                listener.as_ptr(),
+                self.as_raw(),
+                listener.as_raw(),
             )
         }
     }

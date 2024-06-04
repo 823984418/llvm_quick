@@ -74,10 +74,10 @@ impl MemoryBuffer {
     }
 
     pub fn get_size(&self) -> usize {
-        unsafe { LLVMGetBufferSize(self.as_ptr()) }
+        unsafe { LLVMGetBufferSize(self.as_raw()) }
     }
 
     pub fn get_start(&self) -> *const u8 {
-        unsafe { LLVMGetBufferStart(self.as_ptr()) as *const u8 }
+        unsafe { LLVMGetBufferStart(self.as_raw()) as *const u8 }
     }
 }

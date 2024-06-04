@@ -19,13 +19,13 @@ pub struct Owning<T: OpaqueDrop> {
 
 impl<T: OpaqueClone> Clone for Owning<T> {
     fn clone(&self) -> Self {
-        unsafe { Self::from_raw(T::clone_raw(self.as_ptr())) }
+        unsafe { Self::from_raw(T::clone_raw(self.as_raw())) }
     }
 }
 
 impl<T: OpaqueDrop> Drop for Owning<T> {
     fn drop(&mut self) {
-        unsafe { T::drop_raw(self.as_ptr()) };
+        unsafe { T::drop_raw(self.as_raw()) };
     }
 }
 
@@ -53,7 +53,7 @@ impl<T: OpaqueDrop> Owning<T> {
     }
 
     pub unsafe fn into_raw(self) -> *mut T::Inner {
-        let ptr = self.as_ptr();
+        let ptr = self.as_raw();
         forget(self);
         ptr
     }

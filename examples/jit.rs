@@ -35,7 +35,7 @@ impl<'ctx> CodeGen<'ctx> {
         self.builder.return_value(sum);
 
         println!("{:?}", module);
-        println!("{:?}", function.get_name());
+        println!("{:?}", function.get_name_string());
 
         ExecutionEngine::create_mc_jit_compiler_for_module(
             module,
@@ -65,7 +65,7 @@ fn main() {
 
     let context = Context::create();
 
-    context.set_diagnostic_handler(|info| {
+    context.set_diagnostic_handler_leak(|info| {
         println!("{:?}", info.get_description());
     });
 

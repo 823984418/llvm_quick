@@ -5,11 +5,16 @@ use llvm_sys::core::*;
 use llvm_sys::*;
 
 use crate::core::context::Context;
+use crate::core::type_tag::functions::{fun, fun_any};
+use crate::core::type_tag::{any, TagTuple, TypeTag, TypeTuple};
 use crate::core::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
-use crate::type_tag::array_tag::{array, array_sized};
-use crate::type_tag::function_tag::{fun, fun_any};
-use crate::type_tag::{any, TagTuple, TypeTag, TypeTuple};
+
+pub mod arrays;
+pub mod floats;
+pub mod integers;
+pub mod others;
+pub mod pointers;
 
 #[repr(transparent)]
 pub struct Type<T: TypeTag> {
@@ -23,13 +28,13 @@ unsafe impl<T: TypeTag> Opaque for Type<T> {
 
 impl<T: TypeTag> Debug for Type<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        T::type_debug_fmt(self, f)
+        f.write_str(self.print_to_string().to_str().unwrap())
     }
 }
 
 impl<T: TypeTag> Type<T> {
     pub unsafe fn cast_unchecked<N: TypeTag>(&self) -> &Type<N> {
-        unsafe { Type::from_ref(self.as_ptr()) }
+        unsafe { Type::from_ref(self.as_raw()) }
     }
 
     pub fn try_cast<N: TypeTag>(&self) -> Option<&Type<N>> {
@@ -46,17 +51,25 @@ impl<T: TypeTag> Type<T> {
 
     /// Obtain the enumerated type of a Type instance.
     pub fn get_kind(&self) -> LLVMTypeKind {
-        T::type_get_kind(self)
+        unsafe { LLVMGetTypeKind(self.as_raw()) }
+    }
+
+    pub fn is_size(&self) -> bool {
+        unsafe { LLVMTypeIsSized(self.as_raw()) != 0 }
+    }
+
+    /// Obtain the context to which this type instance is associated.
+    pub fn get_context(&self) -> &Context {
+        unsafe { Context::from_ref(LLVMGetTypeContext(self.as_raw())) }
+    }
+
+    pub fn dump(&self) {
+        unsafe { LLVMDumpType(self.as_raw()) };
     }
 
     /// Return a string representation of the type.
     pub fn print_to_string(&self) -> Message {
-        unsafe { Message::from_raw(LLVMPrintTypeToString(self.as_ptr())) }
-    }
-
-    /// Obtain the context to which this type instance is associated.
-    pub fn context(&self) -> &Context {
-        unsafe { Context::from_ref(LLVMGetTypeContext(self.as_ptr())) }
+        unsafe { Message::from_raw(LLVMPrintTypeToString(self.as_raw())) }
     }
 
     /// Obtain a function type consisting of a specified signature.
@@ -65,7 +78,7 @@ impl<T: TypeTag> Type<T> {
     /// and whether the function is variadic.
     pub fn fun_any<'s>(&'s self, args: &[&'s Type<any>], var: bool) -> &'s Type<fun_any> {
         unsafe {
-            let ty = LLVMFunctionType(self.as_ptr(), args.as_ptr() as _, args.len() as _, var as _);
+            let ty = LLVMFunctionType(self.as_raw(), args.as_ptr() as _, args.len() as _, var as _);
             Type::from_ref(ty)
         }
     }
@@ -90,19 +103,5 @@ impl<T: TypeTag> Type<T> {
             self.fun_any(ArgTypeTuple::Tags::type_into_slice(args, slice), true)
                 .cast_unchecked()
         })
-    }
-
-    /// Create a fixed size array type that refers to a specific type.
-    ///
-    /// The created type will exist in the context that its element type exists in.
-    pub fn array(&self, count: u64) -> &Type<array<T>> {
-        unsafe { Type::from_ref(LLVMArrayType2(self.as_ptr(), count)) }
-    }
-
-    /// Create a fixed size array type that refers to a specific type.
-    ///
-    /// The created type will exist in the context that its element type exists in.
-    pub fn array_sized<const N: u64>(&self) -> &Type<array_sized<T, N>> {
-        unsafe { self.array(N).cast_unchecked() }
     }
 }

@@ -50,7 +50,7 @@ impl OrcLLJitBuilder {
     }
 
     pub fn set_jit_target_machine_builder(&self, j: Owning<OrcJitTargetMachineBuilder>) {
-        unsafe { LLVMOrcLLJITBuilderSetJITTargetMachineBuilder(self.as_ptr(), j.into_raw()) };
+        unsafe { LLVMOrcLLJITBuilderSetJITTargetMachineBuilder(self.as_raw(), j.into_raw()) };
     }
 
     pub fn set_object_linking_layer_creator_raw(
@@ -58,7 +58,7 @@ impl OrcLLJitBuilder {
         f: LLVMOrcLLJITBuilderObjectLinkingLayerCreatorFunction,
         ctx: *mut (),
     ) {
-        unsafe { LLVMOrcLLJITBuilderSetObjectLinkingLayerCreator(self.as_ptr(), f, ctx as _) };
+        unsafe { LLVMOrcLLJITBuilderSetObjectLinkingLayerCreator(self.as_raw(), f, ctx as _) };
     }
 }
 
@@ -75,25 +75,25 @@ impl OrcLLJit {
     }
 
     pub fn get_execution_session(&self) -> &OrcExecutionSession {
-        unsafe { OrcExecutionSession::from_ref(LLVMOrcLLJITGetExecutionSession(self.as_ptr())) }
+        unsafe { OrcExecutionSession::from_ref(LLVMOrcLLJITGetExecutionSession(self.as_raw())) }
     }
 
     pub fn get_main_jit_dylib(&self) -> &OrcJitDylib {
-        unsafe { OrcJitDylib::from_ref(LLVMOrcLLJITGetMainJITDylib(self.as_ptr())) }
+        unsafe { OrcJitDylib::from_ref(LLVMOrcLLJITGetMainJITDylib(self.as_raw())) }
     }
 
     pub fn get_triple(&self) -> &CStr {
-        unsafe { CStr::from_ptr(LLVMOrcLLJITGetTripleString(self.as_ptr())) }
+        unsafe { CStr::from_ptr(LLVMOrcLLJITGetTripleString(self.as_raw())) }
     }
 
     pub fn get_global_prefix(&self) -> c_char {
-        unsafe { LLVMOrcLLJITGetGlobalPrefix(self.as_ptr()) }
+        unsafe { LLVMOrcLLJITGetGlobalPrefix(self.as_raw()) }
     }
 
     pub fn mangle_and_intern(&self, unmangled_name: &CStr) -> Owning<OrcSymbolStringPoolEntry> {
         unsafe {
             Owning::from_raw(LLVMOrcLLJITMangleAndIntern(
-                self.as_ptr(),
+                self.as_raw(),
                 unmangled_name.as_ptr(),
             ))
         }
@@ -106,8 +106,8 @@ impl OrcLLJit {
     ) -> Result<(), Owning<Error>> {
         unsafe {
             Error::check(LLVMOrcLLJITAddObjectFile(
-                self.as_ptr(),
-                jd.as_ptr(),
+                self.as_raw(),
+                jd.as_raw(),
                 obj_buffer.into_raw(),
             ))
         }
@@ -120,8 +120,8 @@ impl OrcLLJit {
     ) -> Result<(), Owning<Error>> {
         unsafe {
             Error::check(LLVMOrcLLJITAddObjectFileWithRT(
-                self.as_ptr(),
-                rt.as_ptr(),
+                self.as_raw(),
+                rt.as_raw(),
                 obj_buffer.into_raw(),
             ))
         }
@@ -134,8 +134,8 @@ impl OrcLLJit {
     ) -> Result<(), Owning<Error>> {
         unsafe {
             Error::check(LLVMOrcLLJITAddLLVMIRModule(
-                self.as_ptr(),
-                jd.as_ptr(),
+                self.as_raw(),
+                jd.as_raw(),
                 tsm.into_raw(),
             ))
         }
@@ -147,8 +147,8 @@ impl OrcLLJit {
     ) -> Result<(), Owning<Error>> {
         unsafe {
             Error::check(LLVMOrcLLJITAddLLVMIRModuleWithRT(
-                self.as_ptr(),
-                rt.as_ptr(),
+                self.as_raw(),
+                rt.as_raw(),
                 tsm.into_raw(),
             ))
         }
@@ -158,7 +158,7 @@ impl OrcLLJit {
         unsafe {
             let mut result = 0;
             Error::check(LLVMOrcLLJITLookup(
-                self.as_ptr(),
+                self.as_raw(),
                 &mut result,
                 name.as_ptr(),
             ))?;
@@ -167,24 +167,24 @@ impl OrcLLJit {
     }
 
     pub fn get_obj_linking_layer(&self) -> &OrcObjectLayer {
-        unsafe { OrcObjectLayer::from_ref(LLVMOrcLLJITGetObjLinkingLayer(self.as_ptr())) }
+        unsafe { OrcObjectLayer::from_ref(LLVMOrcLLJITGetObjLinkingLayer(self.as_raw())) }
     }
 
     pub fn get_obj_transform_layer(&self) -> &OrcObjectTransformLayer {
         unsafe {
-            OrcObjectTransformLayer::from_ref(LLVMOrcLLJITGetObjTransformLayer(self.as_ptr()))
+            OrcObjectTransformLayer::from_ref(LLVMOrcLLJITGetObjTransformLayer(self.as_raw()))
         }
     }
 
     pub fn get_ir_transform_layer(&self) -> &OrcIrTransformLayer {
-        unsafe { OrcIrTransformLayer::from_ref(LLVMOrcLLJITGetIRTransformLayer(self.as_ptr())) }
+        unsafe { OrcIrTransformLayer::from_ref(LLVMOrcLLJITGetIRTransformLayer(self.as_raw())) }
     }
 
     pub fn get_data_layout_str(&self) -> &CStr {
-        unsafe { CStr::from_ptr(LLVMOrcLLJITGetDataLayoutStr(self.as_ptr())) }
+        unsafe { CStr::from_ptr(LLVMOrcLLJITGetDataLayoutStr(self.as_raw())) }
     }
 
     pub fn enable_debug_support(&self) -> Result<(), Owning<Error>> {
-        unsafe { Error::check(LLVMOrcLLJITEnableDebugSupport(self.as_ptr())) }
+        unsafe { Error::check(LLVMOrcLLJITEnableDebugSupport(self.as_raw())) }
     }
 }

@@ -21,7 +21,7 @@ pub unsafe trait Opaque: Sized {
         unsafe { &*(ptr as *mut Self) }
     }
 
-    fn as_ptr(&self) -> *mut Self::Inner {
+    fn as_raw(&self) -> *mut Self::Inner {
         self as *const Self as *mut Self::Inner
     }
 }

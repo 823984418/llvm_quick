@@ -6,13 +6,13 @@ use llvm_sys::core::*;
 use llvm_sys::*;
 
 use crate::core::context::Context;
+use crate::core::type_tag::any;
+use crate::core::type_tag::functions::FunTypeTag;
 use crate::core::types::Type;
 use crate::core::values::Value;
 use crate::core::Message;
 use crate::opaque::{Opaque, PhantomOpaque};
-use crate::owning::OpaqueDrop;
-use crate::type_tag::any;
-use crate::type_tag::function_tag::FunTypeTag;
+use crate::owning::{OpaqueClone, OpaqueDrop, Owning};
 
 #[repr(transparent)]
 pub struct Module<'s> {
@@ -36,23 +36,39 @@ impl<'s> Debug for Module<'s> {
     }
 }
 
+impl Context {
+    /// Create a new, empty module in a specific context.
+    pub fn create_module(&self, name: &CStr) -> Owning<Module> {
+        unsafe {
+            let ptr = LLVMModuleCreateWithNameInContext(name.as_ptr(), self.as_raw());
+            Owning::from_raw(ptr)
+        }
+    }
+}
+
+impl<'s> OpaqueClone for Module<'s> {
+    unsafe fn clone_raw(ptr: *mut Self::Inner) -> *mut Self::Inner {
+        unsafe { LLVMCloneModule(ptr) }
+    }
+}
+
 impl<'s> Module<'s> {
     /// Obtain the context to which this module is associated.
     pub fn context(&self) -> &'s Context {
-        unsafe { Context::from_ref(LLVMGetModuleContext(self.as_ptr())) }
+        unsafe { Context::from_ref(LLVMGetModuleContext(self.as_raw())) }
     }
 
     /// Add a function to a module under a specified name.
     pub fn add_function<T: FunTypeTag>(&self, name: &CStr, ty: &'s Type<T>) -> &'s Value<T> {
-        unsafe { Value::from_ref(LLVMAddFunction(self.as_ptr(), name.as_ptr(), ty.as_ptr())) }
+        unsafe { Value::from_ref(LLVMAddFunction(self.as_raw(), name.as_ptr(), ty.as_raw())) }
     }
 
     /// Obtain a Function value from a Module by its name.
     pub fn get_function<T: FunTypeTag>(&self, name: &CStr) -> &'s Value<T> {
-        unsafe { Value::<any>::from_ref(LLVMGetNamedFunction(self.as_ptr(), name.as_ptr())).cast() }
+        unsafe { Value::<any>::from_ref(LLVMGetNamedFunction(self.as_raw(), name.as_ptr())).cast() }
     }
 
     pub fn print_to_string(&self) -> Message {
-        unsafe { Message::from_raw(LLVMPrintModuleToString(self.as_ptr())) }
+        unsafe { Message::from_raw(LLVMPrintModuleToString(self.as_raw())) }
     }
 }

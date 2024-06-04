@@ -23,4 +23,3 @@ pub mod support;
 pub mod target;
 pub mod target_machine;
 pub mod transforms;
-pub mod type_tag;

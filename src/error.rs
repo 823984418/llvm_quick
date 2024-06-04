@@ -38,11 +38,11 @@ impl Error {
     }
 
     pub fn get_type_id(&self) -> LLVMErrorTypeId {
-        unsafe { LLVMGetErrorTypeId(self.as_ptr()) }
+        unsafe { LLVMGetErrorTypeId(self.as_raw()) }
     }
 
     pub fn get_message(&self) -> ErrorMessage {
-        unsafe { ErrorMessage::from_raw(LLVMGetErrorMessage(self.as_ptr())) }
+        unsafe { ErrorMessage::from_raw(LLVMGetErrorMessage(self.as_raw())) }
     }
 }
 

@@ -15,10 +15,10 @@ unsafe impl Opaque for DiagnosticInfo {
 
 impl DiagnosticInfo {
     pub fn get_description(&self) -> Message {
-        unsafe { Message::from_raw(LLVMGetDiagInfoDescription(self.as_ptr())) }
+        unsafe { Message::from_raw(LLVMGetDiagInfoDescription(self.as_raw())) }
     }
 
     pub fn get_severity(&self) -> LLVMDiagnosticSeverity {
-        unsafe { LLVMGetDiagInfoSeverity(self.as_ptr()) }
+        unsafe { LLVMGetDiagInfoSeverity(self.as_raw()) }
     }
 }

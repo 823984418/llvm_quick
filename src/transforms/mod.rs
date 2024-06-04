@@ -1,4 +1,4 @@
 pub mod pass_builder;
 
-// TODO: LLVMAddLowerSwitchPass
-// TODO: LLVMAddPromoteMemoryToRegisterPass
+// FIXME: LLVMAddLowerSwitchPass
+// FIXME: LLVMAddPromoteMemoryToRegisterPass

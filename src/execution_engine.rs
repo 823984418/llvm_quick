@@ -10,6 +10,11 @@ use llvm_sys::*;
 
 use crate::core::context::Context;
 use crate::core::module::Module;
+use crate::core::type_tag::floats::FloatTypeTag;
+use crate::core::type_tag::functions::{fun, fun_any, FunTypeTag};
+use crate::core::type_tag::integers::{int32, IntTypeTag};
+use crate::core::type_tag::pointers::ptr;
+use crate::core::type_tag::TypeTag;
 use crate::core::types::Type;
 use crate::core::values::Value;
 use crate::core::Message;
@@ -17,11 +22,6 @@ use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{OpaqueDrop, Owning};
 use crate::target::TargetData;
 use crate::target_machine::TargetMachine;
-use crate::type_tag::float_tag::FloatTypeTag;
-use crate::type_tag::function_tag::{fun, fun_any, FunTypeTag};
-use crate::type_tag::integer_tag::{int32, IntTypeTag};
-use crate::type_tag::pointer_tag::ptr;
-use crate::type_tag::TypeTag;
 
 #[repr(transparent)]
 pub struct GenericValue {
@@ -55,26 +55,26 @@ impl<'s> OpaqueDrop for ExecutionEngine<'s> {
 }
 
 #[repr(transparent)]
-pub struct McJitMemoryManager {
+pub struct MCJITMemoryManager {
     _opaque: PhantomOpaque,
 }
 
-unsafe impl<'s> Opaque for McJitMemoryManager {
+unsafe impl<'s> Opaque for MCJITMemoryManager {
     type Inner = LLVMOpaqueMCJITMemoryManager;
 }
 
-impl<'s> OpaqueDrop for McJitMemoryManager {
+impl<'s> OpaqueDrop for MCJITMemoryManager {
     unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeMCJITMemoryManager(ptr) }
     }
 }
 
 #[repr(transparent)]
-pub struct JitEventListener {
+pub struct JITEventListener {
     _opaque: PhantomOpaque,
 }
 
-unsafe impl Opaque for JitEventListener {
+unsafe impl Opaque for JITEventListener {
     type Inner = LLVMOpaqueJITEventListener;
 }
 
@@ -83,7 +83,7 @@ pub struct MCJITCompilerOptions {
     pub code_model: LLVMCodeModel,
     pub no_frame_pointer_elim: bool,
     pub enable_fast_instruction_select: bool,
-    pub mc_jit_memory_manager: Option<Owning<McJitMemoryManager>>,
+    pub mc_jit_memory_manager: Option<Owning<MCJITMemoryManager>>,
 }
 
 impl Default for MCJITCompilerOptions {
@@ -120,7 +120,7 @@ pub fn link_in_interpreter() {
 
 impl GenericValue {
     pub fn create_int<T: IntTypeTag>(ty: &Type<T>, n: u64, is_signed: bool) -> Owning<Self> {
-        unsafe { Owning::from_raw(LLVMCreateGenericValueOfInt(ty.as_ptr(), n, is_signed as _)) }
+        unsafe { Owning::from_raw(LLVMCreateGenericValueOfInt(ty.as_raw(), n, is_signed as _)) }
     }
 
     pub fn create_pointer<T>(p: *mut T) -> Owning<Self> {
@@ -128,23 +128,23 @@ impl GenericValue {
     }
 
     pub fn create_float<T: FloatTypeTag>(ty: &Type<T>, n: f64) -> Owning<Self> {
-        unsafe { Owning::from_raw(LLVMCreateGenericValueOfFloat(ty.as_ptr(), n)) }
+        unsafe { Owning::from_raw(LLVMCreateGenericValueOfFloat(ty.as_raw(), n)) }
     }
 
     pub fn int_width(&self) -> u32 {
-        unsafe { LLVMGenericValueIntWidth(self.as_ptr()) }
+        unsafe { LLVMGenericValueIntWidth(self.as_raw()) }
     }
 
     pub fn to_int(&self, is_signed: bool) -> u64 {
-        unsafe { LLVMGenericValueToInt(self.as_ptr(), is_signed as _) }
+        unsafe { LLVMGenericValueToInt(self.as_raw(), is_signed as _) }
     }
 
     pub fn to_pointer(&self) -> *mut () {
-        unsafe { LLVMGenericValueToPointer(self.as_ptr()) as _ }
+        unsafe { LLVMGenericValueToPointer(self.as_raw()) as _ }
     }
 
     pub fn to_float<T: FloatTypeTag>(&self, ty: &Type<T>) -> f64 {
-        unsafe { LLVMGenericValueToFloat(ty.as_ptr(), self.as_ptr()) }
+        unsafe { LLVMGenericValueToFloat(ty.as_raw(), self.as_raw()) }
     }
 }
 
@@ -220,11 +220,11 @@ impl<'s> ExecutionEngine<'s> {
     }
 
     pub fn run_static_constructors(&self) {
-        unsafe { LLVMRunStaticConstructors(self.as_ptr()) };
+        unsafe { LLVMRunStaticConstructors(self.as_raw()) };
     }
 
     pub fn run_static_destructors(&self) {
-        unsafe { LLVMRunStaticDestructors(self.as_ptr()) };
+        unsafe { LLVMRunStaticDestructors(self.as_raw()) };
     }
 
     pub fn run_function_as_main(
@@ -241,8 +241,8 @@ impl<'s> ExecutionEngine<'s> {
             .collect::<Vec<_>>();
         unsafe {
             LLVMRunFunctionAsMain(
-                self.as_ptr(),
-                f.as_ptr(),
+                self.as_raw(),
+                f.as_raw(),
                 args.len() as u32,
                 args.as_ptr(),
                 envs.as_ptr(),
@@ -257,8 +257,8 @@ impl<'s> ExecutionEngine<'s> {
     ) -> Owning<GenericValue> {
         unsafe {
             Owning::from_raw(LLVMRunFunction(
-                self.as_ptr(),
-                f.as_ptr(),
+                self.as_raw(),
+                f.as_raw(),
                 args.len() as u32,
                 args.as_ptr() as _,
             ))
@@ -266,18 +266,18 @@ impl<'s> ExecutionEngine<'s> {
     }
 
     pub fn free_machine_code_for_function<T: FunTypeTag>(&self, f: &'s Value<T>) {
-        unsafe { LLVMFreeMachineCodeForFunction(self.as_ptr(), f.as_ptr()) };
+        unsafe { LLVMFreeMachineCodeForFunction(self.as_raw(), f.as_raw()) };
     }
 
     pub fn add_module(&self, m: Owning<Module<'s>>) {
-        unsafe { LLVMAddModule(self.as_ptr(), m.into_raw()) };
+        unsafe { LLVMAddModule(self.as_raw(), m.into_raw()) };
     }
 
     pub fn remove_module(&self, m: *const Module<'s>) -> Result<Owning<Module>, Message> {
         unsafe {
             let mut ptr = null_mut();
             let mut err = null_mut();
-            if LLVMRemoveModule(self.as_ptr(), m as _, &mut ptr, &mut err) != 0 {
+            if LLVMRemoveModule(self.as_raw(), m as _, &mut ptr, &mut err) != 0 {
                 return Err(Message::from_raw(err));
             }
             Ok(Owning::from_raw(ptr))
@@ -287,43 +287,43 @@ impl<'s> ExecutionEngine<'s> {
     pub fn find_function(&self, name: &CStr) -> Option<&'s Value<fun_any>> {
         unsafe {
             let mut ptr = null_mut();
-            if LLVMFindFunction(self.as_ptr(), name.as_ptr(), &mut ptr) != 0 {
+            if LLVMFindFunction(self.as_raw(), name.as_ptr(), &mut ptr) != 0 {
                 return None;
             }
             Some(Value::from_ref(ptr))
         }
     }
 
-    // TODO: LLVMRecompileAndRelinkFunction
+    // FIXME: LLVMRecompileAndRelinkFunction
 
     pub fn get_target_data(&self) -> &TargetData {
-        unsafe { TargetData::from_ref(LLVMGetExecutionEngineTargetData(self.as_ptr())) }
+        unsafe { TargetData::from_ref(LLVMGetExecutionEngineTargetData(self.as_raw())) }
     }
 
     pub fn get_target_machine(&self) -> &TargetMachine {
-        unsafe { TargetMachine::from_ref(LLVMGetExecutionEngineTargetMachine(self.as_ptr())) }
+        unsafe { TargetMachine::from_ref(LLVMGetExecutionEngineTargetMachine(self.as_raw())) }
     }
 
     pub fn add_global_mapping<T: TypeTag>(&self, global: &'s Value<T>, addr: *mut ()) {
-        unsafe { LLVMAddGlobalMapping(self.as_ptr(), global.as_ptr(), addr as _) }
+        unsafe { LLVMAddGlobalMapping(self.as_raw(), global.as_raw(), addr as _) }
     }
 
     pub fn get_pointer_to_global<T: TypeTag>(&self, global: &'s Value<T>) -> *mut () {
-        unsafe { LLVMGetPointerToGlobal(self.as_ptr(), global.as_ptr()) as _ }
+        unsafe { LLVMGetPointerToGlobal(self.as_raw(), global.as_raw()) as _ }
     }
 
     pub fn get_global_value_address(&self, name: &CStr) -> u64 {
-        unsafe { LLVMGetGlobalValueAddress(self.as_ptr(), name.as_ptr()) }
+        unsafe { LLVMGetGlobalValueAddress(self.as_raw(), name.as_ptr()) }
     }
 
     pub fn get_function_address(&self, name: &CStr) -> u64 {
-        unsafe { LLVMGetFunctionAddress(self.as_ptr(), name.as_ptr()) }
+        unsafe { LLVMGetFunctionAddress(self.as_raw(), name.as_ptr()) }
     }
 
     pub fn get_err_msg(&self) -> Result<(), Message> {
         unsafe {
             let mut ptr = null_mut();
-            if LLVMExecutionEngineGetErrMsg(self.as_ptr(), &mut ptr) != 0 {
+            if LLVMExecutionEngineGetErrMsg(self.as_raw(), &mut ptr) != 0 {
                 return Err(Message::from_raw(ptr));
             }
             Ok(())
@@ -331,7 +331,7 @@ impl<'s> ExecutionEngine<'s> {
     }
 }
 
-pub trait SimpleMcJitMemoryManager {
+pub trait SimpleMCJitMemoryManager {
     fn allocate_code_section(
         &self,
         size: usize,
@@ -352,11 +352,11 @@ pub trait SimpleMcJitMemoryManager {
     fn finalize_memory(&self) -> Result<(), Message>;
 }
 
-impl McJitMemoryManager {
-    pub fn create_simple<T: SimpleMcJitMemoryManager>(t: T) -> Owning<Self> {
+impl MCJITMemoryManager {
+    pub fn create_simple<T: SimpleMCJitMemoryManager>(t: T) -> Owning<Self> {
         let opaque = Box::into_raw(Box::new(t));
 
-        extern "C" fn allocate_code_section_raw<T: SimpleMcJitMemoryManager>(
+        extern "C" fn allocate_code_section_raw<T: SimpleMCJitMemoryManager>(
             this: *mut c_void,
             size: usize,
             alignment: u32,
@@ -372,7 +372,7 @@ impl McJitMemoryManager {
                 )
             }
         }
-        extern "C" fn allocate_data_section_raw<T: SimpleMcJitMemoryManager>(
+        extern "C" fn allocate_data_section_raw<T: SimpleMCJitMemoryManager>(
             this: *mut c_void,
             size: usize,
             alignment: u32,
@@ -390,7 +390,7 @@ impl McJitMemoryManager {
                 )
             }
         }
-        extern "C" fn finalize_memory_raw<T: SimpleMcJitMemoryManager>(
+        extern "C" fn finalize_memory_raw<T: SimpleMCJitMemoryManager>(
             this: *mut c_void,
             err_msg: *mut *mut c_char,
         ) -> LLVMBool {
@@ -403,7 +403,7 @@ impl McJitMemoryManager {
                 }
             }
         }
-        extern "C" fn destroy_raw<T: SimpleMcJitMemoryManager>(this: *mut c_void) {
+        extern "C" fn destroy_raw<T: SimpleMCJitMemoryManager>(this: *mut c_void) {
             unsafe {
                 let _ = Box::from_raw(this as *mut T);
             }
@@ -437,7 +437,7 @@ impl McJitMemoryManager {
     }
 }
 
-impl JitEventListener {
+impl JITEventListener {
     pub fn create_gdb_registration_listener() -> &'static Self {
         unsafe { Self::from_ref(LLVMCreateGDBRegistrationListener()) }
     }

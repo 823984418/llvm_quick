@@ -1,22 +1,18 @@
-use std::fmt::Formatter;
-
-use llvm_sys::core::*;
 use llvm_sys::*;
 
+use crate::core::type_tag::arrays::array;
+use crate::core::type_tag::floats::{bfloat, double, float, fp128, half, ppc_fp128, x86_fp80};
+use crate::core::type_tag::functions::fun;
+use crate::core::type_tag::integers::int;
+use crate::core::type_tag::pointers::ptr;
 use crate::core::types::Type;
 use crate::core::values::Value;
-use crate::opaque::Opaque;
-use crate::type_tag::array_tag::array_sized;
-use crate::type_tag::float_tag::{bfloat, double, float, fp128, half, ppc_fp128, x86_fp80};
-use crate::type_tag::function_tag::fun;
-use crate::type_tag::integer_tag::int;
-use crate::type_tag::pointer_tag::ptr;
 
-pub mod array_tag;
-pub mod float_tag;
-pub mod function_tag;
-pub mod integer_tag;
-pub mod pointer_tag;
+pub mod arrays;
+pub mod floats;
+pub mod functions;
+pub mod integers;
+pub mod pointers;
 
 pub(crate) unsafe fn type_check_kind<T: TypeTag>(
     ty: &Type<any>,
@@ -30,25 +26,13 @@ pub(crate) unsafe fn type_check_kind<T: TypeTag>(
 }
 
 pub trait TypeTag: Copy + 'static {
-    fn type_debug_fmt(ty: &Type<Self>, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str(ty.print_to_string().to_str().unwrap())
-    }
-
-    fn type_get_kind(ty: &Type<Self>) -> LLVMTypeKind {
-        unsafe { LLVMGetTypeKind(ty.as_ptr()) }
-    }
-
     fn type_cast(ty: &Type<any>) -> Option<&Type<Self>>;
-
-    fn value_debug_fmt(val: &Value<Self>, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str(val.print_to_string().to_str().unwrap())
-    }
 }
 
 pub trait InstanceTypeTag: TypeTag {}
 impl InstanceTypeTag for void {}
 impl InstanceTypeTag for label {}
-impl<T: InstanceTypeTag, const N: u64> InstanceTypeTag for array_sized<T, N> {}
+impl<T: InstanceTypeTag, const N: u64> InstanceTypeTag for array<T, N> {}
 impl InstanceTypeTag for half {}
 impl InstanceTypeTag for float {}
 impl InstanceTypeTag for double {}
@@ -90,14 +74,6 @@ impl TypeTag for any {
 pub struct void {}
 
 impl TypeTag for void {
-    fn type_debug_fmt(_ty: &Type<Self>, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str("void")
-    }
-
-    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
-        LLVMTypeKind::LLVMVoidTypeKind
-    }
-
     fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
         unsafe { type_check_kind(ty, LLVMTypeKind::LLVMVoidTypeKind) }
     }
@@ -108,14 +84,6 @@ impl TypeTag for void {
 pub struct label {}
 
 impl TypeTag for label {
-    fn type_debug_fmt(_ty: &Type<Self>, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.write_str("label")
-    }
-
-    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
-        LLVMTypeKind::LLVMLabelTypeKind
-    }
-
     fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
         unsafe { type_check_kind(ty, LLVMTypeKind::LLVMLabelTypeKind) }
     }

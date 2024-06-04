@@ -4,10 +4,10 @@ use std::marker::PhantomData;
 use llvm_sys::core::*;
 use llvm_sys::*;
 
+use crate::core::type_tag::{any, type_check_kind, TagTuple, TypeTag};
 use crate::core::types::Type;
 use crate::core::values::Value;
 use crate::opaque::Opaque;
-use crate::type_tag::{any, type_check_kind, TagTuple, TypeTag};
 
 pub trait FunTypeTag: TypeTag {
     fn type_get_param_count(ty: &Type<Self>) -> u32;
@@ -34,10 +34,6 @@ pub trait FunTypeTag: TypeTag {
 pub struct fun_any {}
 
 impl TypeTag for fun_any {
-    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
-        LLVMTypeKind::LLVMFunctionTypeKind
-    }
-
     fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
         unsafe { type_check_kind(ty, LLVMTypeKind::LLVMFunctionTypeKind) }
     }
@@ -45,11 +41,11 @@ impl TypeTag for fun_any {
 
 impl FunTypeTag for fun_any {
     fn type_get_param_count(ty: &Type<Self>) -> u32 {
-        unsafe { LLVMCountParamTypes(ty.as_ptr()) }
+        unsafe { LLVMCountParamTypes(ty.as_raw()) }
     }
 
     fn type_is_var(ty: &Type<Self>) -> bool {
-        unsafe { LLVMIsFunctionVarArg(ty.as_ptr()) != 0 }
+        unsafe { LLVMIsFunctionVarArg(ty.as_raw()) != 0 }
     }
 
     #[allow(clippy::needless_lifetimes)]
@@ -63,7 +59,7 @@ impl FunTypeTag for fun_any {
     }
 
     fn value_get_param_count(val: &Value<Self>) -> u32 {
-        unsafe { LLVMCountParams(val.as_ptr()) }
+        unsafe { LLVMCountParams(val.as_raw()) }
     }
 
     #[allow(clippy::needless_lifetimes)]
@@ -84,10 +80,6 @@ pub struct fun<Args: TagTuple, Output: TypeTag, const VAR: bool = false> {
 }
 
 impl<Args: TagTuple, Output: TypeTag, const VAR: bool> TypeTag for fun<Args, Output, VAR> {
-    fn type_get_kind(_ty: &Type<Self>) -> LLVMTypeKind {
-        LLVMTypeKind::LLVMFunctionTypeKind
-    }
-
     fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
         let ty = fun_any::type_cast(ty)?;
         if ty.is_var() != VAR {
@@ -155,7 +147,7 @@ impl<T: FunTypeTag> Type<T> {
     ) -> &'a mut [&'s Type<any>] {
         assert_eq!(slice.len(), self.get_param_count() as usize);
         unsafe {
-            LLVMGetParamTypes(self.as_ptr(), slice.as_ptr() as _);
+            LLVMGetParamTypes(self.as_raw(), slice.as_ptr() as _);
             std::mem::transmute(slice)
         }
     }
@@ -169,9 +161,9 @@ impl<T: FunTypeTag> Type<T> {
     /// Obtain the types of a function's parameters.
     pub fn get_param_vec_any(&self) -> Vec<&Type<any>> {
         unsafe {
-            let count = LLVMCountParamTypes(self.as_ptr()) as usize;
+            let count = LLVMCountParamTypes(self.as_raw()) as usize;
             let mut buffer = Vec::with_capacity(count);
-            LLVMGetParamTypes(self.as_ptr(), buffer.as_ptr() as _);
+            LLVMGetParamTypes(self.as_raw(), buffer.as_ptr() as _);
             buffer.set_len(count);
             buffer
         }
@@ -179,7 +171,7 @@ impl<T: FunTypeTag> Type<T> {
 
     /// Obtain the Type this function Type returns.
     pub fn get_return_any(&self) -> &Type<any> {
-        unsafe { Type::from_ref(LLVMGetReturnType(self.as_ptr())) }
+        unsafe { Type::from_ref(LLVMGetReturnType(self.as_raw())) }
     }
 }
 
@@ -199,18 +191,18 @@ impl<T: FunTypeTag> Value<T> {
 
     /// Obtain the calling function of a function.
     pub fn get_call_conv(&self) -> u32 {
-        unsafe { LLVMGetFunctionCallConv(self.as_ptr()) }
+        unsafe { LLVMGetFunctionCallConv(self.as_raw()) }
     }
 
     /// Set the calling convention of a function.
     pub fn set_call_conv(&self, conv: u32) {
-        unsafe { LLVMSetFunctionCallConv(self.as_ptr(), conv) };
+        unsafe { LLVMSetFunctionCallConv(self.as_raw(), conv) };
     }
 
     /// Obtain the name of the garbage collector to use during code generation.
     pub fn get_gc_raw(&self) -> *const CStr {
         unsafe {
-            let ptr = LLVMGetGC(self.as_ptr());
+            let ptr = LLVMGetGC(self.as_raw());
             if ptr.is_null() {
                 std::ptr::slice_from_raw_parts(ptr, 0) as *const CStr
             } else {
@@ -233,7 +225,7 @@ impl<T: FunTypeTag> Value<T> {
 
     /// Define the garbage collector to use during code generation.
     pub fn set_gc(&self, name: &CStr) {
-        unsafe { LLVMSetGC(self.as_ptr(), name.as_ptr()) }
+        unsafe { LLVMSetGC(self.as_raw(), name.as_ptr()) }
     }
 
     /// Obtain the number of parameters in a function.
@@ -249,7 +241,7 @@ impl<T: FunTypeTag> Value<T> {
     ) -> &mut [&'s Value<any>] {
         assert_eq!(slice.len(), self.get_param_count() as usize);
         unsafe {
-            LLVMGetParams(self.as_ptr(), slice.as_ptr() as _);
+            LLVMGetParams(self.as_raw(), slice.as_ptr() as _);
             std::mem::transmute(slice)
         }
     }
@@ -265,7 +257,7 @@ impl<T: FunTypeTag> Value<T> {
         unsafe {
             let count = self.get_param_count() as usize;
             let mut buffer = Vec::with_capacity(count);
-            LLVMGetParams(self.as_ptr(), buffer.as_ptr() as _);
+            LLVMGetParams(self.as_raw(), buffer.as_ptr() as _);
             buffer.set_len(count);
             buffer
         }
