@@ -37,6 +37,7 @@ impl Comdat {
     pub fn get_selection_kind(&self) -> LLVMComdatSelectionKind {
         unsafe { LLVMGetComdatSelectionKind(self.as_raw()) }
     }
+
     pub fn set_selection_kind(&self, kind: LLVMComdatSelectionKind) {
         unsafe { LLVMSetComdatSelectionKind(self.as_raw(), kind) };
     }
