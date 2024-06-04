@@ -17,21 +17,26 @@ unsafe impl Opaque for MemoryBuffer {
     type Inner = LLVMMemoryBuffer;
 }
 
-impl OpaqueDrop for MemoryBuffer {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMDisposeMemoryBuffer(ptr) }
-    }
-}
-
 impl MemoryBuffer {
-    pub fn create_with_memory_range_copy(data: &[u8], name: &CStr) -> Owning<Self> {
+    pub fn create_with_contents_of_file(path: &CStr) -> Result<Owning<Self>, Message> {
         unsafe {
-            let ptr = LLVMCreateMemoryBufferWithMemoryRangeCopy(
-                data.as_ptr().cast(),
-                data.len(),
-                name.as_ptr(),
-            );
-            Owning::from_raw(ptr)
+            let mut ptr = null_mut();
+            let mut err = null_mut();
+            if LLVMCreateMemoryBufferWithContentsOfFile(path.as_ptr(), &mut ptr, &mut err) != 0 {
+                return Err(Message::from_raw(err));
+            }
+            Ok(Owning::from_raw(ptr))
+        }
+    }
+
+    pub fn create_with_stdin() -> Result<Owning<Self>, Message> {
+        unsafe {
+            let mut ptr = null_mut();
+            let mut err = null_mut();
+            if LLVMCreateMemoryBufferWithSTDIN(&mut ptr, &mut err) != 0 {
+                return Err(Message::from_raw(err));
+            }
+            Ok(Owning::from_raw(ptr))
         }
     }
 
@@ -51,33 +56,28 @@ impl MemoryBuffer {
         }
     }
 
-    pub fn create_with_stdin() -> Result<Owning<Self>, Message> {
+    pub fn create_with_memory_range_copy(data: &[u8], name: &CStr) -> Owning<Self> {
         unsafe {
-            let mut ptr = null_mut();
-            let mut err = null_mut();
-            if LLVMCreateMemoryBufferWithSTDIN(&mut ptr, &mut err) != 0 {
-                return Err(Message::from_raw(err));
-            }
-            Ok(Owning::from_raw(ptr))
+            let ptr = LLVMCreateMemoryBufferWithMemoryRangeCopy(
+                data.as_ptr().cast(),
+                data.len(),
+                name.as_ptr(),
+            );
+            Owning::from_raw(ptr)
         }
     }
 
-    pub fn create_with_contents_of_file(path: &CStr) -> Result<Owning<Self>, Message> {
-        unsafe {
-            let mut ptr = null_mut();
-            let mut err = null_mut();
-            if LLVMCreateMemoryBufferWithContentsOfFile(path.as_ptr(), &mut ptr, &mut err) != 0 {
-                return Err(Message::from_raw(err));
-            }
-            Ok(Owning::from_raw(ptr))
-        }
+    pub fn get_start(&self) -> *const u8 {
+        unsafe { LLVMGetBufferStart(self.as_raw()) as *const u8 }
     }
 
     pub fn get_size(&self) -> usize {
         unsafe { LLVMGetBufferSize(self.as_raw()) }
     }
+}
 
-    pub fn get_start(&self) -> *const u8 {
-        unsafe { LLVMGetBufferStart(self.as_raw()) as *const u8 }
+impl OpaqueDrop for MemoryBuffer {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+        unsafe { LLVMDisposeMemoryBuffer(ptr) }
     }
 }

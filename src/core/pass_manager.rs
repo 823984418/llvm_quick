@@ -1,8 +1,10 @@
-use llvm_sys::*;
 use llvm_sys::core::*;
+use llvm_sys::*;
 
 use crate::core::module::Module;
 use crate::core::module_provider::ModuleProvider;
+use crate::core::type_tag::functions::FunTypeTag;
+use crate::core::values::Value;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{OpaqueDrop, Owning};
 
@@ -13,12 +15,6 @@ pub struct PassManager {
 
 unsafe impl Opaque for PassManager {
     type Inner = LLVMPassManager;
-}
-
-impl OpaqueDrop for PassManager {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMDisposePassManager(ptr) };
-    }
 }
 
 impl PassManager {
@@ -40,15 +36,25 @@ impl ModuleProvider {
 }
 
 impl PassManager {
-    pub fn initialize_function_pass_manager(&self) -> bool {
-        unsafe { LLVMInitializeFunctionPassManager(self.as_raw()) != 0 }
-    }
-
     pub fn run(&self, module: &Module) -> bool {
         unsafe { LLVMRunPassManager(self.as_raw(), module.as_raw()) != 0 }
     }
 
+    pub fn initialize_function_pass_manager(&self) -> bool {
+        unsafe { LLVMInitializeFunctionPassManager(self.as_raw()) != 0 }
+    }
+
+    pub fn run_function_pass_manager<T: FunTypeTag>(&self, f: &Value<T>) -> bool {
+        unsafe { LLVMRunFunctionPassManager(self.as_raw(), f.as_raw()) != 0 }
+    }
+
     pub fn finalize_function_pass_manager(&self) -> bool {
         unsafe { LLVMFinalizeFunctionPassManager(self.as_raw()) != 0 }
+    }
+}
+
+impl OpaqueDrop for PassManager {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+        unsafe { LLVMDisposePassManager(ptr) };
     }
 }
