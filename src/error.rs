@@ -39,7 +39,7 @@ impl Error {
 }
 
 impl OpaqueDrop for Error {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+    fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMConsumeError(ptr) };
     }
 }

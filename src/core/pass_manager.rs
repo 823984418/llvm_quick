@@ -44,7 +44,7 @@ impl PassManager {
 }
 
 impl OpaqueDrop for PassManager {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+    fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposePassManager(ptr) };
     }
 }

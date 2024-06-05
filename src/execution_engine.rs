@@ -90,7 +90,7 @@ impl GenericValue {
 }
 
 impl OpaqueDrop for GenericValue {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+    fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeGenericValue(ptr) }
     }
 }
@@ -200,7 +200,7 @@ impl<'s> ExecutionEngine<'s> {
 }
 
 impl<'s> OpaqueDrop for ExecutionEngine<'s> {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+    fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeExecutionEngine(ptr) };
     }
 }
@@ -425,7 +425,7 @@ impl MCJITMemoryManager {
 }
 
 impl<'s> OpaqueDrop for MCJITMemoryManager {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+    fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeMCJITMemoryManager(ptr) }
     }
 }

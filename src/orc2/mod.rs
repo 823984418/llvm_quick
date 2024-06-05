@@ -34,13 +34,13 @@ unsafe impl Opaque for OrcSymbolStringPoolEntry {
 }
 
 impl OpaqueDrop for OrcSymbolStringPoolEntry {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+    fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMOrcReleaseSymbolStringPoolEntry(ptr) };
     }
 }
 
 impl OpaqueClone for OrcSymbolStringPoolEntry {
-    unsafe fn clone_raw(ptr: *mut Self::Inner) -> *mut Self::Inner {
+    fn clone_raw(ptr: *mut Self::Inner) -> *mut Self::Inner {
         unsafe { LLVMOrcRetainSymbolStringPoolEntry(ptr) };
         ptr
     }
@@ -119,7 +119,7 @@ unsafe impl Opaque for OrcThreadSafeModule {
 }
 
 impl OpaqueDrop for OrcThreadSafeModule {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+    fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMOrcDisposeThreadSafeModule(ptr) };
     }
 }
@@ -134,7 +134,7 @@ unsafe impl Opaque for OrcJitTargetMachineBuilder {
 }
 
 impl OpaqueDrop for OrcJitTargetMachineBuilder {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+    fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMOrcDisposeJITTargetMachineBuilder(ptr) };
     }
 }
@@ -149,7 +149,7 @@ unsafe impl Opaque for OrcObjectLayer {
 }
 
 impl OpaqueDrop for OrcObjectLayer {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+    fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMOrcDisposeObjectLayer(ptr) };
     }
 }
@@ -191,7 +191,7 @@ unsafe impl Opaque for OrcIndirectStubsManager {
 }
 
 impl OpaqueDrop for OrcIndirectStubsManager {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+    fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMOrcDisposeIndirectStubsManager(ptr) };
     }
 }
@@ -206,7 +206,7 @@ unsafe impl Opaque for OrcLazyCallThroughManager {
 }
 
 impl OpaqueDrop for OrcLazyCallThroughManager {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+    fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMOrcDisposeLazyCallThroughManager(ptr) };
     }
 }
@@ -221,7 +221,7 @@ unsafe impl Opaque for OrcDumpObjects {
 }
 
 impl OpaqueDrop for OrcDumpObjects {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+    fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMOrcDisposeDumpObjects(ptr) };
     }
 }

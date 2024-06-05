@@ -6,11 +6,11 @@ use std::ptr::{null_mut, NonNull};
 use crate::Opaque;
 
 pub trait OpaqueDrop: Opaque {
-    unsafe fn drop_raw(ptr: *mut Self::Inner);
+    fn drop_raw(ptr: *mut Self::Inner);
 }
 
 pub trait OpaqueClone: OpaqueDrop {
-    unsafe fn clone_raw(ptr: *mut Self::Inner) -> *mut Self::Inner;
+    fn clone_raw(ptr: *mut Self::Inner) -> *mut Self::Inner;
 }
 
 pub struct Owning<T: OpaqueDrop> {
@@ -25,7 +25,7 @@ impl<T: OpaqueClone> Clone for Owning<T> {
 
 impl<T: OpaqueDrop> Drop for Owning<T> {
     fn drop(&mut self) {
-        unsafe { T::drop_raw(self.as_raw()) };
+        T::drop_raw(self.as_raw());
     }
 }
 

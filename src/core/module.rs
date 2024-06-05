@@ -13,7 +13,7 @@ use crate::Value;
 use crate::{Context, Module};
 
 impl<'s> OpaqueDrop for Module<'s> {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+    fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeModule(ptr) };
     }
 }
@@ -35,7 +35,7 @@ impl Context {
 }
 
 impl<'s> OpaqueClone for Module<'s> {
-    unsafe fn clone_raw(ptr: *mut Self::Inner) -> *mut Self::Inner {
+    fn clone_raw(ptr: *mut Self::Inner) -> *mut Self::Inner {
         unsafe { LLVMCloneModule(ptr) }
     }
 }

@@ -58,7 +58,7 @@ impl<'s> Builder<'s> {
 }
 
 impl<'s> OpaqueDrop for Builder<'s> {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+    fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeBuilder(ptr) };
     }
 }

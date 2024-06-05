@@ -20,7 +20,7 @@ unsafe impl Opaque for TargetMachine {
 }
 
 impl OpaqueDrop for TargetMachine {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+    fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeTargetMachine(ptr) };
     }
 }
@@ -35,7 +35,7 @@ unsafe impl Opaque for TargetMachineOptions {
 }
 
 impl OpaqueDrop for TargetMachineOptions {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+    fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeTargetMachineOptions(ptr) };
     }
 }

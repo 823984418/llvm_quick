@@ -38,7 +38,7 @@ impl OrcLLJITBuilder {
 }
 
 impl OpaqueDrop for OrcLLJITBuilder {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+    fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMOrcDisposeLLJITBuilder(ptr) };
     }
 }
@@ -72,7 +72,7 @@ impl OrcLLJIT {
 }
 
 impl OpaqueDrop for OrcLLJIT {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+    fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMOrcDisposeLLJIT(ptr) };
     }
 }

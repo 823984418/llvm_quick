@@ -89,7 +89,7 @@ impl PassBuilderOptions {
 }
 
 impl OpaqueDrop for PassBuilderOptions {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+    fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposePassBuilderOptions(ptr) };
     }
 }
