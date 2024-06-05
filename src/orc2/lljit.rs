@@ -14,44 +14,41 @@ use crate::owning::{OpaqueDrop, Owning};
 use crate::{MemoryBuffer, Opaque, PhantomOpaque};
 
 #[repr(transparent)]
-pub struct OrcLLJitBuilder {
+pub struct OrcLLJITBuilder {
     _opaque: PhantomOpaque,
 }
 
-unsafe impl Opaque for OrcLLJitBuilder {
+unsafe impl Opaque for OrcLLJITBuilder {
     type Inner = LLVMOrcOpaqueLLJITBuilder;
 }
 
-impl OpaqueDrop for OrcLLJitBuilder {
+#[repr(transparent)]
+pub struct OrcLLJIT {
+    _opaque: PhantomOpaque,
+}
+
+unsafe impl Opaque for OrcLLJIT {
+    type Inner = LLVMOrcOpaqueLLJIT;
+}
+
+impl OrcLLJITBuilder {
+    pub fn create() -> Owning<Self> {
+        unsafe { Owning::from_raw(LLVMOrcCreateLLJITBuilder()) }
+    }
+}
+
+impl OpaqueDrop for OrcLLJITBuilder {
     unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMOrcDisposeLLJITBuilder(ptr) };
     }
 }
 
-#[repr(transparent)]
-pub struct OrcLLJit {
-    _opaque: PhantomOpaque,
-}
-
-unsafe impl Opaque for OrcLLJit {
-    type Inner = LLVMOrcOpaqueLLJIT;
-}
-
-impl OpaqueDrop for OrcLLJit {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMOrcDisposeLLJIT(ptr) };
-    }
-}
-
-impl OrcLLJitBuilder {
-    pub fn create() -> Owning<Self> {
-        unsafe { Owning::from_raw(LLVMOrcCreateLLJITBuilder()) }
-    }
-
+impl OrcLLJITBuilder {
     pub fn set_jit_target_machine_builder(&self, j: Owning<OrcJitTargetMachineBuilder>) {
         unsafe { LLVMOrcLLJITBuilderSetJITTargetMachineBuilder(self.as_raw(), j.into_raw()) };
     }
 
+    // TODO: wrap
     pub fn set_object_linking_layer_creator_raw(
         &self,
         f: LLVMOrcLLJITBuilderObjectLinkingLayerCreatorFunction,
@@ -61,8 +58,8 @@ impl OrcLLJitBuilder {
     }
 }
 
-impl OrcLLJit {
-    pub fn create(builder: Option<Owning<OrcLLJitBuilder>>) -> Result<Owning<Self>, Owning<Error>> {
+impl OrcLLJIT {
+    pub fn create(builder: Option<Owning<OrcLLJITBuilder>>) -> Result<Owning<Self>, Owning<Error>> {
         unsafe {
             let mut ptr = null_mut();
             Error::check(LLVMOrcCreateLLJIT(
@@ -72,7 +69,15 @@ impl OrcLLJit {
             Ok(Owning::from_raw(ptr))
         }
     }
+}
 
+impl OpaqueDrop for OrcLLJIT {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+        unsafe { LLVMOrcDisposeLLJIT(ptr) };
+    }
+}
+
+impl OrcLLJIT {
     pub fn get_execution_session(&self) -> &OrcExecutionSession {
         unsafe { OrcExecutionSession::from_ref(LLVMOrcLLJITGetExecutionSession(self.as_raw())) }
     }

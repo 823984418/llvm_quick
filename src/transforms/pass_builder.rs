@@ -16,9 +16,21 @@ unsafe impl Opaque for PassBuilderOptions {
     type Inner = LLVMOpaquePassBuilderOptions;
 }
 
-impl OpaqueDrop for PassBuilderOptions {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMDisposePassBuilderOptions(ptr) };
+impl<'s> Module<'s> {
+    pub fn run_pass(
+        &self,
+        passes: &CStr,
+        target_machine: &TargetMachine,
+        options: &PassBuilderOptions,
+    ) -> Result<(), Owning<Error>> {
+        unsafe {
+            Error::check(LLVMRunPasses(
+                self.as_raw(),
+                passes.as_ptr(),
+                target_machine.as_raw(),
+                options.as_raw(),
+            ))
+        }
     }
 }
 
@@ -76,20 +88,8 @@ impl PassBuilderOptions {
     }
 }
 
-impl<'s> Module<'s> {
-    pub fn run_pass(
-        &self,
-        passes: &CStr,
-        target_machine: &TargetMachine,
-        options: &PassBuilderOptions,
-    ) -> Result<(), Owning<Error>> {
-        unsafe {
-            Error::check(LLVMRunPasses(
-                self.as_raw(),
-                passes.as_ptr(),
-                target_machine.as_raw(),
-                options.as_raw(),
-            ))
-        }
+impl OpaqueDrop for PassBuilderOptions {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+        unsafe { LLVMDisposePassBuilderOptions(ptr) };
     }
 }
