@@ -1,23 +1,13 @@
 use std::ffi::CStr;
 
 use llvm_sys::core::*;
-use llvm_sys::*;
 
-use crate::core::builder::Builder;
-use crate::core::context::Context;
 use crate::core::type_tag::functions::FunTypeTag;
 use crate::core::type_tag::{any, label, TypeTag};
-use crate::core::values::Value;
-use crate::opaque::{Opaque, PhantomOpaque};
-
-#[repr(transparent)]
-pub struct BasicBlock {
-    _opaque: PhantomOpaque,
-}
-
-unsafe impl Opaque for BasicBlock {
-    type Inner = LLVMBasicBlock;
-}
+use crate::Builder;
+use crate::Opaque;
+use crate::Value;
+use crate::{BasicBlock, Context};
 
 impl BasicBlock {
     pub fn as_value(&self) -> &Value<label> {

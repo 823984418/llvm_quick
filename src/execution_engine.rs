@@ -6,22 +6,20 @@ use std::ptr::{null, null_mut};
 use llvm_sys::execution_engine::*;
 use llvm_sys::prelude::*;
 use llvm_sys::target_machine::*;
-use llvm_sys::*;
 
-use crate::core::context::Context;
-use crate::core::module::Module;
 use crate::core::type_tag::floats::FloatTypeTag;
 use crate::core::type_tag::functions::{fun, fun_any, FunTypeTag};
 use crate::core::type_tag::integers::{int32, IntTypeTag};
 use crate::core::type_tag::pointers::ptr;
 use crate::core::type_tag::TypeTag;
-use crate::core::types::Type;
-use crate::core::values::Value;
 use crate::core::Message;
-use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{OpaqueDrop, Owning};
 use crate::target::TargetData;
 use crate::target_machine::TargetMachine;
+use crate::Type;
+use crate::Value;
+use crate::{Context, JITEventListener};
+use crate::{Module, Opaque, PhantomOpaque};
 
 #[repr(transparent)]
 pub struct GenericValue {
@@ -32,10 +30,40 @@ unsafe impl Opaque for GenericValue {
     type Inner = LLVMOpaqueGenericValue;
 }
 
+#[repr(transparent)]
+pub struct MCJITMemoryManager {
+    _opaque: PhantomOpaque,
+}
+
+unsafe impl<'s> Opaque for MCJITMemoryManager {
+    type Inner = LLVMOpaqueMCJITMemoryManager;
+}
+
 impl OpaqueDrop for GenericValue {
     unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeGenericValue(ptr) }
     }
+}
+
+pub trait SimpleMCJitMemoryManager {
+    fn allocate_code_section(
+        &self,
+        size: usize,
+        alignment: u32,
+        section_id: u32,
+        section_name: &CStr,
+    ) -> *mut u8;
+
+    fn allocate_data_section(
+        &self,
+        size: usize,
+        alignment: u32,
+        section_id: u32,
+        section_name: &CStr,
+        is_read_only: bool,
+    ) -> *mut u8;
+
+    fn finalize_memory(&self) -> Result<(), Message>;
 }
 
 #[repr(transparent)]
@@ -54,58 +82,12 @@ impl<'s> OpaqueDrop for ExecutionEngine<'s> {
     }
 }
 
-#[repr(transparent)]
-pub struct MCJITMemoryManager {
-    _opaque: PhantomOpaque,
-}
-
-unsafe impl<'s> Opaque for MCJITMemoryManager {
-    type Inner = LLVMOpaqueMCJITMemoryManager;
-}
-
-impl<'s> OpaqueDrop for MCJITMemoryManager {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMDisposeMCJITMemoryManager(ptr) }
-    }
-}
-
-#[repr(transparent)]
-pub struct JITEventListener {
-    _opaque: PhantomOpaque,
-}
-
-unsafe impl Opaque for JITEventListener {
-    type Inner = LLVMOpaqueJITEventListener;
-}
-
 pub struct MCJITCompilerOptions {
     pub opt_level: u32,
     pub code_model: LLVMCodeModel,
     pub no_frame_pointer_elim: bool,
     pub enable_fast_instruction_select: bool,
     pub mc_jit_memory_manager: Option<Owning<MCJITMemoryManager>>,
-}
-
-impl Default for MCJITCompilerOptions {
-    fn default() -> Self {
-        unsafe {
-            let mut o = LLVMMCJITCompilerOptions {
-                OptLevel: 0,
-                CodeModel: LLVMCodeModel::LLVMCodeModelJITDefault,
-                NoFramePointerElim: 0,
-                EnableFastISel: 0,
-                MCJMM: null_mut(),
-            };
-            LLVMInitializeMCJITCompilerOptions(&mut o, size_of::<LLVMMCJITCompilerOptions>());
-            Self {
-                opt_level: o.OptLevel,
-                code_model: o.CodeModel,
-                no_frame_pointer_elim: o.NoFramePointerElim != 0,
-                enable_fast_instruction_select: o.EnableFastISel != 0,
-                mc_jit_memory_manager: Owning::try_from_raw(o.MCJMM),
-            }
-        }
-    }
 }
 
 #[inline(always)]
@@ -189,7 +171,31 @@ impl<'s> ExecutionEngine<'s> {
             Ok(Owning::from_raw(ptr))
         }
     }
+}
 
+impl Default for MCJITCompilerOptions {
+    fn default() -> Self {
+        unsafe {
+            let mut o = LLVMMCJITCompilerOptions {
+                OptLevel: 0,
+                CodeModel: LLVMCodeModel::LLVMCodeModelJITDefault,
+                NoFramePointerElim: 0,
+                EnableFastISel: 0,
+                MCJMM: null_mut(),
+            };
+            LLVMInitializeMCJITCompilerOptions(&mut o, size_of::<LLVMMCJITCompilerOptions>());
+            Self {
+                opt_level: o.OptLevel,
+                code_model: o.CodeModel,
+                no_frame_pointer_elim: o.NoFramePointerElim != 0,
+                enable_fast_instruction_select: o.EnableFastISel != 0,
+                mc_jit_memory_manager: Owning::try_from_raw(o.MCJMM),
+            }
+        }
+    }
+}
+
+impl<'s> ExecutionEngine<'s> {
     /// Create an MCJIT execution engine for a module, with the given options.
     pub fn create_mc_jit_compiler_for_module(
         module: Owning<Module<'s>>,
@@ -331,27 +337,6 @@ impl<'s> ExecutionEngine<'s> {
     }
 }
 
-pub trait SimpleMCJitMemoryManager {
-    fn allocate_code_section(
-        &self,
-        size: usize,
-        alignment: u32,
-        section_id: u32,
-        section_name: &CStr,
-    ) -> *mut u8;
-
-    fn allocate_data_section(
-        &self,
-        size: usize,
-        alignment: u32,
-        section_id: u32,
-        section_name: &CStr,
-        is_read_only: bool,
-    ) -> *mut u8;
-
-    fn finalize_memory(&self) -> Result<(), Message>;
-}
-
 impl MCJITMemoryManager {
     pub fn create_simple<T: SimpleMCJitMemoryManager>(t: T) -> Owning<Self> {
         let opaque = Box::into_raw(Box::new(t));
@@ -434,6 +419,12 @@ impl MCJITMemoryManager {
                 destroy,
             ))
         }
+    }
+}
+
+impl<'s> OpaqueDrop for MCJITMemoryManager {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+        unsafe { LLVMDisposeMCJITMemoryManager(ptr) }
     }
 }
 

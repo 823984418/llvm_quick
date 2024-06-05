@@ -2,11 +2,11 @@ use std::ptr::null_mut;
 
 use llvm_sys::analysis::*;
 
-use crate::core::module::Module;
 use crate::core::type_tag::functions::FunTypeTag;
-use crate::core::values::Value;
 use crate::core::Message;
-use crate::opaque::Opaque;
+use crate::Module;
+use crate::Opaque;
+use crate::Value;
 
 impl<'s> Module<'s> {
     pub fn verify(&self, action: LLVMVerifierFailureAction) -> Result<(), Message> {

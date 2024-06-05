@@ -3,26 +3,12 @@ use std::ffi::{c_void, CStr};
 use llvm_sys::core::*;
 use llvm_sys::*;
 
-use crate::core::diagnostic::DiagnosticInfo;
 use crate::core::type_tag::any;
-use crate::core::types::Type;
-use crate::opaque::{Opaque, PhantomOpaque};
+use crate::core::Message;
 use crate::owning::{OpaqueDrop, Owning};
-
-#[repr(transparent)]
-pub struct Context {
-    _opaque: PhantomOpaque,
-}
-
-unsafe impl Opaque for Context {
-    type Inner = LLVMContext;
-}
-
-impl OpaqueDrop for Context {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMContextDispose(ptr) };
-    }
-}
+use crate::Opaque;
+use crate::Type;
+use crate::{Context, DiagnosticInfo};
 
 impl Context {
     /// Create a new context.
@@ -70,7 +56,25 @@ impl Context {
     pub fn set_discard_value_name(&self, discard: bool) {
         unsafe { LLVMContextSetDiscardValueNames(self.as_raw(), discard as _) };
     }
+}
 
+impl OpaqueDrop for Context {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+        unsafe { LLVMContextDispose(ptr) };
+    }
+}
+
+impl DiagnosticInfo {
+    pub fn get_description(&self) -> Message {
+        unsafe { Message::from_raw(LLVMGetDiagInfoDescription(self.as_raw())) }
+    }
+
+    pub fn get_severity(&self) -> LLVMDiagnosticSeverity {
+        unsafe { LLVMGetDiagInfoSeverity(self.as_raw()) }
+    }
+}
+
+impl Context {
     pub fn get_md_kind_id(&self, name: &[u8]) -> u32 {
         unsafe { LLVMGetMDKindIDInContext(self.as_raw(), name.as_ptr() as _, name.len() as _) }
     }

@@ -1,30 +1,19 @@
 use std::fmt::{Debug, Formatter};
-use std::marker::PhantomData;
 
 use llvm_sys::core::*;
 use llvm_sys::*;
 
-use crate::core::context::Context;
 use crate::core::type_tag::functions::{fun, fun_any};
 use crate::core::type_tag::{any, TagTuple, TypeTag, TypeTuple};
 use crate::core::Message;
-use crate::opaque::{Opaque, PhantomOpaque};
+use crate::Opaque;
+use crate::{Context, Type};
 
 pub mod arrays;
 pub mod floats;
 pub mod integers;
 pub mod others;
 pub mod pointers;
-
-#[repr(transparent)]
-pub struct Type<T: TypeTag> {
-    _opaque: PhantomOpaque,
-    _marker: PhantomData<fn(T) -> T>,
-}
-
-unsafe impl<T: TypeTag> Opaque for Type<T> {
-    type Inner = LLVMType;
-}
 
 impl<T: TypeTag> Debug for Type<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

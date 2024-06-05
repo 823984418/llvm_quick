@@ -1,24 +1,13 @@
 use std::ffi::CString;
 use std::fmt::{Debug, Formatter};
-use std::marker::PhantomData;
 
 use llvm_sys::core::*;
 use llvm_sys::*;
 
 use crate::core::type_tag::{any, InstanceTypeTag, TypeTag};
-use crate::core::types::Type;
 use crate::core::Message;
-use crate::opaque::{Opaque, PhantomOpaque};
-
-#[repr(transparent)]
-pub struct Value<T: TypeTag> {
-    _opaque: PhantomOpaque,
-    _marker: PhantomData<fn(T) -> T>,
-}
-
-unsafe impl<T: TypeTag> Opaque for Value<T> {
-    type Inner = LLVMValue;
-}
+use crate::Opaque;
+use crate::{Type, Value};
 
 impl<T: TypeTag> Debug for Value<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

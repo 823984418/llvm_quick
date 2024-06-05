@@ -2,8 +2,8 @@ use std::ffi::CStr;
 
 use llvm_sys::disassembler::*;
 
-use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{OpaqueDrop, Owning};
+use crate::{Opaque, PhantomOpaque};
 
 #[repr(transparent)]
 pub struct DisasmContext {
@@ -12,12 +12,6 @@ pub struct DisasmContext {
 
 unsafe impl Opaque for DisasmContext {
     type Inner = LLVMOpaqueDisasmContext;
-}
-
-impl OpaqueDrop for DisasmContext {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMDisasmDispose(ptr) };
-    }
 }
 
 impl DisasmContext {
@@ -91,7 +85,15 @@ impl DisasmContext {
             }
         }
     }
+}
 
+impl OpaqueDrop for DisasmContext {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+        unsafe { LLVMDisasmDispose(ptr) };
+    }
+}
+
+impl DisasmContext {
     pub fn instruction(&self, bytes: &[u8], pc: u64, output: &mut [u8]) -> usize {
         unsafe {
             LLVMDisasmInstruction(

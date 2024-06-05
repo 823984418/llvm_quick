@@ -2,11 +2,10 @@ use std::ffi::CStr;
 
 use llvm_sys::transforms::pass_builder::*;
 
-use crate::core::module::Module;
 use crate::error::Error;
-use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{OpaqueDrop, Owning};
 use crate::target_machine::TargetMachine;
+use crate::{Module, Opaque, PhantomOpaque};
 
 #[repr(transparent)]
 pub struct PassBuilderOptions {

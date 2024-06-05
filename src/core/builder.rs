@@ -1,35 +1,24 @@
 use std::ffi::CStr;
-use std::marker::PhantomData;
 
 use llvm_sys::core::*;
 use llvm_sys::*;
 
-use crate::core::basic_block::BasicBlock;
-use crate::core::context::Context;
-use crate::core::metadata::{Metadata, OperandBundle};
 use crate::core::type_tag::functions::FunTypeTag;
 use crate::core::type_tag::integers::{int, IntTypeTag};
 use crate::core::type_tag::{
     any, label, void, FloatMathTypeTag, InstanceTypeTag, IntMathTypeTag, TypeTag,
 };
-use crate::core::types::Type;
-use crate::core::values::Value;
-use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{OpaqueDrop, Owning};
+use crate::Context;
+use crate::Opaque;
+use crate::OperandBundle;
+use crate::Type;
+use crate::Value;
+use crate::{BasicBlock, Builder, Metadata};
 
 /// Return a constant that specifies that the result of a ShuffleVectorInst is undefined.
 pub fn get_undef_mask_elem() -> i32 {
     unsafe { LLVMGetUndefMaskElem() }
-}
-
-#[repr(transparent)]
-pub struct Builder<'s> {
-    _opaque: PhantomOpaque,
-    _marker: PhantomData<&'s Context>,
-}
-
-unsafe impl<'s> Opaque for Builder<'s> {
-    type Inner = LLVMBuilder;
 }
 
 impl Context {

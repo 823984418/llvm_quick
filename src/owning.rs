@@ -3,7 +3,7 @@ use std::mem::forget;
 use std::ops::Deref;
 use std::ptr::{null_mut, NonNull};
 
-use crate::opaque::Opaque;
+use crate::Opaque;
 
 pub trait OpaqueDrop: Opaque {
     unsafe fn drop_raw(ptr: *mut Self::Inner);

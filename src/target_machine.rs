@@ -3,13 +3,12 @@ use std::ptr::null_mut;
 
 use llvm_sys::target_machine::*;
 
-use crate::core::memory_buffer::MemoryBuffer;
-use crate::core::module::Module;
-use crate::core::pass_manager::PassManager;
 use crate::core::Message;
-use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{OpaqueDrop, Owning};
 use crate::target::TargetData;
+use crate::Module;
+use crate::PassManager;
+use crate::{MemoryBuffer, Opaque, PhantomOpaque};
 
 #[repr(transparent)]
 pub struct TargetMachine {

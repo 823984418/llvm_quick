@@ -1,21 +1,11 @@
 use llvm_sys::core::*;
-use llvm_sys::*;
 
-use crate::core::module::Module;
-use crate::core::module_provider::ModuleProvider;
 use crate::core::type_tag::functions::FunTypeTag;
-use crate::core::values::Value;
-use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{OpaqueDrop, Owning};
-
-#[repr(transparent)]
-pub struct PassManager {
-    _opaque: PhantomOpaque,
-}
-
-unsafe impl Opaque for PassManager {
-    type Inner = LLVMPassManager;
-}
+use crate::ModuleProvider;
+use crate::Opaque;
+use crate::Value;
+use crate::{Module, PassManager};
 
 impl PassManager {
     pub fn create() -> Owning<Self> {

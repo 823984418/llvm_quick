@@ -1,28 +1,16 @@
 use std::ffi::CStr;
 use std::fmt::{Debug, Formatter};
-use std::marker::PhantomData;
 
 use llvm_sys::core::*;
-use llvm_sys::*;
 
-use crate::core::context::Context;
 use crate::core::type_tag::any;
 use crate::core::type_tag::functions::FunTypeTag;
-use crate::core::types::Type;
-use crate::core::values::Value;
 use crate::core::Message;
-use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{OpaqueClone, OpaqueDrop, Owning};
-
-#[repr(transparent)]
-pub struct Module<'s> {
-    _opaque: PhantomOpaque,
-    _marker: PhantomData<&'s Context>,
-}
-
-unsafe impl<'s> Opaque for Module<'s> {
-    type Inner = LLVMModule;
-}
+use crate::Opaque;
+use crate::Type;
+use crate::Value;
+use crate::{Context, Module};
 
 impl<'s> OpaqueDrop for Module<'s> {
     unsafe fn drop_raw(ptr: *mut Self::Inner) {

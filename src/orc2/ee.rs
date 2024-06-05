@@ -1,10 +1,10 @@
 use llvm_sys::execution_engine::*;
 use llvm_sys::orc2::ee::*;
 
-use crate::execution_engine::JITEventListener;
-use crate::opaque::Opaque;
 use crate::orc2::{OrcExecutionSession, OrcObjectLayer};
 use crate::owning::Owning;
+use crate::JITEventListener;
+use crate::Opaque;
 
 impl OrcObjectLayer {
     pub fn orc_create_rt_dyld_object_layer_with_section_memory_manager(

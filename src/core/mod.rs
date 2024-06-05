@@ -11,7 +11,6 @@ pub mod attribute;
 pub mod basic_block;
 pub mod builder;
 pub mod context;
-pub mod diagnostic;
 pub mod memory_buffer;
 pub mod metadata;
 pub mod module;

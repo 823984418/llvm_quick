@@ -1,9 +1,9 @@
 use llvm_sys::core::*;
 
-use crate::core::context::Context;
 use crate::core::type_tag::void;
-use crate::core::types::Type;
-use crate::opaque::Opaque;
+use crate::Context;
+use crate::Opaque;
+use crate::Type;
 
 impl Context {
     /// Create a void type in a context.

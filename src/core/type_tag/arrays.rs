@@ -4,8 +4,8 @@ use llvm_sys::core::*;
 use llvm_sys::*;
 
 use crate::core::type_tag::{any, TypeTag};
-use crate::core::types::Type;
-use crate::opaque::Opaque;
+use crate::Opaque;
+use crate::Type;
 
 pub trait ArrayTypeTag: TypeTag {
     type ElementType: TypeTag;

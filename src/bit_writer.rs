@@ -2,10 +2,10 @@ use std::ffi::CStr;
 
 use llvm_sys::bit_writer::*;
 
-use crate::core::memory_buffer::MemoryBuffer;
-use crate::core::module::Module;
-use crate::opaque::Opaque;
 use crate::owning::Owning;
+use crate::MemoryBuffer;
+use crate::Module;
+use crate::Opaque;
 
 impl<'s> Module<'s> {
     pub fn write_bitcode_to_file(&self, path: &CStr) -> Result<(), ()> {

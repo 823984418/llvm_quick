@@ -1,21 +1,11 @@
 use std::ffi::CStr;
 
 use llvm_sys::comdat::*;
-use llvm_sys::LLVMComdat;
 
-use crate::core::module::Module;
 use crate::core::type_tag::TypeTag;
-use crate::core::values::Value;
-use crate::opaque::{Opaque, PhantomOpaque};
-
-#[repr(transparent)]
-pub struct Comdat {
-    _opaque: PhantomOpaque,
-}
-
-unsafe impl Opaque for Comdat {
-    type Inner = LLVMComdat;
-}
+use crate::Opaque;
+use crate::Value;
+use crate::{Comdat, Module};
 
 impl<'s> Module<'s> {
     pub fn get_or_insert_comdat(&self, name: &CStr) -> &Comdat {

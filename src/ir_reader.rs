@@ -2,12 +2,12 @@ use std::ptr::null_mut;
 
 use llvm_sys::ir_reader::*;
 
-use crate::core::context::Context;
-use crate::core::memory_buffer::MemoryBuffer;
-use crate::core::module::Module;
 use crate::core::Message;
-use crate::opaque::Opaque;
 use crate::owning::Owning;
+use crate::Context;
+use crate::MemoryBuffer;
+use crate::Module;
+use crate::Opaque;
 
 impl Context {
     pub fn parse_ir(&self, mem_buf: &MemoryBuffer) -> Result<Owning<Module>, Message> {

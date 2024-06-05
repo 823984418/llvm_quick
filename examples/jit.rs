@@ -1,7 +1,5 @@
 use llvm_sys::target_machine::LLVMCodeModel;
 
-use llvm_quick::core::builder::Builder;
-use llvm_quick::core::context::Context;
 use llvm_quick::execution_engine::{link_in_mc_jit, ExecutionEngine, MCJITCompilerOptions};
 use llvm_quick::owning::Owning;
 use llvm_quick::target::{
@@ -9,6 +7,8 @@ use llvm_quick::target::{
     initialize_native_disassembler, initialize_native_target,
 };
 use llvm_quick::target_machine::Target;
+use llvm_quick::Builder;
+use llvm_quick::Context;
 
 type SumFunc = unsafe extern "C" fn(i64, i64, i64) -> i64;
 

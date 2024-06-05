@@ -4,15 +4,14 @@ use std::ptr::null_mut;
 use llvm_sys::orc2::lljit::*;
 use llvm_sys::orc2::LLVMOrcExecutorAddress;
 
-use crate::core::memory_buffer::MemoryBuffer;
 use crate::error::Error;
-use crate::opaque::{Opaque, PhantomOpaque};
 use crate::orc2::{
     OrcExecutionSession, OrcIrTransformLayer, OrcJitDylib, OrcJitTargetMachineBuilder,
     OrcObjectLayer, OrcObjectTransformLayer, OrcResourceTracker, OrcSymbolStringPoolEntry,
     OrcThreadSafeModule,
 };
 use crate::owning::{OpaqueDrop, Owning};
+use crate::{MemoryBuffer, Opaque, PhantomOpaque};
 
 #[repr(transparent)]
 pub struct OrcLLJitBuilder {

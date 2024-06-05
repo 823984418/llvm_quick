@@ -6,8 +6,8 @@ use std::ptr::NonNull;
 
 use llvm_sys::error::*;
 
-use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{OpaqueDrop, Owning};
+use crate::{Opaque, PhantomOpaque};
 
 pub fn string_error_type_id() -> LLVMErrorTypeId {
     unsafe { LLVMGetStringErrorTypeId() }
@@ -22,12 +22,6 @@ unsafe impl Opaque for Error {
     type Inner = LLVMOpaqueError;
 }
 
-impl OpaqueDrop for Error {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMConsumeError(ptr) };
-    }
-}
-
 impl Error {
     pub unsafe fn check(ptr: *mut LLVMOpaqueError) -> Result<(), Owning<Self>> {
         if let Some(e) = unsafe { Owning::try_from_raw(ptr) } {
@@ -36,24 +30,40 @@ impl Error {
             Ok(())
         }
     }
+}
 
+impl Error {
     pub fn get_type_id(&self) -> LLVMErrorTypeId {
         unsafe { LLVMGetErrorTypeId(self.as_raw()) }
     }
+}
 
-    pub fn get_message(&self) -> ErrorMessage {
-        unsafe { ErrorMessage::from_raw(LLVMGetErrorMessage(self.as_raw())) }
+impl OpaqueDrop for Error {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+        unsafe { LLVMConsumeError(ptr) };
     }
 }
 
-pub struct ErrorMessage {
-    ptr: NonNull<CStr>,
+impl Error {
+    pub fn get_message(&self) -> ErrorMessage {
+        unsafe { ErrorMessage::from_raw(LLVMGetErrorMessage(self.as_raw())) }
+    }
 }
 
 impl Drop for ErrorMessage {
     fn drop(&mut self) {
         unsafe { LLVMDisposeErrorMessage(self.as_ptr()) }
     }
+}
+
+impl Error {
+    pub fn create_string_error(err_msg: &CStr) -> Owning<Self> {
+        unsafe { Owning::from_raw(LLVMCreateStringError(err_msg.as_ptr())) }
+    }
+}
+
+pub struct ErrorMessage {
+    ptr: NonNull<CStr>,
 }
 
 impl Debug for ErrorMessage {

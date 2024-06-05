@@ -2,20 +2,11 @@ use std::ffi::CStr;
 use std::ptr::null_mut;
 
 use llvm_sys::core::*;
-use llvm_sys::*;
 
 use crate::core::Message;
-use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{OpaqueDrop, Owning};
-
-#[repr(transparent)]
-pub struct MemoryBuffer {
-    _opaque: PhantomOpaque,
-}
-
-unsafe impl Opaque for MemoryBuffer {
-    type Inner = LLVMMemoryBuffer;
-}
+use crate::MemoryBuffer;
+use crate::Opaque;
 
 impl MemoryBuffer {
     pub fn create_with_contents_of_file(path: &CStr) -> Result<Owning<Self>, Message> {
