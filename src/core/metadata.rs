@@ -6,6 +6,15 @@ use crate::core::values::Value;
 use crate::opaque::{Opaque, PhantomOpaque};
 
 #[repr(transparent)]
+pub struct OperandBundle {
+    _opaque: PhantomOpaque,
+}
+
+unsafe impl Opaque for OperandBundle {
+    type Inner = LLVMOpaqueOperandBundle;
+}
+
+#[repr(transparent)]
 pub struct Metadata {
     _opaque: PhantomOpaque,
 }

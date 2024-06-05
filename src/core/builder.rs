@@ -6,11 +6,13 @@ use llvm_sys::*;
 
 use crate::core::basic_block::BasicBlock;
 use crate::core::context::Context;
-use crate::core::metadata::Metadata;
+use crate::core::metadata::{Metadata, OperandBundle};
+use crate::core::type_tag::functions::FunTypeTag;
 use crate::core::type_tag::integers::{int, IntTypeTag};
 use crate::core::type_tag::{
-    label, void, FloatMathTypeTag, InstanceTypeTag, IntMathTypeTag, TypeTag,
+    any, label, void, FloatMathTypeTag, InstanceTypeTag, IntMathTypeTag, TypeTag,
 };
+use crate::core::types::Type;
 use crate::core::values::Value;
 use crate::opaque::{Opaque, PhantomOpaque};
 use crate::owning::{OpaqueDrop, Owning};
@@ -30,15 +32,9 @@ unsafe impl<'s> Opaque for Builder<'s> {
     type Inner = LLVMBuilder;
 }
 
-impl<'s> OpaqueDrop for Builder<'s> {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMDisposeBuilder(ptr) };
-    }
-}
-
 impl Context {
     pub fn create_builder(&self) -> Owning<Builder> {
-        unsafe { Owning::from_raw(LLVMCreateBuilder()) }
+        unsafe { Owning::from_raw(LLVMCreateBuilderInContext(self.as_raw())) }
     }
 }
 
@@ -47,12 +43,12 @@ impl<'s> Builder<'s> {
         unsafe { LLVMPositionBuilder(self.as_raw(), basic_block.as_raw(), inst.as_raw()) };
     }
 
-    pub fn position_at_end(&self, basic_block: &'s BasicBlock) {
-        unsafe { LLVMPositionBuilderAtEnd(self.as_raw(), basic_block.as_raw()) };
-    }
-
     pub fn position_at_end_before<T: TypeTag>(&self, inst: &'s Value<T>) {
         unsafe { LLVMPositionBuilderBefore(self.as_raw(), inst.as_raw()) };
+    }
+
+    pub fn position_at_end(&self, basic_block: &'s BasicBlock) {
+        unsafe { LLVMPositionBuilderAtEnd(self.as_raw(), basic_block.as_raw()) };
     }
 
     pub fn get_insert_block(&self) -> &'s BasicBlock {
@@ -70,7 +66,15 @@ impl<'s> Builder<'s> {
     pub fn insert_with_name<'a, T: TypeTag>(&self, inst: &'s Value<T>, name: &'a CStr) {
         unsafe { LLVMInsertIntoBuilderWithName(self.as_raw(), inst.as_raw(), name.as_ptr()) };
     }
+}
 
+impl<'s> OpaqueDrop for Builder<'s> {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+        unsafe { LLVMDisposeBuilder(ptr) };
+    }
+}
+
+impl<'s> Builder<'s> {
     /// Get location information used by debugging information.
     pub fn get_current_debug_location(&self) -> &'s Metadata {
         unsafe { Metadata::from_ref(LLVMGetCurrentDebugLocation2(self.as_raw())) }
@@ -167,6 +171,66 @@ impl<'s> Builder<'s> {
             Value::from_ref(value)
         }
     }
+
+    pub fn invoke<T: FunTypeTag>(
+        &self,
+        ty: &Type<T>,
+        f: &Value<T>,
+        args: &[&Value<any>],
+        then: &BasicBlock,
+        catch: &BasicBlock,
+        name: &CStr,
+    ) -> &Value<any> {
+        unsafe {
+            Value::from_ref(LLVMBuildInvoke2(
+                self.as_raw(),
+                ty.as_raw(),
+                f.as_raw(),
+                args.as_ptr() as _,
+                args.len() as _,
+                then.as_raw(),
+                catch.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn invoke_with_operand_bundles<T: FunTypeTag>(
+        &self,
+        ty: &Type<T>,
+        f: &Value<T>,
+        args: &[&Value<any>],
+        then: &BasicBlock,
+        catch: &BasicBlock,
+        bundles: &[&OperandBundle],
+        name: &CStr,
+    ) -> &Value<any> {
+        unsafe {
+            Value::from_ref(LLVMBuildInvokeWithOperandBundles(
+                self.as_raw(),
+                ty.as_raw(),
+                f.as_raw(),
+                args.as_ptr() as _,
+                args.len() as _,
+                then.as_raw(),
+                catch.as_raw(),
+                bundles.as_ptr() as _,
+                bundles.len() as _,
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn unreachable(&self) -> &Value<void> {
+        unsafe { Value::from_ref(LLVMBuildUnreachable(self.as_raw())) }
+    }
+
+    pub fn resume<T: TypeTag>(&self, exn: &Value<T>) -> &Value<any> {
+        // TODO
+        unsafe { Value::from_ref(LLVMBuildResume(self.as_raw(), exn.as_raw())) }
+    }
+
+    // TODO
 
     pub fn add<T: IntMathTypeTag>(
         &self,
