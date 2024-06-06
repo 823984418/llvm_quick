@@ -2,8 +2,7 @@ use llvm_sys::core::LLVMGetIntTypeWidth;
 use llvm_sys::*;
 
 use crate::core::type_tag::{any, type_check_kind, TypeTag};
-use crate::Opaque;
-use crate::Type;
+use crate::{Opaque, Type};
 
 pub trait IntTypeTag: TypeTag {
     fn type_get_int_width(ty: &Type<Self>) -> u32 {

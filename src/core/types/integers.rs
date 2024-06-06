@@ -1,9 +1,7 @@
 use llvm_sys::core::*;
 
 use crate::core::type_tag::integers::{int, int1, int128, int16, int32, int64, int8, IntTypeTag};
-use crate::Context;
-use crate::Opaque;
-use crate::Type;
+use crate::{Context, Opaque, Type};
 
 impl Context {
     /// Obtain an integer type from a context with specified bit width.

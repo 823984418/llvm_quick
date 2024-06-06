@@ -4,10 +4,7 @@ use llvm_sys::core::*;
 
 use crate::core::type_tag::functions::FunTypeTag;
 use crate::core::type_tag::{any, label, TypeTag};
-use crate::Builder;
-use crate::Opaque;
-use crate::Value;
-use crate::{BasicBlock, Context};
+use crate::{BasicBlock, Builder, Context, Opaque, Value};
 
 impl BasicBlock {
     pub fn as_value(&self) -> &Value<label> {
@@ -57,6 +54,7 @@ impl<T: FunTypeTag> Value<T> {
     pub fn get_first_basic_block(&self) -> &BasicBlock {
         unsafe { BasicBlock::from_ref(LLVMGetFirstBasicBlock(self.as_raw())) }
     }
+
     pub fn get_last_basic_block(&self) -> &BasicBlock {
         unsafe { BasicBlock::from_ref(LLVMGetLastBasicBlock(self.as_raw())) }
     }
@@ -66,6 +64,7 @@ impl BasicBlock {
     pub fn get_next(&self) -> &Self {
         unsafe { Self::from_ref(LLVMGetNextBasicBlock(self.as_raw())) }
     }
+
     pub fn get_previous(&self) -> &Self {
         unsafe { Self::from_ref(LLVMGetPreviousBasicBlock(self.as_raw())) }
     }

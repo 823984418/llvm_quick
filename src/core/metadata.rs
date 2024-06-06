@@ -1,8 +1,7 @@
 use llvm_sys::core::*;
 
 use crate::core::type_tag::TypeTag;
-use crate::Opaque;
-use crate::{Metadata, Value};
+use crate::{Metadata, Opaque, Value};
 
 // TODO: more
 

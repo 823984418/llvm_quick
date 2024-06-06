@@ -6,8 +6,7 @@ use llvm_sys::*;
 
 use crate::core::type_tag::{any, InstanceTypeTag, TypeTag};
 use crate::core::Message;
-use crate::Opaque;
-use crate::{Type, Value};
+use crate::{Opaque, Type, Value};
 
 impl<T: TypeTag> Debug for Value<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

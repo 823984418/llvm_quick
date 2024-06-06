@@ -1,9 +1,7 @@
 use llvm_sys::core::*;
 
 use crate::core::type_tag::floats::float;
-use crate::Context;
-use crate::Opaque;
-use crate::Type;
+use crate::{Context, Opaque, Type};
 
 impl Context {
     /// Create a float type in a context.

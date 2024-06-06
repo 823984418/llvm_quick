@@ -5,8 +5,7 @@ use crate::core::type_tag::floats::{bfloat, double, float, fp128, half, ppc_fp12
 use crate::core::type_tag::functions::fun;
 use crate::core::type_tag::integers::int;
 use crate::core::type_tag::pointers::ptr;
-use crate::Type;
-use crate::Value;
+use crate::{Type, Value};
 
 pub mod arrays;
 pub mod floats;

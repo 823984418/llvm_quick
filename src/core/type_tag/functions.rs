@@ -5,9 +5,7 @@ use llvm_sys::core::*;
 use llvm_sys::*;
 
 use crate::core::type_tag::{any, type_check_kind, TagTuple, TypeTag};
-use crate::Opaque;
-use crate::Type;
-use crate::Value;
+use crate::{Opaque, Type, Value};
 
 pub trait FunTypeTag: TypeTag {
     fn type_get_param_count(ty: &Type<Self>) -> u32;

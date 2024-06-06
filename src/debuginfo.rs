@@ -1,7 +1,6 @@
 use llvm_sys::debuginfo::*;
 
-use crate::Module;
-use crate::Opaque;
+use crate::{Module, Opaque};
 
 pub fn debug_metadata_version() -> u32 {
     unsafe { LLVMDebugMetadataVersion() }

@@ -6,11 +6,7 @@ use crate::core::type_tag::integers::int_any;
 use crate::core::type_tag::TypeTag;
 use crate::core::Message;
 use crate::owning::{OpaqueDrop, Owning};
-use crate::Module;
-use crate::PassManager;
-use crate::Type;
-use crate::Value;
-use crate::{Context, Opaque, PhantomOpaque};
+use crate::{Context, Module, Opaque, PassManager, PhantomOpaque, Type, Value};
 
 #[repr(transparent)]
 pub struct TargetData {
@@ -116,8 +112,14 @@ impl TargetData {
     pub fn get_preferred_alignment_of_global<T: TypeTag>(&self, ty: &Value<T>) -> u32 {
         unsafe { LLVMPreferredAlignmentOfGlobal(self.as_raw(), ty.as_raw()) }
     }
-    // FIXME: LLVMElementAtOffset
-    // FIXME: LLVMOffsetOfElement
+
+    pub fn element_at_offset<T: TypeTag>(&self, ty: &Type<T>, offset: u64) -> u32 {
+        unsafe { LLVMElementAtOffset(self.as_raw(), ty.as_raw(), offset) }
+    }
+
+    pub fn offset_of_element<T: TypeTag>(&self, ty: &Type<T>, element: u32) -> u64 {
+        unsafe { LLVMOffsetOfElement(self.as_raw(), ty.as_raw(), element) }
+    }
 }
 
 impl OpaqueDrop for TargetData {

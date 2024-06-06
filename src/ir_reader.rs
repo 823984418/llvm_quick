@@ -4,10 +4,7 @@ use llvm_sys::ir_reader::*;
 
 use crate::core::Message;
 use crate::owning::Owning;
-use crate::Context;
-use crate::MemoryBuffer;
-use crate::Module;
-use crate::Opaque;
+use crate::{Context, MemoryBuffer, Module, Opaque};
 
 impl Context {
     pub fn parse_ir(&self, mem_buf: &MemoryBuffer) -> Result<Owning<Module>, Message> {

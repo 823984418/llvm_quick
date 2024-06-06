@@ -6,8 +6,7 @@ use llvm_sys::*;
 use crate::core::type_tag::functions::{fun, fun_any};
 use crate::core::type_tag::{any, TagTuple, TypeTag, TypeTuple};
 use crate::core::Message;
-use crate::Opaque;
-use crate::{Context, Type};
+use crate::{Context, Opaque, Type};
 
 pub mod arrays;
 pub mod floats;

@@ -3,9 +3,7 @@ use std::ffi::CStr;
 use llvm_sys::comdat::*;
 
 use crate::core::type_tag::TypeTag;
-use crate::Opaque;
-use crate::Value;
-use crate::{Comdat, Module};
+use crate::{Comdat, Module, Opaque, Value};
 
 impl<'s> Module<'s> {
     pub fn get_or_insert_comdat(&self, name: &CStr) -> &Comdat {

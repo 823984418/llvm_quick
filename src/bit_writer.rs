@@ -3,9 +3,7 @@ use std::ffi::CStr;
 use llvm_sys::bit_writer::*;
 
 use crate::owning::Owning;
-use crate::MemoryBuffer;
-use crate::Module;
-use crate::Opaque;
+use crate::{MemoryBuffer, Module, Opaque};
 
 impl<'s> Module<'s> {
     pub fn write_bitcode_to_file(&self, path: &CStr) -> Result<(), ()> {

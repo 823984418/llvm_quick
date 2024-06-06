@@ -4,9 +4,7 @@ use llvm_sys::analysis::*;
 
 use crate::core::type_tag::functions::FunTypeTag;
 use crate::core::Message;
-use crate::Module;
-use crate::Opaque;
-use crate::Value;
+use crate::{Module, Opaque, Value};
 
 impl<'s> Module<'s> {
     pub fn verify(&self, action: LLVMVerifierFailureAction) -> Result<(), Message> {

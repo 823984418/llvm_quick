@@ -1,9 +1,7 @@
 use llvm_sys::core::*;
 
 use crate::core::type_tag::pointers::{ptr, ptr_any, PtrTypeTag};
-use crate::Context;
-use crate::Opaque;
-use crate::Type;
+use crate::{Context, Opaque, Type};
 
 impl Context {
     /// Create an opaque pointer type in a context.

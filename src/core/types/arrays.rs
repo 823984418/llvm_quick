@@ -2,8 +2,7 @@ use llvm_sys::core::{LLVMArrayType2, LLVMGetElementType};
 
 use crate::core::type_tag::arrays::{array, array_unsized, ArrayTypeTag};
 use crate::core::type_tag::TypeTag;
-use crate::Opaque;
-use crate::Type;
+use crate::{Opaque, Type};
 
 impl<T: ArrayTypeTag> Type<T> {
     pub fn element_type(&self) -> &Type<T::ElementType> {

@@ -144,6 +144,7 @@ impl OrcLLJIT {
             ))
         }
     }
+
     pub fn add_llvm_ir_module_with_rt(
         &self,
         rt: &OrcResourceTracker,

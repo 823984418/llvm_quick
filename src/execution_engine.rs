@@ -16,10 +16,7 @@ use crate::core::Message;
 use crate::owning::{OpaqueDrop, Owning};
 use crate::target::TargetData;
 use crate::target_machine::TargetMachine;
-use crate::Type;
-use crate::Value;
-use crate::{Context, JITEventListener};
-use crate::{Module, Opaque, PhantomOpaque};
+use crate::{Context, JITEventListener, Module, Opaque, PhantomOpaque, Type, Value};
 
 #[repr(transparent)]
 pub struct GenericValue {

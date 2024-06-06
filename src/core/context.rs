@@ -6,9 +6,7 @@ use llvm_sys::*;
 use crate::core::type_tag::any;
 use crate::core::Message;
 use crate::owning::{OpaqueDrop, Owning};
-use crate::Opaque;
-use crate::Type;
-use crate::{Context, DiagnosticInfo};
+use crate::{Context, DiagnosticInfo, Opaque, Type};
 
 impl Context {
     /// Create a new context.

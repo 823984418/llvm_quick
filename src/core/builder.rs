@@ -9,12 +9,7 @@ use crate::core::type_tag::{
     any, label, void, FloatMathTypeTag, InstanceTypeTag, IntMathTypeTag, TypeTag,
 };
 use crate::owning::{OpaqueDrop, Owning};
-use crate::Context;
-use crate::Opaque;
-use crate::OperandBundle;
-use crate::Type;
-use crate::Value;
-use crate::{BasicBlock, Builder, Metadata};
+use crate::{BasicBlock, Builder, Context, Metadata, Opaque, OperandBundle, Type, Value};
 
 /// Return a constant that specifies that the result of a ShuffleVectorInst is undefined.
 pub fn get_undef_mask_elem() -> i32 {

@@ -7,10 +7,7 @@ use crate::core::type_tag::any;
 use crate::core::type_tag::functions::FunTypeTag;
 use crate::core::Message;
 use crate::owning::{OpaqueClone, OpaqueDrop, Owning};
-use crate::Opaque;
-use crate::Type;
-use crate::Value;
-use crate::{Context, Module};
+use crate::{Context, Module, Opaque, Type, Value};
 
 impl<'s> OpaqueDrop for Module<'s> {
     fn drop_raw(ptr: *mut Self::Inner) {

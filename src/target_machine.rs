@@ -6,9 +6,7 @@ use llvm_sys::target_machine::*;
 use crate::core::Message;
 use crate::owning::{OpaqueDrop, Owning};
 use crate::target::TargetData;
-use crate::Module;
-use crate::PassManager;
-use crate::{MemoryBuffer, Opaque, PhantomOpaque};
+use crate::{MemoryBuffer, Module, Opaque, PassManager, PhantomOpaque};
 
 #[repr(transparent)]
 pub struct TargetMachine {
@@ -19,12 +17,6 @@ unsafe impl Opaque for TargetMachine {
     type Inner = LLVMOpaqueTargetMachine;
 }
 
-impl OpaqueDrop for TargetMachine {
-    fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMDisposeTargetMachine(ptr) };
-    }
-}
-
 #[repr(transparent)]
 pub struct TargetMachineOptions {
     _opaque: PhantomOpaque,
@@ -32,12 +24,6 @@ pub struct TargetMachineOptions {
 
 unsafe impl Opaque for TargetMachineOptions {
     type Inner = LLVMOpaqueTargetMachineOptions;
-}
-
-impl OpaqueDrop for TargetMachineOptions {
-    fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMDisposeTargetMachineOptions(ptr) };
-    }
 }
 
 #[repr(transparent)]
@@ -103,7 +89,15 @@ impl TargetMachineOptions {
     pub fn create() -> Owning<Self> {
         unsafe { Owning::from_raw(LLVMCreateTargetMachineOptions()) }
     }
+}
 
+impl OpaqueDrop for TargetMachineOptions {
+    fn drop_raw(ptr: *mut Self::Inner) {
+        unsafe { LLVMDisposeTargetMachineOptions(ptr) };
+    }
+}
+
+impl TargetMachineOptions {
     pub fn set_cpu(&self, v: &CStr) {
         unsafe { LLVMTargetMachineOptionsSetCPU(self.as_raw(), v.as_ptr()) }
     }
@@ -167,6 +161,12 @@ impl Target {
     }
 }
 
+impl OpaqueDrop for TargetMachine {
+    fn drop_raw(ptr: *mut Self::Inner) {
+        unsafe { LLVMDisposeTargetMachine(ptr) };
+    }
+}
+
 impl TargetMachine {
     pub fn get_target(&self) -> &Target {
         unsafe { Target::from_ref(LLVMGetTargetMachineTarget(self.as_raw())) }
@@ -196,11 +196,11 @@ impl TargetMachine {
         unsafe { LLVMSetTargetMachineFastISel(self.as_raw(), v as _) }
     }
 
-    pub fn set_global_instruction_select(&self, v: bool) {
+    pub fn set_global_i_sel(&self, v: bool) {
         unsafe { LLVMSetTargetMachineGlobalISel(self.as_raw(), v as _) }
     }
 
-    pub fn set_global_instruction_select_abort(&self, v: LLVMGlobalISelAbortMode) {
+    pub fn set_global_i_sel_abort(&self, v: LLVMGlobalISelAbortMode) {
         unsafe { LLVMSetTargetMachineGlobalISelAbort(self.as_raw(), v) }
     }
 

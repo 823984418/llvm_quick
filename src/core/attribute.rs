@@ -1,8 +1,7 @@
-use crate::core::type_tag::TypeTag;
-use crate::Opaque;
-use crate::Type;
-use crate::{Attribute, Context};
 use llvm_sys::core::*;
+
+use crate::core::type_tag::TypeTag;
+use crate::{Attribute, Context, Opaque, Type};
 
 pub fn get_enum_attribute_for_name(name: &[u8]) -> u32 {
     unsafe { LLVMGetEnumAttributeKindForName(name.as_ptr() as _, name.len()) }

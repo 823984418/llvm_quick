@@ -1,7 +1,7 @@
-use crate::{Opaque, PhantomOpaque};
 use llvm_sys::orc2::*;
 
 use crate::owning::{OpaqueClone, OpaqueDrop};
+use crate::{Opaque, PhantomOpaque};
 
 pub mod ee;
 pub mod lljit;

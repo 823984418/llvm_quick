@@ -2,8 +2,7 @@ use llvm_sys::core::*;
 use llvm_sys::*;
 
 use crate::core::type_tag::{any, type_check_kind, TypeTag};
-use crate::Opaque;
-use crate::Type;
+use crate::{Opaque, Type};
 
 pub trait PtrTypeTag: TypeTag {
     fn type_get_address_space(ty: &Type<Self>) -> u32 {

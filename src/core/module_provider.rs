@@ -1,8 +1,7 @@
 use llvm_sys::core::*;
 
 use crate::owning::{OpaqueDrop, Owning};
-use crate::Opaque;
-use crate::{Module, ModuleProvider};
+use crate::{Module, ModuleProvider, Opaque};
 
 impl<'s> Module<'s> {
     pub fn create_module_provider_for_existing_module(&self) -> Owning<ModuleProvider> {

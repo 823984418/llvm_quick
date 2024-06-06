@@ -1,5 +1,6 @@
-use crate::{Opaque, PhantomOpaque};
 use llvm_sys::remarks::*;
+
+use crate::{Opaque, PhantomOpaque};
 
 #[repr(transparent)]
 pub struct RemarkString {
