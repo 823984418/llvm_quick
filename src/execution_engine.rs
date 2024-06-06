@@ -7,15 +7,11 @@ use llvm_sys::execution_engine::*;
 use llvm_sys::prelude::*;
 use llvm_sys::target_machine::*;
 
-use crate::core::type_tag::floats::FloatTypeTag;
-use crate::core::type_tag::functions::{fun, fun_any, FunTypeTag};
-use crate::core::type_tag::integers::{int32, IntTypeTag};
-use crate::core::type_tag::pointers::ptr;
-use crate::core::type_tag::TypeTag;
 use crate::core::Message;
 use crate::owning::{OpaqueDrop, Owning};
 use crate::target::TargetData;
 use crate::target_machine::TargetMachine;
+use crate::type_tag::*;
 use crate::{Context, JITEventListener, Module, Opaque, PhantomOpaque, Type, Value};
 
 #[repr(transparent)]

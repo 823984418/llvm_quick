@@ -1,7 +1,6 @@
 use llvm_sys::core::{LLVMArrayType2, LLVMGetElementType};
 
-use crate::core::type_tag::arrays::{array, array_unsized, ArrayTypeTag};
-use crate::core::type_tag::TypeTag;
+use crate::type_tag::*;
 use crate::{Opaque, Type};
 
 impl<T: ArrayTypeTag> Type<T> {

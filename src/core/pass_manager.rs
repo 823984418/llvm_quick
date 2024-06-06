@@ -1,7 +1,7 @@
 use llvm_sys::core::*;
 
-use crate::core::type_tag::functions::FunTypeTag;
 use crate::owning::{OpaqueDrop, Owning};
+use crate::type_tag::*;
 use crate::{Module, ModuleProvider, Opaque, PassManager, Value};
 
 impl PassManager {

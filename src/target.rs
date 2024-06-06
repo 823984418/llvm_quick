@@ -2,10 +2,9 @@ use std::ffi::CStr;
 
 use llvm_sys::target::*;
 
-use crate::core::type_tag::integers::int_any;
-use crate::core::type_tag::TypeTag;
 use crate::core::Message;
 use crate::owning::{OpaqueDrop, Owning};
+use crate::type_tag::*;
 use crate::{Context, Module, Opaque, PassManager, PhantomOpaque, Type, Value};
 
 #[repr(transparent)]
@@ -113,6 +112,7 @@ impl TargetData {
         unsafe { LLVMPreferredAlignmentOfGlobal(self.as_raw(), ty.as_raw()) }
     }
 
+    // TODO: type tag
     pub fn element_at_offset<T: TypeTag>(&self, ty: &Type<T>, offset: u64) -> u32 {
         unsafe { LLVMElementAtOffset(self.as_raw(), ty.as_raw(), offset) }
     }

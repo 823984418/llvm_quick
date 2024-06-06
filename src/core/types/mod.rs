@@ -3,9 +3,8 @@ use std::fmt::{Debug, Formatter};
 use llvm_sys::core::*;
 use llvm_sys::*;
 
-use crate::core::type_tag::functions::{fun, fun_any};
-use crate::core::type_tag::{any, TagTuple, TypeTag, TypeTuple};
 use crate::core::Message;
+use crate::type_tag::*;
 use crate::{Context, Opaque, Type};
 
 pub mod arrays;

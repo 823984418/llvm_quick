@@ -7,17 +7,16 @@ use std::ptr::NonNull;
 
 use llvm_sys::core::*;
 
-pub mod attribute;
 pub mod basic_block;
 pub mod builder;
 pub mod context;
+pub mod instruction;
 pub mod memory_buffer;
 pub mod metadata;
 pub mod module;
 pub mod module_provider;
 pub mod pass_manager;
 pub mod thread;
-pub mod type_tag;
 pub mod types;
 pub mod values;
 

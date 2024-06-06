@@ -1,6 +1,6 @@
 use llvm_sys::core::*;
 
-use crate::core::type_tag::floats::float;
+use crate::type_tag::*;
 use crate::{Context, Opaque, Type};
 
 impl Context {

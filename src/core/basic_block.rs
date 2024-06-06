@@ -2,8 +2,7 @@ use std::ffi::CStr;
 
 use llvm_sys::core::*;
 
-use crate::core::type_tag::functions::FunTypeTag;
-use crate::core::type_tag::{any, label, TypeTag};
+use crate::type_tag::*;
 use crate::{BasicBlock, Builder, Context, Opaque, Value};
 
 impl BasicBlock {

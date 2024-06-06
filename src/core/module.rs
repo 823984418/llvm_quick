@@ -3,10 +3,9 @@ use std::fmt::{Debug, Formatter};
 
 use llvm_sys::core::*;
 
-use crate::core::type_tag::any;
-use crate::core::type_tag::functions::FunTypeTag;
 use crate::core::Message;
 use crate::owning::{OpaqueClone, OpaqueDrop, Owning};
+use crate::type_tag::*;
 use crate::{Context, Module, Opaque, Type, Value};
 
 impl<'s> OpaqueDrop for Module<'s> {

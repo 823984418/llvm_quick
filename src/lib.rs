@@ -3,8 +3,8 @@ use std::marker::PhantomData;
 pub use llvm_sys;
 use llvm_sys::*;
 
-use crate::core::type_tag::TypeTag;
 use crate::opaque::{Opaque, PhantomOpaque};
+use crate::type_tag::*;
 
 pub mod analysis;
 pub mod bit_reader;
@@ -29,6 +29,7 @@ pub mod support;
 pub mod target;
 pub mod target_machine;
 pub mod transforms;
+pub mod type_tag;
 
 #[repr(transparent)]
 pub struct MemoryBuffer {

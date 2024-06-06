@@ -1,4 +1,5 @@
-imports_granularity = "Module"
 newline_style = "Unix"
+
+imports_granularity = "Module"
 group_imports = "StdExternalCrate"
 reorder_impl_items = true

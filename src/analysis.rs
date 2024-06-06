@@ -2,8 +2,8 @@ use std::ptr::null_mut;
 
 use llvm_sys::analysis::*;
 
-use crate::core::type_tag::functions::FunTypeTag;
 use crate::core::Message;
+use crate::type_tag::*;
 use crate::{Module, Opaque, Value};
 
 impl<'s> Module<'s> {

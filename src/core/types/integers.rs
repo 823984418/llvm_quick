@@ -1,6 +1,6 @@
 use llvm_sys::core::*;
 
-use crate::core::type_tag::integers::{int, int1, int128, int16, int32, int64, int8, IntTypeTag};
+use crate::type_tag::*;
 use crate::{Context, Opaque, Type};
 
 impl Context {

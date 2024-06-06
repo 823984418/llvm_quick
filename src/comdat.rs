@@ -2,7 +2,7 @@ use std::ffi::CStr;
 
 use llvm_sys::comdat::*;
 
-use crate::core::type_tag::TypeTag;
+use crate::type_tag::*;
 use crate::{Comdat, Module, Opaque, Value};
 
 impl<'s> Module<'s> {

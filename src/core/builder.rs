@@ -3,18 +3,9 @@ use std::ffi::CStr;
 use llvm_sys::core::*;
 use llvm_sys::*;
 
-use crate::core::type_tag::functions::FunTypeTag;
-use crate::core::type_tag::integers::{int, IntTypeTag};
-use crate::core::type_tag::{
-    any, label, void, FloatMathTypeTag, InstanceTypeTag, IntMathTypeTag, TypeTag,
-};
 use crate::owning::{OpaqueDrop, Owning};
+use crate::type_tag::*;
 use crate::{BasicBlock, Builder, Context, Metadata, Opaque, OperandBundle, Type, Value};
-
-/// Return a constant that specifies that the result of a ShuffleVectorInst is undefined.
-pub fn get_undef_mask_elem() -> i32 {
-    unsafe { LLVMGetUndefMaskElem() }
-}
 
 impl Context {
     pub fn create_builder(&self) -> Owning<Builder> {
@@ -608,4 +599,9 @@ impl<T: TypeTag> Value<T> {
     pub fn set_fast_math_flags(&self, set: LLVMFastMathFlags) {
         unsafe { LLVMSetFastMathFlags(self.as_raw(), set) };
     }
+}
+
+/// Return a constant that specifies that the result of a ShuffleVectorInst is undefined.
+pub fn get_undef_mask_elem() -> i32 {
+    unsafe { LLVMGetUndefMaskElem() }
 }
