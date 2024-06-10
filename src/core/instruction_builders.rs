@@ -14,15 +14,15 @@ impl Context {
 }
 
 impl<'s> Builder<'s> {
-    pub fn position<T: TypeTag>(&self, basic_block: &'s BasicBlock, inst: &'s Value<T>) {
+    pub fn position<T: TypeTag>(&self, basic_block: &BasicBlock, inst: &Value<T>) {
         unsafe { LLVMPositionBuilder(self.as_raw(), basic_block.as_raw(), inst.as_raw()) };
     }
 
-    pub fn position_at_end_before<T: TypeTag>(&self, inst: &'s Value<T>) {
+    pub fn position_at_end_before<T: TypeTag>(&self, inst: &Value<T>) {
         unsafe { LLVMPositionBuilderBefore(self.as_raw(), inst.as_raw()) };
     }
 
-    pub fn position_at_end(&self, basic_block: &'s BasicBlock) {
+    pub fn position_at_end(&self, basic_block: &BasicBlock) {
         unsafe { LLVMPositionBuilderAtEnd(self.as_raw(), basic_block.as_raw()) };
     }
 
@@ -38,7 +38,7 @@ impl<'s> Builder<'s> {
         unsafe { LLVMInsertIntoBuilder(self.as_raw(), inst.as_raw()) };
     }
 
-    pub fn insert_with_name<'a, T: TypeTag>(&self, inst: &'s Value<T>, name: &'a CStr) {
+    pub fn insert_with_name<'a, T: TypeTag>(&self, inst: &Value<T>, name: &CStr) {
         unsafe { LLVMInsertIntoBuilderWithName(self.as_raw(), inst.as_raw(), name.as_ptr()) };
     }
 }
@@ -56,7 +56,7 @@ impl<'s> Builder<'s> {
     }
 
     /// Set location information used by debugging information.
-    pub fn set_current_debug_location(&self, loc: &'s Metadata) {
+    pub fn set_current_debug_location(&self, loc: &Metadata) {
         unsafe { LLVMSetCurrentDebugLocation2(self.as_raw(), loc.as_raw()) };
     }
 
@@ -79,14 +79,11 @@ impl<'s> Builder<'s> {
         unsafe { Value::from_ref(LLVMBuildRetVoid(self.as_raw())) }
     }
 
-    pub fn return_value<T: TypeTag>(&self, value: &'s Value<T>) -> &'s Value<void> {
+    pub fn return_value<T: TypeTag>(&self, value: &Value<T>) -> &'s Value<void> {
         unsafe { Value::from_ref(LLVMBuildRet(self.as_raw(), value.as_raw())) }
     }
 
-    pub fn return_aggregate<'a, T: TypeTag>(
-        &self,
-        ret_vals: &'a [&'s Value<T>],
-    ) -> &'s Value<void> {
+    pub fn return_aggregate<T: TypeTag>(&self, ret_vals: &[&Value<T>]) -> &'s Value<void> {
         unsafe {
             Value::from_ref(LLVMBuildAggregateRet(
                 self.as_raw(),
@@ -96,15 +93,15 @@ impl<'s> Builder<'s> {
         }
     }
 
-    pub fn branch(&self, dest: &'s BasicBlock) -> &'s Value<void> {
+    pub fn branch(&self, dest: &BasicBlock) -> &'s Value<void> {
         unsafe { Value::from_ref(LLVMBuildBr(self.as_raw(), dest.as_raw())) }
     }
 
     pub fn cond_branch<T: IntTypeTag>(
         &self,
-        cond: &'s Value<T>,
-        then: &'s BasicBlock,
-        els: &'s BasicBlock,
+        cond: &Value<T>,
+        then: &BasicBlock,
+        els: &BasicBlock,
     ) -> &'s Value<void> {
         unsafe {
             Value::from_ref(LLVMBuildCondBr(
@@ -118,9 +115,9 @@ impl<'s> Builder<'s> {
 
     pub fn switch<'a, const N: u32>(
         &self,
-        v: &'s Value<int<N>>,
+        v: &Value<int<N>>,
         els: &BasicBlock,
-        cases: &'a [(&'s Value<int<N>>, &'s BasicBlock)],
+        cases: &[(&Value<int<N>>, &BasicBlock)],
     ) -> &'s Value<void> {
         unsafe {
             let value =
@@ -132,10 +129,10 @@ impl<'s> Builder<'s> {
         }
     }
 
-    pub fn indirect_branch<'a>(
+    pub fn indirect_branch(
         &self,
-        addr: &'s Value<label>,
-        destinations: &'a [&'s BasicBlock],
+        addr: &Value<label>,
+        destinations: &[&BasicBlock],
     ) -> &'s Value<void> {
         unsafe {
             let value =
@@ -155,7 +152,7 @@ impl<'s> Builder<'s> {
         then: &BasicBlock,
         catch: &BasicBlock,
         name: &CStr,
-    ) -> &Value<any> {
+    ) -> &'s Value<any> {
         unsafe {
             Value::from_ref(LLVMBuildInvoke2(
                 self.as_raw(),
@@ -179,7 +176,7 @@ impl<'s> Builder<'s> {
         catch: &BasicBlock,
         bundles: &[&OperandBundle],
         name: &CStr,
-    ) -> &Value<any> {
+    ) -> &'s Value<any> {
         unsafe {
             Value::from_ref(LLVMBuildInvokeWithOperandBundles(
                 self.as_raw(),
@@ -196,21 +193,48 @@ impl<'s> Builder<'s> {
         }
     }
 
-    pub fn unreachable(&self) -> &Value<void> {
+    pub fn unreachable(&self) -> &'s Value<void> {
         unsafe { Value::from_ref(LLVMBuildUnreachable(self.as_raw())) }
     }
 
-    pub fn resume<T: TypeTag>(&self, exn: &Value<T>) -> &Value<any> {
-        // TODO
+    pub fn resume<T: TypeTag>(&self, exn: &Value<T>) -> &'s Value<any> {
         unsafe { Value::from_ref(LLVMBuildResume(self.as_raw(), exn.as_raw())) }
+    }
+
+    pub fn landing_pad<F: FunTypeTag>(
+        &self,
+        ty: &Type<any>,
+        pers_fn: &Value<F>,
+        num_clauses: u32,
+        name: &CStr,
+    ) -> &'s Value<any> {
+        unsafe {
+            Value::from_ref(LLVMBuildLandingPad(
+                self.as_raw(),
+                ty.as_raw(),
+                pers_fn.as_raw(),
+                num_clauses,
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn cleanup_return(&self, catch_pad: &Value<any>, bb: &BasicBlock) -> &'s Value<any> {
+        unsafe {
+            Value::from_ref(LLVMBuildCleanupRet(
+                self.as_raw(),
+                catch_pad.as_raw(),
+                bb.as_raw(),
+            ))
+        }
     }
 
     // TODO
 
     pub fn add<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -221,8 +245,8 @@ impl<'s> Builder<'s> {
 
     pub fn nsw_add<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -233,8 +257,8 @@ impl<'s> Builder<'s> {
 
     pub fn nuw_add<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -245,8 +269,8 @@ impl<'s> Builder<'s> {
 
     pub fn float_add<T: FloatMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -257,8 +281,8 @@ impl<'s> Builder<'s> {
 
     pub fn sub<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -269,8 +293,8 @@ impl<'s> Builder<'s> {
 
     pub fn nsw_sub<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -281,8 +305,8 @@ impl<'s> Builder<'s> {
 
     pub fn nuw_sub<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -293,8 +317,8 @@ impl<'s> Builder<'s> {
 
     pub fn float_sub<T: FloatMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -305,8 +329,8 @@ impl<'s> Builder<'s> {
 
     pub fn mul<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -317,8 +341,8 @@ impl<'s> Builder<'s> {
 
     pub fn nsw_mul<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -329,8 +353,8 @@ impl<'s> Builder<'s> {
 
     pub fn nuw_mul<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -341,8 +365,8 @@ impl<'s> Builder<'s> {
 
     pub fn float_mul<T: FloatMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -353,8 +377,8 @@ impl<'s> Builder<'s> {
 
     pub fn unsigned_div<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -363,22 +387,10 @@ impl<'s> Builder<'s> {
         }
     }
 
-    pub fn signed_div<T: IntMathTypeTag>(
-        &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
-        name: &CStr,
-    ) -> &'s Value<T> {
-        unsafe {
-            let ptr = LLVMBuildSDiv(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
-        }
-    }
-
     pub fn exact_unsigned_div<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -387,10 +399,22 @@ impl<'s> Builder<'s> {
         }
     }
 
+    pub fn signed_div<T: IntMathTypeTag>(
+        &self,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
+        name: &CStr,
+    ) -> &'s Value<T> {
+        unsafe {
+            let ptr = LLVMBuildSDiv(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
+            Value::from_ref(ptr)
+        }
+    }
+
     pub fn exact_signed_div<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -401,8 +425,8 @@ impl<'s> Builder<'s> {
 
     pub fn float_div<T: FloatMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -413,8 +437,8 @@ impl<'s> Builder<'s> {
 
     pub fn unsigned_rem<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -425,8 +449,8 @@ impl<'s> Builder<'s> {
 
     pub fn signed_rem<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -437,8 +461,8 @@ impl<'s> Builder<'s> {
 
     pub fn float_rem<T: FloatMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -449,8 +473,8 @@ impl<'s> Builder<'s> {
 
     pub fn shl<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -461,8 +485,8 @@ impl<'s> Builder<'s> {
 
     pub fn logic_shr<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -473,8 +497,8 @@ impl<'s> Builder<'s> {
 
     pub fn arith_shr<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -485,8 +509,8 @@ impl<'s> Builder<'s> {
 
     pub fn and<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -497,8 +521,8 @@ impl<'s> Builder<'s> {
 
     pub fn or<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -509,8 +533,8 @@ impl<'s> Builder<'s> {
 
     pub fn xor<T: IntMathTypeTag>(
         &self,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -522,8 +546,8 @@ impl<'s> Builder<'s> {
     pub unsafe fn binary_op<T: InstanceTypeTag>(
         &self,
         op: LLVMOpcode,
-        lhs: &'s Value<T>,
-        rhs: &'s Value<T>,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
@@ -532,27 +556,25 @@ impl<'s> Builder<'s> {
         }
     }
 
-    pub fn neg<T: IntMathTypeTag>(&self, v: &'s Value<T>, name: &CStr) -> &'s Value<T> {
+    pub fn neg<T: IntMathTypeTag>(&self, v: &Value<T>, name: &CStr) -> &'s Value<T> {
         unsafe { Value::from_ref(LLVMBuildNeg(self.as_raw(), v.as_raw(), name.as_ptr())) }
     }
 
-    pub fn nsw_neg<T: IntMathTypeTag>(&self, v: &'s Value<T>, name: &CStr) -> &'s Value<T> {
+    pub fn nsw_neg<T: IntMathTypeTag>(&self, v: &Value<T>, name: &CStr) -> &'s Value<T> {
         unsafe { Value::from_ref(LLVMBuildNSWNeg(self.as_raw(), v.as_raw(), name.as_ptr())) }
     }
 
-    pub fn nuw_neg<T: IntMathTypeTag>(&self, v: &'s Value<T>, name: &CStr) -> &'s Value<T> {
+    pub fn nuw_neg<T: IntMathTypeTag>(&self, v: &Value<T>, name: &CStr) -> &'s Value<T> {
         unsafe { Value::from_ref(LLVMBuildNUWNeg(self.as_raw(), v.as_raw(), name.as_ptr())) }
     }
 
-    pub fn float_neg<T: FloatMathTypeTag>(&self, v: &'s Value<T>, name: &CStr) -> &'s Value<T> {
+    pub fn float_neg<T: FloatMathTypeTag>(&self, v: &Value<T>, name: &CStr) -> &'s Value<T> {
         unsafe { Value::from_ref(LLVMBuildFNeg(self.as_raw(), v.as_raw(), name.as_ptr())) }
     }
 
-    pub fn not<T: IntMathTypeTag>(&self, v: &'s Value<T>, name: &CStr) -> &'s Value<T> {
+    pub fn not<T: IntMathTypeTag>(&self, v: &Value<T>, name: &CStr) -> &'s Value<T> {
         unsafe { Value::from_ref(LLVMBuildNot(self.as_raw(), v.as_raw(), name.as_ptr())) }
     }
-
-    // TODO: more
 }
 
 impl<T: TypeTag> Value<T> {
@@ -598,6 +620,146 @@ impl<T: TypeTag> Value<T> {
     /// Sets the flags for which fast-math-style optimizations are allowed for this value.
     pub fn set_fast_math_flags(&self, set: LLVMFastMathFlags) {
         unsafe { LLVMSetFastMathFlags(self.as_raw(), set) };
+    }
+
+    pub fn can_use_fast_math_flags(&self) -> bool {
+        unsafe { LLVMCanValueUseFastMathFlags(self.as_raw()) != 0 }
+    }
+
+    pub fn get_is_disjoint(&self) -> bool {
+        unsafe { LLVMGetIsDisjoint(self.as_raw()) != 0 }
+    }
+
+    pub fn set_is_disjoint(&self, is_disjoint: bool) {
+        unsafe { LLVMSetIsDisjoint(self.as_raw(), is_disjoint as _) }
+    }
+}
+
+impl<'s> Builder<'s> {
+    pub fn malloc<T: TypeTag>(&self, ty: &Type<T>, name: &CStr) -> &'s Value<T> {
+        unsafe { Value::from_ref(LLVMBuildMalloc(self.as_raw(), ty.as_raw(), name.as_ptr())) }
+    }
+
+    pub fn array_malloc<T: TypeTag, L: IntTypeTag>(
+        &self,
+        ty: &Type<T>,
+        val: &Value<L>,
+        name: &CStr,
+    ) -> &'s Value<T> {
+        unsafe {
+            Value::from_ref(LLVMBuildArrayMalloc(
+                self.as_raw(),
+                ty.as_raw(),
+                val.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn mem_set<P: PtrTypeTag, T: TypeTag, L: IntTypeTag>(
+        &self,
+        ptr: &Value<P>,
+        val: &Value<T>,
+        len: &Value<L>,
+        align: u32,
+    ) -> &'s Value<void> {
+        unsafe {
+            Value::from_ref(LLVMBuildMemSet(
+                self.as_raw(),
+                ptr.as_raw(),
+                val.as_raw(),
+                len.as_raw(),
+                align,
+            ))
+        }
+    }
+
+    pub fn mem_cpy<P: TypeTag, Q: TypeTag, L: IntTypeTag>(
+        &self,
+        dst: &Value<P>,
+        dst_align: u32,
+        src: &Value<Q>,
+        src_align: u32,
+        size: &Value<L>,
+    ) -> &'s Value<void> {
+        unsafe {
+            Value::from_ref(LLVMBuildMemCpy(
+                self.as_raw(),
+                dst.as_raw(),
+                dst_align,
+                src.as_raw(),
+                src_align,
+                size.as_raw(),
+            ))
+        }
+    }
+
+    pub fn mem_move<P: TypeTag, Q: TypeTag, L: IntTypeTag>(
+        &self,
+        dst: &Value<P>,
+        dst_align: u32,
+        src: &Value<Q>,
+        src_align: u32,
+        size: &Value<L>,
+    ) -> &'s Value<void> {
+        unsafe {
+            Value::from_ref(LLVMBuildMemMove(
+                self.as_raw(),
+                dst.as_raw(),
+                dst_align,
+                src.as_raw(),
+                src_align,
+                size.as_raw(),
+            ))
+        }
+    }
+
+    pub fn alloc<T: TypeTag>(&self, ty: &Type<T>, name: &CStr) -> &'s Value<T> {
+        unsafe { Value::from_ref(LLVMBuildAlloca(self.as_raw(), ty.as_raw(), name.as_ptr())) }
+    }
+
+    pub fn array_alloc<T: TypeTag, L: IntTypeTag>(
+        &self,
+        ty: &Type<T>,
+        val: &Value<L>,
+        name: &CStr,
+    ) -> &'s Value<T> {
+        unsafe {
+            Value::from_ref(LLVMBuildArrayAlloca(
+                self.as_raw(),
+                ty.as_raw(),
+                val.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn free<P: PtrTypeTag>(&self, pointer_val: &Value<P>) -> &'s Value<void> {
+        unsafe { Value::from_ref(LLVMBuildFree(self.as_raw(), pointer_val.as_raw())) }
+    }
+
+    pub fn load<T: TypeTag, P: PtrTypeTag>(
+        &self,
+        ty: &Type<T>,
+        pointer_val: &Value<P>,
+        name: &CStr,
+    ) -> &'s Value<T> {
+        unsafe {
+            Value::from_ref(LLVMBuildLoad2(
+                self.as_raw(),
+                ty.as_raw(),
+                pointer_val.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn store<T: TypeTag, P: PtrTypeTag>(
+        &self,
+        val: &Value<T>,
+        ptr: &Value<P>,
+    ) -> &'s Value<void> {
+        unsafe { Value::from_ref(LLVMBuildStore(self.as_raw(), val.as_raw(), ptr.as_raw())) }
     }
 }
 

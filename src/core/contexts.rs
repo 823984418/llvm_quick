@@ -78,12 +78,6 @@ impl Context {
     }
 }
 
-impl Context {
-    pub fn get_type_by_name(&self, name: &CStr) -> &Type<any> {
-        unsafe { Type::from_ref(LLVMGetTypeByName2(self.as_raw(), name.as_ptr())) }
-    }
-}
-
 pub fn get_enum_attribute_for_name(name: &[u8]) -> u32 {
     unsafe { LLVMGetEnumAttributeKindForName(name.as_ptr() as _, name.len()) }
 }
@@ -173,5 +167,11 @@ impl Attribute {
 
     pub fn is_type_attribute(&self) -> bool {
         unsafe { LLVMIsTypeAttribute(self.as_raw()) != 0 }
+    }
+}
+
+impl Context {
+    pub fn get_type_by_name(&self, name: &CStr) -> &Type<any> {
+        unsafe { Type::from_ref(LLVMGetTypeByName2(self.as_raw(), name.as_ptr())) }
     }
 }
