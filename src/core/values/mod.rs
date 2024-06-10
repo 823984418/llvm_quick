@@ -8,6 +8,8 @@ use crate::core::Message;
 use crate::type_tag::*;
 use crate::{Opaque, Type, Value};
 
+pub mod functions;
+
 impl<T: TypeTag> Debug for Value<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_str(self.print_to_string().to_str().unwrap())

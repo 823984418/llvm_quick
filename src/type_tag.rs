@@ -1,4 +1,6 @@
-use std::ffi::{CStr, CString};
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+
 use std::marker::PhantomData;
 
 use llvm_sys::core::*;
@@ -7,53 +9,11 @@ use llvm_sys::*;
 use crate::opaque::Opaque;
 use crate::{Type, Value};
 
-pub(crate) unsafe fn type_check_kind<T: TypeTag>(
-    ty: &Type<any>,
-    kind: LLVMTypeKind,
-) -> Option<&Type<T>> {
-    if ty.get_kind() == kind {
-        Some(unsafe { ty.cast_unchecked() })
-    } else {
-        None
-    }
-}
-
 pub trait TypeTag: Copy + 'static {
     fn type_cast(ty: &Type<any>) -> Option<&Type<Self>>;
 }
 
-pub trait InstanceTypeTag: TypeTag {}
-impl InstanceTypeTag for void {}
-impl InstanceTypeTag for label {}
-impl<T: InstanceTypeTag, const N: u64> InstanceTypeTag for array<T, N> {}
-impl InstanceTypeTag for half {}
-impl InstanceTypeTag for float {}
-impl InstanceTypeTag for double {}
-impl InstanceTypeTag for x86_fp80 {}
-impl InstanceTypeTag for fp128 {}
-impl InstanceTypeTag for ppc_fp128 {}
-impl InstanceTypeTag for bfloat {}
-impl<const N: u32> InstanceTypeTag for int<N> {}
-impl<const ADDRESS_SPACE: u32> InstanceTypeTag for ptr<ADDRESS_SPACE> {}
-impl<Args: InstanceTagTuple, Output: InstanceTypeTag, const VAR: bool> InstanceTypeTag
-    for fun<Args, Output, VAR>
-{
-}
-
-pub trait IntMathTypeTag: InstanceTypeTag {}
-impl<const N: u32> IntMathTypeTag for int<N> {}
-
-pub trait FloatMathTypeTag: InstanceTypeTag {}
-impl FloatMathTypeTag for half {}
-impl FloatMathTypeTag for float {}
-impl FloatMathTypeTag for double {}
-impl FloatMathTypeTag for x86_fp80 {}
-impl FloatMathTypeTag for fp128 {}
-impl FloatMathTypeTag for ppc_fp128 {}
-impl FloatMathTypeTag for bfloat {}
-
 #[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
 pub struct any {}
 
 impl TypeTag for any {
@@ -63,7 +23,6 @@ impl TypeTag for any {
 }
 
 #[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
 pub struct void {}
 
 impl TypeTag for void {
@@ -73,47 +32,12 @@ impl TypeTag for void {
 }
 
 #[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
 pub struct label {}
 
 impl TypeTag for label {
     fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
         unsafe { type_check_kind(ty, LLVMTypeKind::LLVMLabelTypeKind) }
     }
-}
-
-pub trait TagTuple: Copy + 'static {
-    const COUNT: usize;
-
-    type Types<'s>: TypeTuple<'s, Tags = Self>;
-
-    type Values<'s>: ValueTuple<'s, Tags = Self>;
-
-    fn stack_array<Type: Default, Fun: FnOnce(&mut [Type]) -> Ret, Ret>(f: Fun) -> Ret;
-
-    fn type_into_slice<'a, 's>(
-        tuple: Self::Types<'s>,
-        slice: &'a mut [Option<&'s Type<any>>],
-    ) -> &'a mut [&'s Type<any>];
-
-    fn type_from_slice<'s>(slice: &[&'s Type<any>]) -> Option<Self::Types<'s>>;
-
-    fn value_into_slice<'a, 's>(
-        tuple: Self::Values<'s>,
-        slice: &'a mut [Option<&'s Value<any>>],
-    ) -> &'a mut [&'s Value<any>];
-
-    fn value_from_slice<'s>(slice: &[&'s Value<any>]) -> Option<Self::Values<'s>>;
-}
-
-pub trait InstanceTagTuple: TagTuple {}
-
-pub trait TypeTuple<'s>: Sized {
-    type Tags: TagTuple<Types<'s> = Self>;
-}
-
-pub trait ValueTuple<'s>: Sized {
-    type Tags: TagTuple<Values<'s> = Self>;
 }
 
 pub trait ArrayTypeTag: TypeTag {
@@ -124,8 +48,44 @@ pub trait ArrayTypeTag: TypeTag {
     }
 }
 
-impl<T: TypeTag> ArrayTypeTag for array_unsized<T> {
+pub type array_any = array_any_len<any>;
+
+#[derive(Copy, Clone)]
+pub struct array_any_len<T: TypeTag> {
+    marker: PhantomData<fn(T) -> T>,
+}
+
+impl<T: TypeTag> TypeTag for array_any_len<T> {
+    fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
+        unsafe {
+            let ty = type_check_kind::<array_any>(ty, LLVMTypeKind::LLVMArrayTypeKind)?;
+            if ty.element_type().try_cast::<T>().is_some() {
+                Some(ty.cast_unchecked())
+            } else {
+                None
+            }
+        }
+    }
+}
+
+impl<T: TypeTag> ArrayTypeTag for array_any_len<T> {
     type ElementType = T;
+}
+
+#[derive(Copy, Clone)]
+pub struct array<T: TypeTag, const N: u64> {
+    marker: PhantomData<fn(T) -> T>,
+}
+
+impl<T: TypeTag, const N: u64> TypeTag for array<T, N> {
+    fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
+        let ty = array_any_len::<T>::type_cast(ty)?;
+        if ty.length() == N {
+            Some(unsafe { ty.cast_unchecked() })
+        } else {
+            None
+        }
+    }
 }
 
 impl<T: TypeTag, const N: u64> ArrayTypeTag for array<T, N> {
@@ -136,57 +96,9 @@ impl<T: TypeTag, const N: u64> ArrayTypeTag for array<T, N> {
     }
 }
 
-impl<T: ArrayTypeTag> Type<T> {
-    pub fn to_array_any(&self) -> &Type<array_unsized<any>> {
-        unsafe { self.cast_unchecked() }
-    }
-
-    pub fn length(&self) -> u64 {
-        T::type_length(self)
-    }
-}
-
-#[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
-pub struct array_unsized<T: TypeTag> {
-    marker: PhantomData<fn(T) -> T>,
-}
-
-impl<T: TypeTag> TypeTag for array_unsized<T> {
-    fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
-        unsafe {
-            if ty.get_kind() == LLVMTypeKind::LLVMArrayTypeKind
-                && T::type_cast(Type::from_ref(LLVMGetElementType(ty.as_raw()))).is_some()
-            {
-                Some(ty.cast_unchecked())
-            } else {
-                None
-            }
-        }
-    }
-}
-
-#[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
-pub struct array<T: TypeTag, const N: u64> {
-    marker: PhantomData<fn(T) -> T>,
-}
-
-impl<T: TypeTag, const N: u64> TypeTag for array<T, N> {
-    fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
-        let ty = array_unsized::<T>::type_cast(ty)?;
-        if ty.length() == N {
-            Some(unsafe { ty.cast_unchecked() })
-        } else {
-            None
-        }
-    }
-}
-
 pub trait FloatTypeTag: TypeTag {}
 
 #[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
 pub struct float_any {}
 
 impl TypeTag for float_any {
@@ -207,7 +119,6 @@ impl TypeTag for float_any {
 impl FloatTypeTag for float_any {}
 
 #[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
 pub struct half {}
 
 impl TypeTag for half {
@@ -219,7 +130,6 @@ impl TypeTag for half {
 impl FloatTypeTag for half {}
 
 #[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
 pub struct float {}
 
 impl TypeTag for float {
@@ -231,7 +141,6 @@ impl TypeTag for float {
 impl FloatTypeTag for float {}
 
 #[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
 pub struct double {}
 
 impl TypeTag for double {
@@ -243,7 +152,6 @@ impl TypeTag for double {
 impl FloatTypeTag for double {}
 
 #[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
 pub struct x86_fp80 {}
 
 impl TypeTag for x86_fp80 {
@@ -255,7 +163,6 @@ impl TypeTag for x86_fp80 {
 impl FloatTypeTag for x86_fp80 {}
 
 #[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
 pub struct fp128 {}
 
 impl TypeTag for fp128 {
@@ -267,7 +174,6 @@ impl TypeTag for fp128 {
 impl FloatTypeTag for fp128 {}
 
 #[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
 pub struct ppc_fp128 {}
 
 impl TypeTag for ppc_fp128 {
@@ -279,7 +185,6 @@ impl TypeTag for ppc_fp128 {
 impl FloatTypeTag for ppc_fp128 {}
 
 #[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
 pub struct bfloat {}
 
 impl TypeTag for bfloat {
@@ -311,7 +216,6 @@ pub trait FunTypeTag: TypeTag {
 }
 
 #[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
 pub struct fun_any {}
 
 impl TypeTag for fun_any {
@@ -355,7 +259,6 @@ impl FunTypeTag for fun_any {
 }
 
 #[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
 pub struct fun<Args: TagTuple, Output: TypeTag, const VAR: bool = false> {
     marker: PhantomData<fn(Args) -> Output>,
 }
@@ -405,143 +308,12 @@ impl<Args: TagTuple, Output: TypeTag, const VAR: bool> FunTypeTag for fun<Args, 
     }
 }
 
-impl<T: FunTypeTag> Type<T> {
-    pub fn to_fun_any(&self) -> &Type<fun_any> {
-        unsafe { self.cast_unchecked() }
-    }
-
-    /// Returns whether a function type is variadic.
-    pub fn is_var(&self) -> bool {
-        T::type_is_var(self)
-    }
-
-    /// Obtain the number of parameters this function accepts.
-    pub fn get_param_count(&self) -> u32 {
-        T::type_get_param_count(self)
-    }
-
-    /// Obtain the types of a function's parameters.
-    #[allow(clippy::mut_from_ref)]
-    pub fn get_param_into_slice<'s, 'a>(
-        &'s self,
-        slice: &'a mut [Option<&'s Type<any>>],
-    ) -> &'a mut [&'s Type<any>] {
-        assert_eq!(slice.len(), self.get_param_count() as usize);
-        unsafe {
-            LLVMGetParamTypes(self.as_raw(), slice.as_ptr() as _);
-            std::mem::transmute(slice)
-        }
-    }
-
-    /// Obtain the types of a function's parameters.
-    #[allow(clippy::needless_lifetimes)]
-    pub fn get_param_with_slice<'s, F: FnOnce(&[&'s Type<any>]) -> R, R>(&'s self, f: F) -> R {
-        T::type_get_param_with_slice(self, f)
-    }
-
-    /// Obtain the types of a function's parameters.
-    pub fn get_param_vec_any(&self) -> Vec<&Type<any>> {
-        unsafe {
-            let count = LLVMCountParamTypes(self.as_raw()) as usize;
-            let mut buffer = Vec::with_capacity(count);
-            LLVMGetParamTypes(self.as_raw(), buffer.as_ptr() as _);
-            buffer.set_len(count);
-            buffer
-        }
-    }
-
-    /// Obtain the Type this function Type returns.
-    pub fn get_return_any(&self) -> &Type<any> {
-        unsafe { Type::from_ref(LLVMGetReturnType(self.as_raw())) }
-    }
-}
-
 impl<Args: TagTuple, Output: TypeTag, const VAR: bool> Type<fun<Args, Output, VAR>> {
     /// Obtain the types of a function's parameters.
     #[allow(clippy::needless_lifetimes)]
     pub fn get_params<'s>(&'s self) -> Args::Types<'s> {
         self.get_param_with_slice(|slice| Args::type_from_slice(slice))
             .unwrap()
-    }
-}
-
-impl<T: FunTypeTag> Value<T> {
-    pub fn to_fun_any(&self) -> &Value<fun_any> {
-        unsafe { self.cast_unchecked() }
-    }
-
-    /// Obtain the calling function of a function.
-    pub fn get_call_conv(&self) -> u32 {
-        unsafe { LLVMGetFunctionCallConv(self.as_raw()) }
-    }
-
-    /// Set the calling convention of a function.
-    pub fn set_call_conv(&self, conv: u32) {
-        unsafe { LLVMSetFunctionCallConv(self.as_raw(), conv) };
-    }
-
-    /// Obtain the name of the garbage collector to use during code generation.
-    pub fn get_gc_raw(&self) -> *const CStr {
-        unsafe {
-            let ptr = LLVMGetGC(self.as_raw());
-            if ptr.is_null() {
-                std::ptr::slice_from_raw_parts(ptr, 0) as *const CStr
-            } else {
-                CStr::from_ptr(ptr)
-            }
-        }
-    }
-
-    /// Obtain the name of the garbage collector to use during code generation.
-    pub fn get_gc(&self) -> Option<CString> {
-        unsafe {
-            let ptr = self.get_gc_raw();
-            if ptr.is_null() {
-                None
-            } else {
-                Some(CString::from(&*ptr))
-            }
-        }
-    }
-
-    /// Define the garbage collector to use during code generation.
-    pub fn set_gc(&self, name: &CStr) {
-        unsafe { LLVMSetGC(self.as_raw(), name.as_ptr()) }
-    }
-
-    /// Obtain the number of parameters in a function.
-    pub fn get_param_count(&self) -> u32 {
-        T::value_get_param_count(self)
-    }
-
-    /// Obtain the types of a function's parameters.
-    #[allow(clippy::mut_from_ref)]
-    pub fn get_param_into_slice<'s>(
-        &'s self,
-        slice: &mut [Option<&'s Value<any>>],
-    ) -> &mut [&'s Value<any>] {
-        assert_eq!(slice.len(), self.get_param_count() as usize);
-        unsafe {
-            LLVMGetParams(self.as_raw(), slice.as_ptr() as _);
-            std::mem::transmute(slice)
-        }
-    }
-
-    /// Obtain the types of a function's parameters.
-    #[allow(clippy::needless_lifetimes)]
-    pub fn get_param_with_slice<'s, F: FnOnce(&[&'s Value<any>]) -> R, R>(&'s self, f: F) -> R {
-        T::value_get_param_with_slice(self, f)
-    }
-
-    /// Obtain the types of a function's parameters.
-    pub fn get_param_vec_any(&self) -> Vec<&Value<any>> {
-        unsafe {
-            let count = self.get_param_count() as usize;
-            let mut buffer = Vec::with_capacity(count);
-            LLVMGetParams(self.as_raw(), buffer.as_ptr() as _);
-            buffer.set_len(count);
-            buffer
-        }
     }
 }
 
@@ -561,7 +333,6 @@ pub trait IntTypeTag: TypeTag {
 }
 
 #[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
 pub struct int_any {}
 
 impl TypeTag for int_any {
@@ -573,7 +344,6 @@ impl TypeTag for int_any {
 impl IntTypeTag for int_any {}
 
 #[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
 pub struct int<const N: u32> {}
 
 impl<const N: u32> TypeTag for int<N> {
@@ -595,22 +365,11 @@ impl<T: IntTypeTag> Type<T> {
     }
 }
 
-#[allow(non_camel_case_types)]
 pub type int1 = int<1>;
-
-#[allow(non_camel_case_types)]
 pub type int8 = int<8>;
-
-#[allow(non_camel_case_types)]
 pub type int16 = int<16>;
-
-#[allow(non_camel_case_types)]
 pub type int32 = int<32>;
-
-#[allow(non_camel_case_types)]
 pub type int64 = int<64>;
-
-#[allow(non_camel_case_types)]
 pub type int128 = int<128>;
 
 pub trait PtrTypeTag: TypeTag {
@@ -620,7 +379,6 @@ pub trait PtrTypeTag: TypeTag {
 }
 
 #[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
 pub struct ptr_any {}
 
 impl TypeTag for ptr_any {
@@ -632,7 +390,6 @@ impl TypeTag for ptr_any {
 impl PtrTypeTag for ptr_any {}
 
 #[derive(Copy, Clone)]
-#[allow(non_camel_case_types)]
 pub struct ptr<const ADDRESS_SPACE: u32 = 0> {}
 
 impl<const ADDRESS_SPACE: u32> TypeTag for ptr<ADDRESS_SPACE> {
@@ -650,6 +407,81 @@ impl<const ADDRESS_SPACE: u32> PtrTypeTag for ptr<ADDRESS_SPACE> {
     fn type_get_address_space(_ty: &Type<Self>) -> u32 {
         ADDRESS_SPACE
     }
+}
+
+pub(crate) unsafe fn type_check_kind<T: TypeTag>(
+    ty: &Type<any>,
+    kind: LLVMTypeKind,
+) -> Option<&Type<T>> {
+    if ty.get_kind() == kind {
+        Some(unsafe { ty.cast_unchecked() })
+    } else {
+        None
+    }
+}
+
+pub trait InstanceTypeTag: TypeTag {}
+impl InstanceTypeTag for void {}
+impl InstanceTypeTag for label {}
+impl<T: InstanceTypeTag, const N: u64> InstanceTypeTag for array<T, N> {}
+impl InstanceTypeTag for half {}
+impl InstanceTypeTag for float {}
+impl InstanceTypeTag for double {}
+impl InstanceTypeTag for x86_fp80 {}
+impl InstanceTypeTag for fp128 {}
+impl InstanceTypeTag for ppc_fp128 {}
+impl InstanceTypeTag for bfloat {}
+impl<const N: u32> InstanceTypeTag for int<N> {}
+impl<const ADDRESS_SPACE: u32> InstanceTypeTag for ptr<ADDRESS_SPACE> {}
+impl<Args: InstanceTagTuple, Output: InstanceTypeTag, const VAR: bool> InstanceTypeTag
+    for fun<Args, Output, VAR>
+{
+}
+
+pub trait IntMathTypeTag: InstanceTypeTag {}
+impl<const N: u32> IntMathTypeTag for int<N> {}
+
+pub trait FloatMathTypeTag: InstanceTypeTag {}
+impl FloatMathTypeTag for half {}
+impl FloatMathTypeTag for float {}
+impl FloatMathTypeTag for double {}
+impl FloatMathTypeTag for x86_fp80 {}
+impl FloatMathTypeTag for fp128 {}
+impl FloatMathTypeTag for ppc_fp128 {}
+impl FloatMathTypeTag for bfloat {}
+
+pub trait TagTuple: Copy + 'static {
+    const COUNT: usize;
+
+    type Types<'s>: TypeTuple<'s, Tags = Self>;
+
+    type Values<'s>: ValueTuple<'s, Tags = Self>;
+
+    fn stack_array<Type: Default, Fun: FnOnce(&mut [Type]) -> Ret, Ret>(f: Fun) -> Ret;
+
+    fn type_into_slice<'a, 's>(
+        tuple: Self::Types<'s>,
+        slice: &'a mut [Option<&'s Type<any>>],
+    ) -> &'a mut [&'s Type<any>];
+
+    fn type_from_slice<'s>(slice: &[&'s Type<any>]) -> Option<Self::Types<'s>>;
+
+    fn value_into_slice<'a, 's>(
+        tuple: Self::Values<'s>,
+        slice: &'a mut [Option<&'s Value<any>>],
+    ) -> &'a mut [&'s Value<any>];
+
+    fn value_from_slice<'s>(slice: &[&'s Value<any>]) -> Option<Self::Values<'s>>;
+}
+
+pub trait InstanceTagTuple: TagTuple {}
+
+pub trait TypeTuple<'s>: Sized {
+    type Tags: TagTuple<Types<'s> = Self>;
+}
+
+pub trait ValueTuple<'s>: Sized {
+    type Tags: TagTuple<Values<'s> = Self>;
 }
 
 macro_rules! impl_tuple {

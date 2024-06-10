@@ -9,11 +9,21 @@ impl<T: ArrayTypeTag> Type<T> {
     }
 }
 
+impl<T: ArrayTypeTag> Type<T> {
+    pub fn to_array_any(&self) -> &Type<array_any_len<any>> {
+        unsafe { self.cast_unchecked() }
+    }
+
+    pub fn length(&self) -> u64 {
+        T::type_length(self)
+    }
+}
+
 impl<T: TypeTag> Type<T> {
     /// Create a fixed size array type that refers to a specific type.
     ///
     /// The created type will exist in the context that its element type exists in.
-    pub fn array_in(&self, count: u64) -> &Type<array_unsized<T>> {
+    pub fn array_in(&self, count: u64) -> &Type<array_any_len<T>> {
         unsafe { Type::from_ref(LLVMArrayType2(self.as_raw(), count)) }
     }
 

@@ -9,6 +9,7 @@ use crate::{Context, Opaque, Type};
 
 pub mod arrays;
 pub mod floats;
+pub mod functions;
 pub mod integers;
 pub mod others;
 pub mod pointers;

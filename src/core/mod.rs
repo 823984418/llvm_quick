@@ -8,15 +8,15 @@ use std::ptr::NonNull;
 use llvm_sys::core::*;
 
 pub mod basic_block;
-pub mod builder;
-pub mod context;
-pub mod instruction;
-pub mod memory_buffer;
+pub mod contexts;
+pub mod instruction_builders;
+pub mod instructions;
+pub mod memory_buffers;
 pub mod metadata;
-pub mod module;
-pub mod module_provider;
-pub mod pass_manager;
-pub mod thread;
+pub mod module_providers;
+pub mod modules;
+pub mod pass_managers;
+pub mod threading;
 pub mod types;
 pub mod values;
 
@@ -36,9 +36,15 @@ pub struct Message {
     ptr: NonNull<CStr>,
 }
 
+impl Message {
+    pub fn create(s: &CStr) -> Self {
+        unsafe { Self::from_raw(LLVMCreateMessage(s.as_ptr())) }
+    }
+}
+
 impl Drop for Message {
     fn drop(&mut self) {
-        unsafe { LLVMDisposeMessage(self.as_ptr()) }
+        unsafe { LLVMDisposeMessage(self.as_raw()) }
     }
 }
 
@@ -84,16 +90,12 @@ impl Message {
         Self { ptr }
     }
 
-    pub fn create(s: &CStr) -> Self {
-        unsafe { Self::from_raw(LLVMCreateMessage(s.as_ptr())) }
-    }
-
-    pub fn as_ptr(&self) -> *mut c_char {
+    pub fn as_raw(&self) -> *mut c_char {
         self.ptr.as_ptr() as _
     }
 
     pub fn into_raw(self) -> *mut c_char {
-        let ptr = self.as_ptr();
+        let ptr = self.as_raw();
         forget(self);
         ptr
     }
