@@ -117,7 +117,9 @@ impl<'s> Deref for ValueMetadataEntries<'s> {
 
 impl<'s> ValueMetadataEntries<'s> {
     pub unsafe fn from_raw(ptr: *mut [&'s ValueMetadataEntry]) -> Self {
-        Self { ptr: ptr.into() }
+        Self {
+            ptr: NonNull::new(ptr).unwrap(),
+        }
     }
 }
 
