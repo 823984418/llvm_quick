@@ -162,11 +162,12 @@ unsafe impl Opaque for Use {
 }
 
 #[repr(transparent)]
-pub struct OperandBundle {
+pub struct OperandBundle<'s> {
     _opaque: PhantomOpaque,
+    _marker: PhantomData<&'s Context>,
 }
 
-unsafe impl Opaque for OperandBundle {
+unsafe impl<'s> Opaque for OperandBundle<'s> {
     type Inner = LLVMOpaqueOperandBundle;
 }
 

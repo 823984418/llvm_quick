@@ -9,7 +9,7 @@ use crate::type_tag::*;
 use crate::{Context, Module, Opaque, Type, Value};
 
 impl<'s> OpaqueDrop for Module<'s> {
-    fn drop_raw(ptr: *mut Self::Inner) {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeModule(ptr) }
     }
 }
@@ -31,7 +31,7 @@ impl Context {
 }
 
 impl<'s> OpaqueClone for Module<'s> {
-    fn clone_raw(ptr: *mut Self::Inner) -> *mut Self::Inner {
+    unsafe fn clone_raw(ptr: *mut Self::Inner) -> *mut Self::Inner {
         unsafe { LLVMCloneModule(ptr) }
     }
 }

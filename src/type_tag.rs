@@ -40,6 +40,15 @@ impl TypeTag for label {
     }
 }
 
+#[derive(Copy, Clone)]
+pub struct metadata {}
+
+impl TypeTag for metadata {
+    fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
+        unsafe { type_check_kind(ty, LLVMTypeKind::LLVMMetadataTypeKind) }
+    }
+}
+
 pub trait ArrayTypeTag: TypeTag {
     type ElementType: TypeTag;
 

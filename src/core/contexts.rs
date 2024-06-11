@@ -57,7 +57,7 @@ impl Context {
 }
 
 impl OpaqueDrop for Context {
-    fn drop_raw(ptr: *mut Self::Inner) {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMContextDispose(ptr) }
     }
 }

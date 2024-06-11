@@ -41,7 +41,6 @@ impl OrcObjectLayer {
         }
     }
 
-    // FIXME: owner?
     pub fn orc_rt_dyld_object_linking_layer_register_jit_event_listener(
         &self,
         listener: &JITEventListener,

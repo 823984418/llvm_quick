@@ -38,13 +38,13 @@ impl<'s> Builder<'s> {
         unsafe { LLVMInsertIntoBuilder(self.as_raw(), inst.as_raw()) }
     }
 
-    pub fn insert_with_name<'a, T: TypeTag>(&self, inst: &Value<T>, name: &CStr) {
+    pub fn insert_with_name<T: TypeTag>(&self, inst: &Value<T>, name: &CStr) {
         unsafe { LLVMInsertIntoBuilderWithName(self.as_raw(), inst.as_raw(), name.as_ptr()) }
     }
 }
 
 impl<'s> OpaqueDrop for Builder<'s> {
-    fn drop_raw(ptr: *mut Self::Inner) {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeBuilder(ptr) }
     }
 }
@@ -113,7 +113,7 @@ impl<'s> Builder<'s> {
         }
     }
 
-    pub fn switch<'a, const N: u32>(
+    pub fn switch<const N: u32>(
         &self,
         v: &Value<int<N>>,
         els: &BasicBlock,

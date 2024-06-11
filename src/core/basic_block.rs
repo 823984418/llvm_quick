@@ -42,7 +42,10 @@ impl<T: FunTypeTag> Value<T> {
         unsafe { LLVMCountBasicBlocks(self.as_raw()) }
     }
 
-    pub fn get_basic_blocks(&self, basic_blocks: &mut [Option<&BasicBlock>]) -> &mut [&BasicBlock] {
+    pub fn get_basic_blocks<'a, 's>(
+        &self,
+        basic_blocks: &'a mut [Option<&'s BasicBlock>],
+    ) -> &'a mut [&'s BasicBlock] {
         assert_eq!(basic_blocks.len(), self.count_basic_block() as usize);
         unsafe {
             LLVMGetBasicBlocks(self.as_raw(), basic_blocks.as_mut_ptr() as _);

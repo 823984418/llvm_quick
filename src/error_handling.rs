@@ -3,6 +3,7 @@ use std::mem::{forget, size_of, MaybeUninit};
 
 use llvm_sys::error_handling::*;
 
+#[allow(clippy::uninit_assumed_init)]
 pub fn install_fatal_error_handler<T: Fn(&CStr) + 'static>(handle: T) {
     assert_eq!(
         size_of::<T>(),

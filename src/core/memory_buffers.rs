@@ -67,7 +67,7 @@ impl MemoryBuffer {
 }
 
 impl OpaqueDrop for MemoryBuffer {
-    fn drop_raw(ptr: *mut Self::Inner) {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeMemoryBuffer(ptr) }
     }
 }

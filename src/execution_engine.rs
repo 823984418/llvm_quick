@@ -38,7 +38,7 @@ pub struct MCJITMemoryManager {
     _opaque: PhantomOpaque,
 }
 
-unsafe impl<'s> Opaque for MCJITMemoryManager {
+unsafe impl Opaque for MCJITMemoryManager {
     type Inner = LLVMOpaqueMCJITMemoryManager;
 }
 
@@ -83,7 +83,7 @@ impl GenericValue {
 }
 
 impl OpaqueDrop for GenericValue {
-    fn drop_raw(ptr: *mut Self::Inner) {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeGenericValue(ptr) }
     }
 }
@@ -193,7 +193,7 @@ impl<'s> ExecutionEngine<'s> {
 }
 
 impl<'s> OpaqueDrop for ExecutionEngine<'s> {
-    fn drop_raw(ptr: *mut Self::Inner) {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeExecutionEngine(ptr) };
     }
 }
@@ -274,7 +274,11 @@ impl<'s> ExecutionEngine<'s> {
         }
     }
 
-    // FIXME: LLVMRecompileAndRelinkFunction
+    /// In fact, currently it only returns nullptr
+    #[deprecated]
+    pub fn recompile_and_relink_function<F: FunTypeTag>(&self, f: &Value<F>) -> *const () {
+        unsafe { LLVMRecompileAndRelinkFunction(self.as_raw(), f.as_raw()) as _ }
+    }
 
     pub fn get_target_data(&self) -> &TargetData {
         unsafe { TargetData::from_ref(LLVMGetExecutionEngineTargetData(self.as_raw())) }
@@ -389,16 +393,18 @@ impl MCJITMemoryManager {
             }
         }
 
-        Self::create_simple_raw(
-            opaque as _,
-            allocate_code_section_raw::<T>,
-            allocate_data_section_raw::<T>,
-            finalize_memory_raw::<T>,
-            Some(destroy_raw::<T>),
-        )
+        unsafe {
+            Self::create_simple_raw(
+                opaque as _,
+                allocate_code_section_raw::<T>,
+                allocate_data_section_raw::<T>,
+                finalize_memory_raw::<T>,
+                Some(destroy_raw::<T>),
+            )
+        }
     }
 
-    pub fn create_simple_raw(
+    pub unsafe fn create_simple_raw(
         opaque: *mut c_void,
         allocate_code_section: LLVMMemoryManagerAllocateCodeSectionCallback,
         allocate_data_section: LLVMMemoryManagerAllocateDataSectionCallback,
@@ -417,8 +423,8 @@ impl MCJITMemoryManager {
     }
 }
 
-impl<'s> OpaqueDrop for MCJITMemoryManager {
-    fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for MCJITMemoryManager {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeMCJITMemoryManager(ptr) }
     }
 }

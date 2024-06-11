@@ -10,7 +10,7 @@ impl<'s> Module<'s> {
 }
 
 impl OpaqueDrop for ModuleProvider {
-    fn drop_raw(ptr: *mut Self::Inner) {
+    unsafe fn drop_raw(ptr: *mut Self::Inner) {
         unsafe { LLVMDisposeModuleProvider(ptr) }
     }
 }
