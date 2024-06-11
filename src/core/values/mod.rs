@@ -66,7 +66,7 @@ impl<T: TypeTag> Value<T> {
     }
 
     pub fn dump(&self) {
-        unsafe { LLVMDumpValue(self.as_raw()) };
+        unsafe { LLVMDumpValue(self.as_raw()) }
     }
 
     /// Return a string representation of the value.
@@ -78,7 +78,7 @@ impl<T: TypeTag> Value<T> {
     where
         T: InstanceTypeTag,
     {
-        unsafe { LLVMReplaceAllUsesWith(self.as_raw(), new.as_raw()) };
+        unsafe { LLVMReplaceAllUsesWith(self.as_raw(), new.as_raw()) }
     }
 
     /// Determine whether the specified value instance is constant.

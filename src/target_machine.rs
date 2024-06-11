@@ -93,7 +93,7 @@ impl TargetMachineOptions {
 
 impl OpaqueDrop for TargetMachineOptions {
     fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMDisposeTargetMachineOptions(ptr) };
+        unsafe { LLVMDisposeTargetMachineOptions(ptr) }
     }
 }
 
@@ -163,7 +163,7 @@ impl Target {
 
 impl OpaqueDrop for TargetMachine {
     fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMDisposeTargetMachine(ptr) };
+        unsafe { LLVMDisposeTargetMachine(ptr) }
     }
 }
 

@@ -31,7 +31,7 @@ impl<'s> Module<'s> {
     }
 
     pub fn set_data_layout(&self, v: &TargetData) {
-        unsafe { LLVMSetModuleDataLayout(self.as_raw(), v.as_raw()) };
+        unsafe { LLVMSetModuleDataLayout(self.as_raw(), v.as_raw()) }
     }
 }
 
@@ -124,38 +124,46 @@ impl TargetData {
 
 impl OpaqueDrop for TargetData {
     fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMDisposeTargetData(ptr) };
+        unsafe { LLVMDisposeTargetData(ptr) }
     }
 }
 
 pub fn initialize_all_target_infos() {
-    unsafe { LLVM_InitializeAllTargetInfos() };
+    unsafe { LLVM_InitializeAllTargetInfos() }
 }
+
 pub fn initialize_all_targets() {
-    unsafe { LLVM_InitializeAllTargets() };
+    unsafe { LLVM_InitializeAllTargets() }
 }
+
 pub fn initialize_all_target_mcs() {
-    unsafe { LLVM_InitializeAllTargetMCs() };
+    unsafe { LLVM_InitializeAllTargetMCs() }
 }
+
 pub fn initialize_all_asm_printers() {
-    unsafe { LLVM_InitializeAllAsmPrinters() };
+    unsafe { LLVM_InitializeAllAsmPrinters() }
 }
+
 pub fn initialize_all_asm_parsers() {
-    unsafe { LLVM_InitializeAllAsmParsers() };
+    unsafe { LLVM_InitializeAllAsmParsers() }
 }
+
 pub fn initialize_all_disassemblers() {
-    unsafe { LLVM_InitializeAllDisassemblers() };
+    unsafe { LLVM_InitializeAllDisassemblers() }
 }
 
 pub fn initialize_native_target() -> bool {
     unsafe { LLVM_InitializeNativeTarget() != 0 }
 }
+
 pub fn initialize_native_asm_parser() -> bool {
     unsafe { LLVM_InitializeNativeAsmParser() != 0 }
 }
+
 pub fn initialize_native_asm_printer() -> bool {
     unsafe { LLVM_InitializeNativeAsmPrinter() != 0 }
 }
+
 pub fn initialize_native_disassembler() -> bool {
     unsafe { LLVM_InitializeNativeDisassembler() != 0 }
 }

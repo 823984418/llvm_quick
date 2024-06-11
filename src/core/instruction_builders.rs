@@ -15,15 +15,15 @@ impl Context {
 
 impl<'s> Builder<'s> {
     pub fn position<T: TypeTag>(&self, basic_block: &BasicBlock, inst: &Value<T>) {
-        unsafe { LLVMPositionBuilder(self.as_raw(), basic_block.as_raw(), inst.as_raw()) };
+        unsafe { LLVMPositionBuilder(self.as_raw(), basic_block.as_raw(), inst.as_raw()) }
     }
 
     pub fn position_at_end_before<T: TypeTag>(&self, inst: &Value<T>) {
-        unsafe { LLVMPositionBuilderBefore(self.as_raw(), inst.as_raw()) };
+        unsafe { LLVMPositionBuilderBefore(self.as_raw(), inst.as_raw()) }
     }
 
     pub fn position_at_end(&self, basic_block: &BasicBlock) {
-        unsafe { LLVMPositionBuilderAtEnd(self.as_raw(), basic_block.as_raw()) };
+        unsafe { LLVMPositionBuilderAtEnd(self.as_raw(), basic_block.as_raw()) }
     }
 
     pub fn get_insert_block(&self) -> &'s BasicBlock {
@@ -31,21 +31,21 @@ impl<'s> Builder<'s> {
     }
 
     pub fn clear_insertion_position(&self) {
-        unsafe { LLVMClearInsertionPosition(self.as_raw()) };
+        unsafe { LLVMClearInsertionPosition(self.as_raw()) }
     }
 
     pub fn insert<T: TypeTag>(&self, inst: &'s Value<T>) {
-        unsafe { LLVMInsertIntoBuilder(self.as_raw(), inst.as_raw()) };
+        unsafe { LLVMInsertIntoBuilder(self.as_raw(), inst.as_raw()) }
     }
 
     pub fn insert_with_name<'a, T: TypeTag>(&self, inst: &Value<T>, name: &CStr) {
-        unsafe { LLVMInsertIntoBuilderWithName(self.as_raw(), inst.as_raw(), name.as_ptr()) };
+        unsafe { LLVMInsertIntoBuilderWithName(self.as_raw(), inst.as_raw(), name.as_ptr()) }
     }
 }
 
 impl<'s> OpaqueDrop for Builder<'s> {
     fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMDisposeBuilder(ptr) };
+        unsafe { LLVMDisposeBuilder(ptr) }
     }
 }
 
@@ -57,12 +57,12 @@ impl<'s> Builder<'s> {
 
     /// Set location information used by debugging information.
     pub fn set_current_debug_location(&self, loc: &Metadata) {
-        unsafe { LLVMSetCurrentDebugLocation2(self.as_raw(), loc.as_raw()) };
+        unsafe { LLVMSetCurrentDebugLocation2(self.as_raw(), loc.as_raw()) }
     }
 
     /// Adds the metadata registered with the given builder to the given instruction.
     pub fn add_metadata_to_inst<T: TypeTag>(&self, inst: &'s Value<T>) {
-        unsafe { LLVMAddMetadataToInst(self.as_raw(), inst.as_raw()) };
+        unsafe { LLVMAddMetadataToInst(self.as_raw(), inst.as_raw()) }
     }
 
     /// Get the default floating-point math metadata for a given builder.
@@ -72,7 +72,7 @@ impl<'s> Builder<'s> {
 
     /// Set the default floating-point math metadata for the given builder.
     pub fn set_default_fp_math_tag(&self, fp_math_tag: &'s Metadata) {
-        unsafe { LLVMBuilderSetDefaultFPMathTag(self.as_raw(), fp_math_tag.as_raw()) };
+        unsafe { LLVMBuilderSetDefaultFPMathTag(self.as_raw(), fp_math_tag.as_raw()) }
     }
 
     pub fn return_void(&self) -> &'s Value<void> {
@@ -583,7 +583,7 @@ impl<T: TypeTag> Value<T> {
     }
 
     pub fn set_nuw(&self, set: bool) {
-        unsafe { LLVMSetNUW(self.as_raw(), set as _) };
+        unsafe { LLVMSetNUW(self.as_raw(), set as _) }
     }
 
     pub fn get_nsw(&self) -> bool {
@@ -591,7 +591,7 @@ impl<T: TypeTag> Value<T> {
     }
 
     pub fn set_nsw(&self, set: bool) {
-        unsafe { LLVMSetNSW(self.as_raw(), set as _) };
+        unsafe { LLVMSetNSW(self.as_raw(), set as _) }
     }
 
     pub fn get_exact(&self) -> bool {
@@ -599,7 +599,7 @@ impl<T: TypeTag> Value<T> {
     }
 
     pub fn set_exact(&self, set: bool) {
-        unsafe { LLVMSetExact(self.as_raw(), set as _) };
+        unsafe { LLVMSetExact(self.as_raw(), set as _) }
     }
 
     /// Gets if the instruction has the non-negative flag set.
@@ -609,7 +609,7 @@ impl<T: TypeTag> Value<T> {
 
     /// Sets the non-negative flag for the instruction.
     pub fn set_non_neg(&self, set: bool) {
-        unsafe { LLVMSetNNeg(self.as_raw(), set as _) };
+        unsafe { LLVMSetNNeg(self.as_raw(), set as _) }
     }
 
     /// Get the flags for which fast-math-style optimizations are allowed for this value.
@@ -619,7 +619,7 @@ impl<T: TypeTag> Value<T> {
 
     /// Sets the flags for which fast-math-style optimizations are allowed for this value.
     pub fn set_fast_math_flags(&self, set: LLVMFastMathFlags) {
-        unsafe { LLVMSetFastMathFlags(self.as_raw(), set) };
+        unsafe { LLVMSetFastMathFlags(self.as_raw(), set) }
     }
 
     pub fn can_use_fast_math_flags(&self) -> bool {
@@ -761,6 +761,136 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<void> {
         unsafe { Value::from_ref(LLVMBuildStore(self.as_raw(), val.as_raw(), ptr.as_raw())) }
     }
+
+    pub fn get_element_ptr<T: TypeTag, P: PtrTypeTag, I: IntTypeTag>(
+        &self,
+        ty: &Type<T>,
+        pointer: &Value<P>,
+        indices: &[&Value<I>],
+        name: &CStr,
+    ) -> &'s Value<any> {
+        unsafe {
+            Value::from_ref(LLVMBuildGEP2(
+                self.as_raw(),
+                ty.as_raw(),
+                pointer.as_raw(),
+                indices.as_ptr() as _,
+                indices.len() as _,
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn in_bounds_get_element_ptr<T: TypeTag, P: PtrTypeTag, I: IntTypeTag>(
+        &self,
+        ty: &Type<T>,
+        pointer: &Value<P>,
+        indices: &[&Value<I>],
+        name: &CStr,
+    ) -> &'s Value<any> {
+        unsafe {
+            Value::from_ref(LLVMBuildInBoundsGEP2(
+                self.as_raw(),
+                ty.as_raw(),
+                pointer.as_raw(),
+                indices.as_ptr() as _,
+                indices.len() as _,
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn struct_get_element_ptr<T: TypeTag, P: PtrTypeTag>(
+        &self,
+        ty: &Type<T>,
+        pointer: &Value<P>,
+        idx: u32,
+        name: &CStr,
+    ) -> &'s Value<any> {
+        unsafe {
+            Value::from_ref(LLVMBuildStructGEP2(
+                self.as_raw(),
+                ty.as_raw(),
+                pointer.as_raw(),
+                idx,
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn global_string(&self, str: &CStr, name: &CStr) -> &'s Value<any> {
+        unsafe {
+            Value::from_ref(LLVMBuildGlobalString(
+                self.as_raw(),
+                str.as_ptr(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn global_string_ptr(&self, str: &CStr, name: &CStr) -> &'s Value<any> {
+        unsafe {
+            Value::from_ref(LLVMBuildGlobalStringPtr(
+                self.as_raw(),
+                str.as_ptr(),
+                name.as_ptr(),
+            ))
+        }
+    }
+}
+
+impl<T: TypeTag> Value<T> {
+    pub fn get_volatile(&self) -> bool {
+        unsafe { LLVMGetVolatile(self.as_raw()) != 0 }
+    }
+
+    pub fn set_volatile(&self, is_volatile: bool) {
+        unsafe { LLVMSetVolatile(self.as_raw(), is_volatile as _) }
+    }
+
+    pub fn get_weak(&self) -> bool {
+        unsafe { LLVMGetWeak(self.as_raw()) != 0 }
+    }
+
+    pub fn set_weak(&self, is_weak: bool) {
+        unsafe { LLVMSetWeak(self.as_raw(), is_weak as _) }
+    }
+
+    pub fn get_ordering(&self) -> LLVMAtomicOrdering {
+        unsafe { LLVMGetOrdering(self.as_raw()) }
+    }
+
+    pub fn set_ordering(&self, ordering: LLVMAtomicOrdering) {
+        unsafe { LLVMSetOrdering(self.as_raw(), ordering) }
+    }
+
+    pub fn get_atomic_rmw_bin_op(&self) -> LLVMAtomicRMWBinOp {
+        unsafe { LLVMGetAtomicRMWBinOp(self.as_raw()) }
+    }
+
+    pub fn set_atomic_rmw_bin_op(&self, bin_op: LLVMAtomicRMWBinOp) {
+        unsafe { LLVMSetAtomicRMWBinOp(self.as_raw(), bin_op) }
+    }
+}
+
+impl<'s> Builder<'s> {
+    pub fn trunc<T: TypeTag, D: TypeTag>(
+        &self,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        name: &CStr,
+    ) -> &'s Value<D> {
+        unsafe {
+            Value::from_ref(LLVMBuildTrunc(
+                self.as_raw(),
+                val.as_raw(),
+                dest_ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    // TODO
 }
 
 /// Return a constant that specifies that the result of a ShuffleVectorInst is undefined.

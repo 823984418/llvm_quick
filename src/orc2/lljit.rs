@@ -39,13 +39,13 @@ impl OrcLLJITBuilder {
 
 impl OpaqueDrop for OrcLLJITBuilder {
     fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMOrcDisposeLLJITBuilder(ptr) };
+        unsafe { LLVMOrcDisposeLLJITBuilder(ptr) }
     }
 }
 
 impl OrcLLJITBuilder {
     pub fn set_jit_target_machine_builder(&self, j: Owning<OrcJitTargetMachineBuilder>) {
-        unsafe { LLVMOrcLLJITBuilderSetJITTargetMachineBuilder(self.as_raw(), j.into_raw()) };
+        unsafe { LLVMOrcLLJITBuilderSetJITTargetMachineBuilder(self.as_raw(), j.into_raw()) }
     }
 
     // TODO: wrap
@@ -54,7 +54,7 @@ impl OrcLLJITBuilder {
         f: LLVMOrcLLJITBuilderObjectLinkingLayerCreatorFunction,
         ctx: *mut (),
     ) {
-        unsafe { LLVMOrcLLJITBuilderSetObjectLinkingLayerCreator(self.as_raw(), f, ctx as _) };
+        unsafe { LLVMOrcLLJITBuilderSetObjectLinkingLayerCreator(self.as_raw(), f, ctx as _) }
     }
 }
 
@@ -73,7 +73,8 @@ impl OrcLLJIT {
 
 impl OpaqueDrop for OrcLLJIT {
     fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMOrcDisposeLLJIT(ptr) };
+        // In fact, currently it always returns success
+        unsafe { Error::check(LLVMOrcDisposeLLJIT(ptr)).unwrap() }
     }
 }
 

@@ -30,12 +30,12 @@ pub fn install_fatal_error_handler_none() {
 /// registered with this function will be invoked before the program is
 /// exited.
 pub fn install_fatal_error_handler_raw(handler: LLVMFatalErrorHandler) {
-    unsafe { LLVMInstallFatalErrorHandler(handler) };
+    unsafe { LLVMInstallFatalErrorHandler(handler) }
 }
 
 /// Reset fatal error handling to the default.
 pub fn reset_fatal_error_handler() {
-    unsafe { LLVMResetFatalErrorHandler() };
+    unsafe { LLVMResetFatalErrorHandler() }
 }
 
 /// Enable LLVM's build-in stack trace code.
@@ -43,5 +43,5 @@ pub fn reset_fatal_error_handler() {
 /// This intercepts the OS's crash signals and prints which component
 /// of LLVM you were in at the time of the crash.
 pub fn enable_pretty_stack_trace() {
-    unsafe { LLVMEnablePrettyStackTrace() };
+    unsafe { LLVMEnablePrettyStackTrace() }
 }

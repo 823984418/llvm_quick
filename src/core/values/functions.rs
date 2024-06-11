@@ -18,7 +18,7 @@ impl<T: FunTypeTag> Value<T> {
 
     /// Set the calling convention of a function.
     pub fn set_call_conv(&self, conv: u32) {
-        unsafe { LLVMSetFunctionCallConv(self.as_raw(), conv) };
+        unsafe { LLVMSetFunctionCallConv(self.as_raw(), conv) }
     }
 
     /// Obtain the name of the garbage collector to use during code generation.

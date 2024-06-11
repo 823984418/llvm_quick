@@ -52,7 +52,7 @@ impl<T: TypeTag> Type<T> {
     }
 
     pub fn dump(&self) {
-        unsafe { LLVMDumpType(self.as_raw()) };
+        unsafe { LLVMDumpType(self.as_raw()) }
     }
 
     /// Return a string representation of the type.

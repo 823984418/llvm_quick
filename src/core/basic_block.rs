@@ -116,19 +116,19 @@ impl Context {
 
 impl BasicBlock {
     pub fn delete(&self) {
-        unsafe { LLVMDeleteBasicBlock(self.as_raw()) };
+        unsafe { LLVMDeleteBasicBlock(self.as_raw()) }
     }
 
     pub fn remove_from_parent(&self) {
-        unsafe { LLVMRemoveBasicBlockFromParent(self.as_raw()) };
+        unsafe { LLVMRemoveBasicBlockFromParent(self.as_raw()) }
     }
 
     pub fn move_basic_block_before(&self, move_pos: &BasicBlock) {
-        unsafe { LLVMMoveBasicBlockBefore(self.as_raw(), move_pos.as_raw()) };
+        unsafe { LLVMMoveBasicBlockBefore(self.as_raw(), move_pos.as_raw()) }
     }
 
     pub fn move_basic_block_after(&self, move_pos: &BasicBlock) {
-        unsafe { LLVMMoveBasicBlockAfter(self.as_raw(), move_pos.as_raw()) };
+        unsafe { LLVMMoveBasicBlockAfter(self.as_raw(), move_pos.as_raw()) }
     }
 
     pub fn get_first_instruction(&self) -> &Value<any> {

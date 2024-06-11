@@ -40,7 +40,7 @@ impl Error {
 
 impl OpaqueDrop for Error {
     fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMConsumeError(ptr) };
+        unsafe { LLVMConsumeError(ptr) }
     }
 }
 
@@ -59,6 +59,15 @@ impl Drop for ErrorMessage {
 impl Error {
     pub fn create_string_error(err_msg: &CStr) -> Owning<Self> {
         unsafe { Owning::from_raw(LLVMCreateStringError(err_msg.as_ptr())) }
+    }
+}
+
+impl Debug for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut s = f.debug_struct("Error");
+        s.field("type_id", &self.get_type_id());
+        s.field("message", &self.get_message());
+        s.finish()
     }
 }
 

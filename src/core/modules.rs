@@ -10,7 +10,7 @@ use crate::{Context, Module, Opaque, Type, Value};
 
 impl<'s> OpaqueDrop for Module<'s> {
     fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMDisposeModule(ptr) };
+        unsafe { LLVMDisposeModule(ptr) }
     }
 }
 

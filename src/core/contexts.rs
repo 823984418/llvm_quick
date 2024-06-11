@@ -20,7 +20,7 @@ impl Context {
     }
 
     pub fn set_diagnostic_handler(&self, handle: LLVMDiagnosticHandler, handle_ctx: *mut ()) {
-        unsafe { LLVMContextSetDiagnosticHandler(self.as_raw(), handle, handle_ctx as _) };
+        unsafe { LLVMContextSetDiagnosticHandler(self.as_raw(), handle, handle_ctx as _) }
     }
 
     /// Leak
@@ -44,7 +44,7 @@ impl Context {
     }
 
     pub fn set_yield_callback(&self, callback: LLVMYieldCallback, opaque_handle: *mut ()) {
-        unsafe { LLVMContextSetYieldCallback(self.as_raw(), callback, opaque_handle as _) };
+        unsafe { LLVMContextSetYieldCallback(self.as_raw(), callback, opaque_handle as _) }
     }
 
     pub fn should_discard_value_names(&self) -> bool {
@@ -52,13 +52,13 @@ impl Context {
     }
 
     pub fn set_discard_value_name(&self, discard: bool) {
-        unsafe { LLVMContextSetDiscardValueNames(self.as_raw(), discard as _) };
+        unsafe { LLVMContextSetDiscardValueNames(self.as_raw(), discard as _) }
     }
 }
 
 impl OpaqueDrop for Context {
     fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMContextDispose(ptr) };
+        unsafe { LLVMContextDispose(ptr) }
     }
 }
 

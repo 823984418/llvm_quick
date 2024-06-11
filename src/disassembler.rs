@@ -89,7 +89,7 @@ impl DisasmContext {
 
 impl OpaqueDrop for DisasmContext {
     fn drop_raw(ptr: *mut Self::Inner) {
-        unsafe { LLVMDisasmDispose(ptr) };
+        unsafe { LLVMDisasmDispose(ptr) }
     }
 }
 

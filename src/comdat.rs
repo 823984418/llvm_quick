@@ -17,7 +17,7 @@ impl<T: TypeTag> Value<T> {
     }
 
     pub fn set_comdat(&self, c: &Comdat) {
-        unsafe { LLVMSetComdat(self.as_raw(), c.as_raw()) };
+        unsafe { LLVMSetComdat(self.as_raw(), c.as_raw()) }
     }
 }
 
@@ -27,6 +27,6 @@ impl Comdat {
     }
 
     pub fn set_selection_kind(&self, kind: LLVMComdatSelectionKind) {
-        unsafe { LLVMSetComdatSelectionKind(self.as_raw(), kind) };
+        unsafe { LLVMSetComdatSelectionKind(self.as_raw(), kind) }
     }
 }
