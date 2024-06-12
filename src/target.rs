@@ -112,12 +112,11 @@ impl TargetData {
         unsafe { LLVMPreferredAlignmentOfGlobal(self.as_raw(), ty.as_raw()) }
     }
 
-    // TODO: type tag
-    pub fn element_at_offset<T: TypeTag>(&self, ty: &Type<T>, offset: u64) -> u32 {
+    pub fn element_at_offset(&self, ty: &Type<struct_any>, offset: u64) -> u32 {
         unsafe { LLVMElementAtOffset(self.as_raw(), ty.as_raw(), offset) }
     }
 
-    pub fn offset_of_element<T: TypeTag>(&self, ty: &Type<T>, element: u32) -> u64 {
+    pub fn offset_of_element(&self, ty: &Type<struct_any>, element: u32) -> u64 {
         unsafe { LLVMOffsetOfElement(self.as_raw(), ty.as_raw(), element) }
     }
 }

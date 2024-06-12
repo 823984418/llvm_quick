@@ -762,7 +762,7 @@ impl<'s> Builder<'s> {
         unsafe { Value::from_ref(LLVMBuildStore(self.as_raw(), val.as_raw(), ptr.as_raw())) }
     }
 
-    pub fn get_element_ptr<T: TypeTag, P: PtrTypeTag, I: IntTypeTag>(
+    pub fn get_element_ptr<T: ElementTypeTag, P: PtrTypeTag, I: IntTypeTag>(
         &self,
         ty: &Type<T>,
         pointer: &Value<P>,
@@ -800,9 +800,9 @@ impl<'s> Builder<'s> {
         }
     }
 
-    pub fn struct_get_element_ptr<T: TypeTag, P: PtrTypeTag>(
+    pub fn struct_get_element_ptr<P: PtrTypeTag>(
         &self,
-        ty: &Type<T>,
+        ty: &Type<struct_any>,
         pointer: &Value<P>,
         idx: u32,
         name: &CStr,

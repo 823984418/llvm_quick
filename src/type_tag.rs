@@ -43,6 +43,15 @@ impl TypeTag for void {
 }
 
 #[derive(Copy, Clone)]
+pub struct struct_any {}
+
+impl TypeTag for struct_any {
+    fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
+        unsafe { type_check_kind(ty, LLVMTypeKind::LLVMStructTypeKind) }
+    }
+}
+
+#[derive(Copy, Clone)]
 pub struct label {}
 
 impl TypeTag for label {
@@ -348,6 +357,11 @@ impl FloatMathTypeTag for x86_fp80 {}
 impl FloatMathTypeTag for fp128 {}
 impl FloatMathTypeTag for ppc_fp128 {}
 impl FloatMathTypeTag for bfloat {}
+
+pub trait ElementTypeTag: TypeTag {}
+impl ElementTypeTag for struct_any {}
+impl<T: TypeTag, const N: u64> ElementTypeTag for array<T, N> {}
+impl<T: TypeTag> ElementTypeTag for array_any_len<T> {}
 
 pub trait InstanceTagTuple: TagTuple {}
 
