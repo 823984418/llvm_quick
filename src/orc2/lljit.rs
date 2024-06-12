@@ -1,8 +1,10 @@
-use std::ffi::{c_char, CStr};
+use std::ffi::{c_char, c_void, CStr};
 use std::ptr::null_mut;
 
 use llvm_sys::orc2::lljit::*;
-use llvm_sys::orc2::LLVMOrcExecutorAddress;
+use llvm_sys::orc2::{
+    LLVMOrcExecutorAddress, LLVMOrcOpaqueExecutionSession, LLVMOrcOpaqueObjectLayer,
+};
 
 use crate::error::Error;
 use crate::orc2::{
@@ -48,13 +50,31 @@ impl OrcLLJITBuilder {
         unsafe { LLVMOrcLLJITBuilderSetJITTargetMachineBuilder(self.as_raw(), j.into_raw()) }
     }
 
-    // TODO: wrap
     pub fn set_object_linking_layer_creator_raw(
         &self,
         f: LLVMOrcLLJITBuilderObjectLinkingLayerCreatorFunction,
         ctx: *mut (),
     ) {
         unsafe { LLVMOrcLLJITBuilderSetObjectLinkingLayerCreator(self.as_raw(), f, ctx as _) }
+    }
+
+    pub fn set_object_linking_layer_creator<
+        F: Fn(&OrcExecutionSession, &CStr) -> Owning<OrcObjectLayer>,
+    >(
+        &self,
+        f: F,
+    ) {
+        extern "C" fn creator_raw<F: Fn(&OrcExecutionSession, &CStr) -> Owning<OrcObjectLayer>>(
+            ctx: *mut c_void,
+            es: *mut LLVMOrcOpaqueExecutionSession,
+            triple: *const c_char,
+        ) -> *mut LLVMOrcOpaqueObjectLayer {
+            unsafe {
+                (*(ctx as *const F))(OrcExecutionSession::from_ref(es), CStr::from_ptr(triple))
+                    .into_raw()
+            }
+        }
+        self.set_object_linking_layer_creator_raw(creator_raw::<F>, Box::into_raw(Box::new(f)) as _)
     }
 }
 
