@@ -1,4 +1,6 @@
-use llvm_sys::core::{LLVMGetParamTypes, LLVMGetReturnType};
+use llvm_sys::core::{
+    LLVMCountParamTypes, LLVMGetParamTypes, LLVMGetReturnType, LLVMIsFunctionVarArg,
+};
 
 use crate::opaque::Opaque;
 use crate::type_tag::{any, fun_any, FunTypeTag};
@@ -11,16 +13,15 @@ impl<T: FunTypeTag> Type<T> {
 
     /// Returns whether a function type is variadic.
     pub fn is_var(&self) -> bool {
-        T::type_is_var(self)
+        unsafe { LLVMIsFunctionVarArg(self.as_raw()) != 0 }
     }
 
     /// Obtain the number of parameters this function accepts.
     pub fn get_param_count(&self) -> u32 {
-        T::type_get_param_count(self)
+        unsafe { LLVMCountParamTypes(self.as_raw()) }
     }
 
     /// Obtain the types of a function's parameters.
-    #[allow(clippy::mut_from_ref)]
     pub fn get_param_into_slice<'s, 'a>(
         &'s self,
         slice: &'a mut [Option<&'s Type<any>>],

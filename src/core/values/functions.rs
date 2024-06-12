@@ -52,11 +52,10 @@ impl<T: FunTypeTag> Value<T> {
 
     /// Obtain the number of parameters in a function.
     pub fn get_param_count(&self) -> u32 {
-        T::value_get_param_count(self)
+        unsafe { LLVMCountParams(self.as_raw()) }
     }
 
     /// Obtain the types of a function's parameters.
-    #[allow(clippy::mut_from_ref)]
     pub fn get_param_into_slice<'s>(
         &'s self,
         slice: &mut [Option<&'s Value<any>>],

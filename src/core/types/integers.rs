@@ -42,6 +42,6 @@ impl Context {
 
 impl<T: IntTypeTag> Type<T> {
     pub fn get_int_width(&self) -> u32 {
-        T::type_get_int_width(self)
+        unsafe { LLVMGetIntTypeWidth(self.as_raw()) }
     }
 }

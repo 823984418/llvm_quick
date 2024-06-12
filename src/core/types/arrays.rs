@@ -1,4 +1,4 @@
-use llvm_sys::core::{LLVMArrayType2, LLVMGetElementType};
+use llvm_sys::core::{LLVMArrayType2, LLVMGetArrayLength2, LLVMGetElementType};
 
 use crate::type_tag::*;
 use crate::{Opaque, Type};
@@ -15,7 +15,7 @@ impl<T: ArrayTypeTag> Type<T> {
     }
 
     pub fn length(&self) -> u64 {
-        T::type_length(self)
+        unsafe { LLVMGetArrayLength2(self.as_raw()) }
     }
 }
 

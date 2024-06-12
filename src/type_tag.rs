@@ -51,10 +51,6 @@ impl TypeTag for metadata {
 
 pub trait ArrayTypeTag: TypeTag {
     type ElementType: TypeTag;
-
-    fn type_length(ty: &Type<Self>) -> u64 {
-        unsafe { LLVMGetArrayLength2(ty.as_raw()) }
-    }
 }
 
 pub type array_any = array_any_len<any>;
@@ -99,10 +95,6 @@ impl<T: TypeTag, const N: u64> TypeTag for array<T, N> {
 
 impl<T: TypeTag, const N: u64> ArrayTypeTag for array<T, N> {
     type ElementType = T;
-
-    fn type_length(_ty: &Type<Self>) -> u64 {
-        N
-    }
 }
 
 pub trait FloatTypeTag: TypeTag {}
@@ -205,17 +197,11 @@ impl TypeTag for bfloat {
 impl FloatTypeTag for bfloat {}
 
 pub trait FunTypeTag: TypeTag {
-    fn type_get_param_count(ty: &Type<Self>) -> u32;
-
-    fn type_is_var(ty: &Type<Self>) -> bool;
-
     #[allow(clippy::needless_lifetimes)]
     fn type_get_param_with_slice<'s, F: FnOnce(&[&'s Type<any>]) -> R, R>(
         ty: &'s Type<Self>,
         f: F,
     ) -> R;
-
-    fn value_get_param_count(val: &Value<Self>) -> u32;
 
     #[allow(clippy::needless_lifetimes)]
     fn value_get_param_with_slice<'s, F: FnOnce(&[&'s Value<any>]) -> R, R>(
@@ -234,14 +220,6 @@ impl TypeTag for fun_any {
 }
 
 impl FunTypeTag for fun_any {
-    fn type_get_param_count(ty: &Type<Self>) -> u32 {
-        unsafe { LLVMCountParamTypes(ty.as_raw()) }
-    }
-
-    fn type_is_var(ty: &Type<Self>) -> bool {
-        unsafe { LLVMIsFunctionVarArg(ty.as_raw()) != 0 }
-    }
-
     #[allow(clippy::needless_lifetimes)]
     fn type_get_param_with_slice<'s, F: FnOnce(&[&'s Type<any>]) -> R, R>(
         ty: &'s Type<Self>,
@@ -250,10 +228,6 @@ impl FunTypeTag for fun_any {
         let count = ty.get_param_count() as usize;
         let mut buffer = vec![None; count];
         f(ty.get_param_into_slice(&mut buffer))
-    }
-
-    fn value_get_param_count(val: &Value<Self>) -> u32 {
-        unsafe { LLVMCountParams(val.as_raw()) }
     }
 
     #[allow(clippy::needless_lifetimes)]
@@ -288,24 +262,12 @@ impl<Args: TagTuple, Output: TypeTag, const VAR: bool> TypeTag for fun<Args, Out
 }
 
 impl<Args: TagTuple, Output: TypeTag, const VAR: bool> FunTypeTag for fun<Args, Output, VAR> {
-    fn type_get_param_count(_ty: &Type<Self>) -> u32 {
-        Args::COUNT as u32
-    }
-
-    fn type_is_var(_ty: &Type<Self>) -> bool {
-        VAR
-    }
-
     #[allow(clippy::needless_lifetimes)]
     fn type_get_param_with_slice<'s, F: FnOnce(&[&'s Type<any>]) -> R, R>(
         ty: &'s Type<Self>,
         f: F,
     ) -> R {
         Args::stack_array(|array| f(ty.get_param_into_slice(array)))
-    }
-
-    fn value_get_param_count(_val: &Value<Self>) -> u32 {
-        Args::COUNT as u32
     }
 
     #[allow(clippy::needless_lifetimes)]
@@ -319,8 +281,7 @@ impl<Args: TagTuple, Output: TypeTag, const VAR: bool> FunTypeTag for fun<Args, 
 
 impl<Args: TagTuple, Output: TypeTag, const VAR: bool> Type<fun<Args, Output, VAR>> {
     /// Obtain the types of a function's parameters.
-    #[allow(clippy::needless_lifetimes)]
-    pub fn get_params<'s>(&'s self) -> Args::Types<'s> {
+    pub fn get_params(&self) -> Args::Types<'_> {
         self.get_param_with_slice(|slice| Args::type_from_slice(slice))
             .unwrap()
     }
@@ -328,18 +289,13 @@ impl<Args: TagTuple, Output: TypeTag, const VAR: bool> Type<fun<Args, Output, VA
 
 impl<Args: TagTuple, Output: TypeTag, const VAR: bool> Value<fun<Args, Output, VAR>> {
     /// Obtain the parameters in a function.
-    #[allow(clippy::needless_lifetimes)]
-    pub fn get_params<'s>(&'s self) -> Args::Values<'s> {
+    pub fn get_params(&self) -> Args::Values<'_> {
         self.get_param_with_slice(|slice| Args::value_from_slice(slice))
             .unwrap()
     }
 }
 
-pub trait IntTypeTag: TypeTag {
-    fn type_get_int_width(ty: &Type<Self>) -> u32 {
-        unsafe { LLVMGetIntTypeWidth(ty.as_raw()) }
-    }
-}
+pub trait IntTypeTag: TypeTag {}
 
 #[derive(Copy, Clone)]
 pub struct int_any {}
@@ -459,6 +415,8 @@ impl FloatMathTypeTag for fp128 {}
 impl FloatMathTypeTag for ppc_fp128 {}
 impl FloatMathTypeTag for bfloat {}
 
+pub trait InstanceTagTuple: TagTuple {}
+
 pub trait TagTuple: Copy + 'static {
     const COUNT: usize;
 
@@ -482,8 +440,6 @@ pub trait TagTuple: Copy + 'static {
 
     fn value_from_slice<'s>(slice: &[&'s Value<any>]) -> Option<Self::Values<'s>>;
 }
-
-pub trait InstanceTagTuple: TagTuple {}
 
 pub trait TypeTuple<'s>: Sized {
     type Tags: TagTuple<Types<'s> = Self>;
