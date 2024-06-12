@@ -241,5 +241,3 @@ impl<'a, 's> RelocationIterator<'a, 's> {
         unsafe { CString::from(&*self.get_relocation_value_string_raw()) }
     }
 }
-
-// TODO
