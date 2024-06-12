@@ -1,4 +1,5 @@
 use std::ffi::{CStr, CString};
+use std::mem::MaybeUninit;
 
 use llvm_sys::core::*;
 
@@ -56,21 +57,15 @@ impl<T: FunTypeTag> Value<T> {
     }
 
     /// Obtain the types of a function's parameters.
-    pub fn get_param_into_slice<'s>(
+    pub fn get_param_into_slice<'a, 's>(
         &'s self,
-        slice: &mut [Option<&'s Value<any>>],
-    ) -> &mut [&'s Value<any>] {
+        slice: &'a mut [Option<&'s Value<any>>],
+    ) -> &'a mut [&'s Value<any>] {
         assert_eq!(slice.len(), self.get_param_count() as usize);
         unsafe {
-            LLVMGetParams(self.as_raw(), slice.as_ptr() as _);
+            LLVMGetParams(self.as_raw(), slice.as_mut_ptr() as _);
             std::mem::transmute(slice)
         }
-    }
-
-    /// Obtain the types of a function's parameters.
-    #[allow(clippy::needless_lifetimes)]
-    pub fn get_param_with_slice<'s, F: FnOnce(&[&'s Value<any>]) -> R, R>(&'s self, f: F) -> R {
-        T::value_get_param_with_slice(self, f)
     }
 
     /// Obtain the types of a function's parameters.
@@ -81,6 +76,19 @@ impl<T: FunTypeTag> Value<T> {
             LLVMGetParams(self.as_raw(), buffer.as_ptr() as _);
             buffer.set_len(count);
             buffer
+        }
+    }
+}
+
+impl<Args: TagTuple, Output: TypeTag, const VAR: bool> Value<fun<Args, Output, VAR>> {
+    /// Obtain the parameters in a function.
+    pub fn get_params(&self) -> Args::Values<'_> {
+        unsafe {
+            let mut array =
+                MaybeUninit::<<Args::Values<'_> as Tuple>::Array<Option<&Value<any>>>>::zeroed()
+                    .assume_init();
+            self.get_param_into_slice(array.as_mut());
+            Args::Values::from_array_any_unchecked(std::mem::transmute(array.as_ref()))
         }
     }
 }

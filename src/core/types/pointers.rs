@@ -17,6 +17,6 @@ impl Context {
 
 impl<T: PtrTypeTag> Type<T> {
     pub fn get_address_space(&self) -> u32 {
-        T::type_get_address_space(self)
+        unsafe { LLVMGetPointerAddressSpace(self.as_raw()) }
     }
 }

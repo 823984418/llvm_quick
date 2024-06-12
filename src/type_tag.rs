@@ -1,12 +1,12 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
+use std::borrow::{Borrow, BorrowMut};
 use std::marker::PhantomData;
+use std::mem::MaybeUninit;
 
-use llvm_sys::core::*;
 use llvm_sys::*;
 
-use crate::opaque::Opaque;
 use crate::{Type, Value};
 
 pub trait TypeTag: Copy + 'static {
@@ -196,19 +196,7 @@ impl TypeTag for bfloat {
 
 impl FloatTypeTag for bfloat {}
 
-pub trait FunTypeTag: TypeTag {
-    #[allow(clippy::needless_lifetimes)]
-    fn type_get_param_with_slice<'s, F: FnOnce(&[&'s Type<any>]) -> R, R>(
-        ty: &'s Type<Self>,
-        f: F,
-    ) -> R;
-
-    #[allow(clippy::needless_lifetimes)]
-    fn value_get_param_with_slice<'s, F: FnOnce(&[&'s Value<any>]) -> R, R>(
-        ty: &'s Value<Self>,
-        f: F,
-    ) -> R;
-}
+pub trait FunTypeTag: TypeTag {}
 
 #[derive(Copy, Clone)]
 pub struct fun_any {}
@@ -219,27 +207,7 @@ impl TypeTag for fun_any {
     }
 }
 
-impl FunTypeTag for fun_any {
-    #[allow(clippy::needless_lifetimes)]
-    fn type_get_param_with_slice<'s, F: FnOnce(&[&'s Type<any>]) -> R, R>(
-        ty: &'s Type<Self>,
-        f: F,
-    ) -> R {
-        let count = ty.get_param_count() as usize;
-        let mut buffer = vec![None; count];
-        f(ty.get_param_into_slice(&mut buffer))
-    }
-
-    #[allow(clippy::needless_lifetimes)]
-    fn value_get_param_with_slice<'s, F: FnOnce(&[&'s Value<any>]) -> R, R>(
-        val: &'s Value<Self>,
-        f: F,
-    ) -> R {
-        let count = val.get_param_count() as usize;
-        let mut buffer = vec![None; count];
-        f(val.get_param_into_slice(&mut buffer))
-    }
-}
+impl FunTypeTag for fun_any {}
 
 #[derive(Copy, Clone)]
 pub struct fun<Args: TagTuple, Output: TypeTag, const VAR: bool = false> {
@@ -256,44 +224,18 @@ impl<Args: TagTuple, Output: TypeTag, const VAR: bool> TypeTag for fun<Args, Out
             return None;
         }
         ty.get_return_any().try_cast::<Output>()?;
-        ty.get_param_with_slice(|slice| Args::type_from_slice(slice))?;
-        unsafe { Some(ty.cast_unchecked()) }
+        unsafe {
+            let mut array =
+                MaybeUninit::<<Args::Types<'_> as Tuple>::Array<Option<&Type<any>>>>::zeroed()
+                    .assume_init();
+            ty.get_param_into_slice(array.as_mut());
+            Args::Types::try_from_array_any(std::mem::transmute(array.as_ref()))?;
+            Some(ty.cast_unchecked())
+        }
     }
 }
 
-impl<Args: TagTuple, Output: TypeTag, const VAR: bool> FunTypeTag for fun<Args, Output, VAR> {
-    #[allow(clippy::needless_lifetimes)]
-    fn type_get_param_with_slice<'s, F: FnOnce(&[&'s Type<any>]) -> R, R>(
-        ty: &'s Type<Self>,
-        f: F,
-    ) -> R {
-        Args::stack_array(|array| f(ty.get_param_into_slice(array)))
-    }
-
-    #[allow(clippy::needless_lifetimes)]
-    fn value_get_param_with_slice<'s, F: FnOnce(&[&'s Value<any>]) -> R, R>(
-        val: &'s Value<Self>,
-        f: F,
-    ) -> R {
-        Args::stack_array(|array| f(val.get_param_into_slice(array)))
-    }
-}
-
-impl<Args: TagTuple, Output: TypeTag, const VAR: bool> Type<fun<Args, Output, VAR>> {
-    /// Obtain the types of a function's parameters.
-    pub fn get_params(&self) -> Args::Types<'_> {
-        self.get_param_with_slice(|slice| Args::type_from_slice(slice))
-            .unwrap()
-    }
-}
-
-impl<Args: TagTuple, Output: TypeTag, const VAR: bool> Value<fun<Args, Output, VAR>> {
-    /// Obtain the parameters in a function.
-    pub fn get_params(&self) -> Args::Values<'_> {
-        self.get_param_with_slice(|slice| Args::value_from_slice(slice))
-            .unwrap()
-    }
-}
+impl<Args: TagTuple, Output: TypeTag, const VAR: bool> FunTypeTag for fun<Args, Output, VAR> {}
 
 pub trait IntTypeTag: TypeTag {}
 
@@ -337,11 +279,7 @@ pub type int32 = int<32>;
 pub type int64 = int<64>;
 pub type int128 = int<128>;
 
-pub trait PtrTypeTag: TypeTag {
-    fn type_get_address_space(ty: &Type<Self>) -> u32 {
-        unsafe { LLVMGetPointerAddressSpace(ty.as_raw()) }
-    }
-}
+pub trait PtrTypeTag: TypeTag {}
 
 #[derive(Copy, Clone)]
 pub struct ptr_any {}
@@ -368,11 +306,7 @@ impl<const ADDRESS_SPACE: u32> TypeTag for ptr<ADDRESS_SPACE> {
     }
 }
 
-impl<const ADDRESS_SPACE: u32> PtrTypeTag for ptr<ADDRESS_SPACE> {
-    fn type_get_address_space(_ty: &Type<Self>) -> u32 {
-        ADDRESS_SPACE
-    }
-}
+impl<const ADDRESS_SPACE: u32> PtrTypeTag for ptr<ADDRESS_SPACE> {}
 
 pub(crate) unsafe fn type_check_kind<T: TypeTag>(
     ty: &Type<any>,
@@ -417,100 +351,91 @@ impl FloatMathTypeTag for bfloat {}
 
 pub trait InstanceTagTuple: TagTuple {}
 
-pub trait TagTuple: Copy + 'static {
+pub trait Tuple {
     const COUNT: usize;
+    /// `[Type; Self::COUNT]`
+    type Array<Type>: AsRef<[Type]> + AsMut<[Type]> + Borrow<[Type]> + BorrowMut<[Type]>;
+}
 
+pub trait TagTuple: Tuple + Copy + 'static {
     type Types<'s>: TypeTuple<'s, Tags = Self>;
-
     type Values<'s>: ValueTuple<'s, Tags = Self>;
-
-    fn stack_array<Type: Default, Fun: FnOnce(&mut [Type]) -> Ret, Ret>(f: Fun) -> Ret;
-
-    fn type_into_slice<'a, 's>(
-        tuple: Self::Types<'s>,
-        slice: &'a mut [Option<&'s Type<any>>],
-    ) -> &'a mut [&'s Type<any>];
-
-    fn type_from_slice<'s>(slice: &[&'s Type<any>]) -> Option<Self::Types<'s>>;
-
-    fn value_into_slice<'a, 's>(
-        tuple: Self::Values<'s>,
-        slice: &'a mut [Option<&'s Value<any>>],
-    ) -> &'a mut [&'s Value<any>];
-
-    fn value_from_slice<'s>(slice: &[&'s Value<any>]) -> Option<Self::Values<'s>>;
 }
 
-pub trait TypeTuple<'s>: Sized {
+pub trait TypeTuple<'s>: Tuple + Sized {
     type Tags: TagTuple<Types<'s> = Self>;
+    fn try_from_array_any(array: &[&'s Type<any>]) -> Option<Self>;
+    unsafe fn from_array_any_unchecked(array: &[&'s Type<any>]) -> Self;
+    fn to_array_any(&self) -> Self::Array<&'s Type<any>>;
 }
 
-pub trait ValueTuple<'s>: Sized {
+pub trait ValueTuple<'s>: Tuple + Sized {
     type Tags: TagTuple<Values<'s> = Self>;
+    fn try_from_array_any(array: &[&'s Value<any>]) -> Option<Self>;
+    unsafe fn from_array_any_unchecked(array: &[&'s Value<any>]) -> Self;
+    fn to_array_any(&self) -> Self::Array<&'s Value<any>>;
 }
 
 macro_rules! impl_tuple {
-    ($count:literal $(,$arg:ident)*) => {
-        impl<$($arg: TypeTag),*> TagTuple for ($($arg,)*) {
+    (impl Tuple for ($($arg:ident),*)[$count:literal]) => {
+        impl<$($arg),*> Tuple for ($($arg,)*) {
             const COUNT: usize = $count;
-
-            type Types<'s> = ($(&'s Type<$arg>,)*);
-
-            type Values<'s> = ($(&'s Value<$arg>,)*);
-
-            fn stack_array<Type: Default, Fun: FnOnce(&mut [Type]) -> Ret, Ret>(f: Fun) -> Ret {
-                let mut alloc: [Type; $count] = std::array::from_fn(|_| Type::default());
-                f(&mut alloc)
-            }
-
-            #[allow(non_snake_case)]
-            fn type_into_slice<'a, 's>(
-                tuple: Self::Types<'s>,
-                slice: &'a mut [Option<&'s Type<any>>],
-            ) -> &'a mut [&'s Type<any>] {
-                let ($($arg,)*) = tuple;
-                slice.copy_from_slice(&[$(Some($arg.to_any()),)*]);
-                unsafe { std::mem::transmute(slice) }
-            }
-
-            #[allow(non_snake_case)]
-            fn type_from_slice<'s>(slice: &[&'s Type<any>]) -> Option<Self::Types<'s>> {
-                if let &[$($arg,)*] = slice {
-                    Some(($($arg.try_cast()?,)*))
-                } else {
-                    None
-                }
-            }
-
-            #[allow(non_snake_case)]
-            fn value_into_slice<'a, 's>(
-                tuple: Self::Values<'s>,
-                slice: &'a mut [Option<&'s Value<any>>],
-            ) -> &'a mut [&'s Value<any>] {
-                let ($($arg,)*) = tuple;
-                slice.copy_from_slice(&[$(Some($arg.to_any()),)*]);
-                unsafe { std::mem::transmute(slice) }
-            }
-
-            #[allow(non_snake_case)]
-            fn value_from_slice<'s>(slice: &[&'s Value<any>]) -> Option<Self::Values<'s>> {
-                if let &[$($arg,)*] = slice {
-                    Some(($($arg.try_cast()?,)*))
-                } else {
-                    None
-                }
-            }
+            type Array<Type> = [Type; $count];
         }
-
-        impl<$($arg: InstanceTypeTag),*> InstanceTagTuple for ($($arg,)*) {}
-
+    };
+    (impl TagTuple for ($($arg:ident),*)) => {
+        impl<$($arg: TypeTag),*> TagTuple for ($($arg,)*) {
+            type Types<'s> = ($(&'s Type<$arg>,)*);
+            type Values<'s> = ($(&'s Value<$arg>,)*);
+        }
+    };
+    (impl TypeTuple for ($($arg:ident),*)) => {
         impl<'s, $($arg: TypeTag),*> TypeTuple<'s> for ($(&'s Type<$arg>,)*) {
             type Tags = ($($arg,)*);
+            #[allow(unused_unsafe)]
+            fn try_from_array_any(array: &[&'s Type<any>]) -> Option<Self> {
+                let &[$($arg,)*] = array else { panic!() };
+                unsafe { Some(($(Type::try_cast($arg)?,)*)) }
+            }
+            #[allow(unused_unsafe)]
+            unsafe fn from_array_any_unchecked(array: &[&'s Type<any>]) -> Self {
+                let &[$($arg,)*] = array else { panic!() };
+                unsafe { ($(Type::cast_unchecked($arg),)*) }
+            }
+            fn to_array_any(&self) -> Self::Array<&'s Type<any>> {
+                let ($($arg,)*) = self;
+                [$(Type::to_any($arg),)*]
+            }
         }
-
+    };
+    (impl ValueTuple for ($($arg:ident),*)) => {
         impl<'s, $($arg: TypeTag),*> ValueTuple<'s> for ($(&'s Value<$arg>,)*) {
             type Tags = ($($arg,)*);
+            #[allow(unused_unsafe)]
+            fn try_from_array_any(array: &[&'s Value<any>]) -> Option<Self> {
+                let &[$($arg,)*] = array else { panic!() };
+                unsafe { Some(($(Value::try_cast($arg)?,)*)) }
+            }
+            #[allow(unused_unsafe)]
+            unsafe fn from_array_any_unchecked(array: &[&'s Value<any>]) -> Self {
+                let &[$($arg,)*] = array else { panic!() };
+                unsafe { ($(Value::cast_unchecked($arg),)*) }
+            }
+            fn to_array_any(&self) -> Self::Array<&'s Value<any>> {
+                let ($($arg,)*) = self;
+                [$(Value::to_any($arg),)*]
+            }
         }
+    };
+    (impl InstanceTagTuple for ($($arg:ident),*)) => {
+        impl<$($arg: InstanceTypeTag),*> InstanceTagTuple for ($($arg,)*) {}
+    };
+    ($count:literal $(,$arg:ident)*) => {
+        impl_tuple!(impl Tuple for ($($arg),*)[$count]);
+        impl_tuple!(impl TagTuple for ($($arg),*));
+        impl_tuple!(impl TypeTuple for ($($arg),*));
+        impl_tuple!(impl ValueTuple for ($($arg),*));
+        impl_tuple!(impl InstanceTagTuple for ($($arg),*));
     };
 }
 

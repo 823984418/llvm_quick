@@ -1,9 +1,9 @@
-use llvm_sys::core::{
-    LLVMCountParamTypes, LLVMGetParamTypes, LLVMGetReturnType, LLVMIsFunctionVarArg,
-};
+use std::mem::MaybeUninit;
+
+use llvm_sys::core::*;
 
 use crate::opaque::Opaque;
-use crate::type_tag::{any, fun_any, FunTypeTag};
+use crate::type_tag::{any, fun, fun_any, FunTypeTag, TagTuple, Tuple, TypeTag, TypeTuple};
 use crate::Type;
 
 impl<T: FunTypeTag> Type<T> {
@@ -22,21 +22,15 @@ impl<T: FunTypeTag> Type<T> {
     }
 
     /// Obtain the types of a function's parameters.
-    pub fn get_param_into_slice<'s, 'a>(
+    pub fn get_param_into_slice<'a, 's>(
         &'s self,
         slice: &'a mut [Option<&'s Type<any>>],
     ) -> &'a mut [&'s Type<any>] {
         assert_eq!(slice.len(), self.get_param_count() as usize);
         unsafe {
-            LLVMGetParamTypes(self.as_raw(), slice.as_ptr() as _);
+            LLVMGetParamTypes(self.as_raw(), slice.as_mut_ptr() as _);
             std::mem::transmute(slice)
         }
-    }
-
-    /// Obtain the types of a function's parameters.
-    #[allow(clippy::needless_lifetimes)]
-    pub fn get_param_with_slice<'s, F: FnOnce(&[&'s Type<any>]) -> R, R>(&'s self, f: F) -> R {
-        T::type_get_param_with_slice(self, f)
     }
 
     /// Obtain the types of a function's parameters.
@@ -53,5 +47,18 @@ impl<T: FunTypeTag> Type<T> {
     /// Obtain the Type this function Type returns.
     pub fn get_return_any(&self) -> &Type<any> {
         unsafe { Type::from_ref(LLVMGetReturnType(self.as_raw())) }
+    }
+}
+
+impl<Args: TagTuple, Output: TypeTag, const VAR: bool> Type<fun<Args, Output, VAR>> {
+    /// Obtain the types of a function's parameters.
+    pub fn get_params(&self) -> Args::Types<'_> {
+        unsafe {
+            let mut array =
+                MaybeUninit::<<Args::Types<'_> as Tuple>::Array<Option<&Type<any>>>>::zeroed()
+                    .assume_init();
+            self.get_param_into_slice(array.as_mut());
+            Args::Types::from_array_any_unchecked(std::mem::transmute(array.as_ref()))
+        }
     }
 }

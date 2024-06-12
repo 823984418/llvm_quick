@@ -76,10 +76,8 @@ impl<T: TypeTag> Type<T> {
         &'s self,
         args: ArgTypeTuple,
     ) -> &'s Type<fun<ArgTypeTuple::Tags, T>> {
-        ArgTypeTuple::Tags::stack_array(|slice| unsafe {
-            self.fun_any(ArgTypeTuple::Tags::type_into_slice(args, slice), false)
-                .cast_unchecked()
-        })
+        let fun = self.fun_any(args.to_array_any().as_ref(), false);
+        unsafe { fun.cast_unchecked() }
     }
 
     /// Obtain a function type consisting of a specified signature.
@@ -87,9 +85,7 @@ impl<T: TypeTag> Type<T> {
         &'s self,
         args: ArgTypeTuple,
     ) -> &'s Type<fun<ArgTypeTuple::Tags, T, true>> {
-        ArgTypeTuple::Tags::stack_array(|slice| unsafe {
-            self.fun_any(ArgTypeTuple::Tags::type_into_slice(args, slice), true)
-                .cast_unchecked()
-        })
+        let fun = self.fun_any(args.to_array_any().as_ref(), true);
+        unsafe { fun.cast_unchecked() }
     }
 }
