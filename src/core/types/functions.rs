@@ -10,10 +10,48 @@ impl<T: FunTypeTag> Type<T> {
     pub fn to_fun_any(&self) -> &Type<fun_any> {
         unsafe { self.cast_unchecked() }
     }
+}
 
+impl<T: TypeTag> Type<T> {
+    /// Obtain a function type consisting of a specified signature.
+    ///
+    /// The function is defined as a tuple of a return Type, a list of parameter types,
+    /// and whether the function is variadic.
+    pub fn fun_any<'s>(&'s self, args: &[&'s Type<any>], var: bool) -> &'s Type<fun_any> {
+        unsafe {
+            let ty = LLVMFunctionType(self.as_raw(), args.as_ptr() as _, args.len() as _, var as _);
+            Type::from_ref(ty)
+        }
+    }
+
+    /// Obtain a function type consisting of a specified signature.
+    pub fn fun<'s, ArgTypeTuple: TypeTuple<'s>>(
+        &'s self,
+        args: ArgTypeTuple,
+    ) -> &'s Type<fun<ArgTypeTuple::Tags, T>> {
+        let fun = self.fun_any(args.to_array_any().as_ref(), false);
+        unsafe { fun.cast_unchecked() }
+    }
+
+    /// Obtain a function type consisting of a specified signature.
+    pub fn fun_var<'s, ArgTypeTuple: TypeTuple<'s>>(
+        &'s self,
+        args: ArgTypeTuple,
+    ) -> &'s Type<fun<ArgTypeTuple::Tags, T, true>> {
+        let fun = self.fun_any(args.to_array_any().as_ref(), true);
+        unsafe { fun.cast_unchecked() }
+    }
+}
+
+impl<T: FunTypeTag> Type<T> {
     /// Returns whether a function type is variadic.
     pub fn is_var(&self) -> bool {
         unsafe { LLVMIsFunctionVarArg(self.as_raw()) != 0 }
+    }
+
+    /// Obtain the Type this function Type returns.
+    pub fn get_return_any(&self) -> &Type<any> {
+        unsafe { Type::from_ref(LLVMGetReturnType(self.as_raw())) }
     }
 
     /// Obtain the number of parameters this function accepts.
@@ -42,11 +80,6 @@ impl<T: FunTypeTag> Type<T> {
             buffer.set_len(count);
             buffer
         }
-    }
-
-    /// Obtain the Type this function Type returns.
-    pub fn get_return_any(&self) -> &Type<any> {
-        unsafe { Type::from_ref(LLVMGetReturnType(self.as_raw())) }
     }
 }
 
