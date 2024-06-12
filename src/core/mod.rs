@@ -7,7 +7,7 @@ use std::ptr::NonNull;
 
 use llvm_sys::core::*;
 
-use crate::ValueMetadataEntry;
+use crate::ValueMetadataEntries;
 
 pub mod basic_block;
 pub mod contexts;
@@ -103,28 +103,8 @@ impl Message {
     }
 }
 
-pub struct ValueMetadataEntries<'s> {
-    ptr: NonNull<[&'s ValueMetadataEntry]>,
-}
-
-impl<'s> Deref for ValueMetadataEntries<'s> {
-    type Target = [&'s ValueMetadataEntry];
-
-    fn deref(&self) -> &Self::Target {
-        unsafe { self.ptr.as_ref() }
-    }
-}
-
-impl<'s> ValueMetadataEntries<'s> {
-    pub unsafe fn from_raw(ptr: *mut [&'s ValueMetadataEntry]) -> Self {
-        Self {
-            ptr: NonNull::new(ptr).unwrap(),
-        }
-    }
-}
-
 impl<'s> Drop for ValueMetadataEntries<'s> {
     fn drop(&mut self) {
-        unsafe { LLVMDisposeValueMetadataEntries(self.ptr.as_ptr() as _) }
+        unsafe { LLVMDisposeValueMetadataEntries(self.as_raw()) }
     }
 }

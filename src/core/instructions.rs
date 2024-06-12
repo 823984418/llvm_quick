@@ -3,10 +3,9 @@ use std::ptr::null_mut;
 use llvm_sys::core::*;
 use llvm_sys::{LLVMIntPredicate, LLVMOpcode, LLVMRealPredicate};
 
-use crate::core::ValueMetadataEntries;
 use crate::opaque::Opaque;
 use crate::type_tag::{any, metadata, TypeTag};
-use crate::{BasicBlock, Value};
+use crate::{BasicBlock, Value, ValueMetadataEntries};
 
 impl<T: TypeTag> Value<T> {
     pub fn has_metadata(&self) -> bool {

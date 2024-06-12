@@ -9,8 +9,19 @@ use llvm_sys::*;
 
 use crate::{Type, Value};
 
-pub trait TypeTag: Copy + 'static {
+pub trait TypeTag: Sized {
     fn type_cast(ty: &Type<any>) -> Option<&Type<Self>>;
+}
+
+pub(crate) unsafe fn type_check_kind<T: TypeTag>(
+    ty: &Type<any>,
+    kind: LLVMTypeKind,
+) -> Option<&Type<T>> {
+    if ty.get_kind() == kind {
+        Some(unsafe { ty.cast_unchecked() })
+    } else {
+        None
+    }
 }
 
 #[derive(Copy, Clone)]
@@ -308,17 +319,6 @@ impl<const ADDRESS_SPACE: u32> TypeTag for ptr<ADDRESS_SPACE> {
 
 impl<const ADDRESS_SPACE: u32> PtrTypeTag for ptr<ADDRESS_SPACE> {}
 
-pub(crate) unsafe fn type_check_kind<T: TypeTag>(
-    ty: &Type<any>,
-    kind: LLVMTypeKind,
-) -> Option<&Type<T>> {
-    if ty.get_kind() == kind {
-        Some(unsafe { ty.cast_unchecked() })
-    } else {
-        None
-    }
-}
-
 pub trait InstanceTypeTag: TypeTag {}
 impl InstanceTypeTag for void {}
 impl InstanceTypeTag for label {}
@@ -357,19 +357,23 @@ pub trait Tuple {
     type Array<Type>: AsRef<[Type]> + AsMut<[Type]> + Borrow<[Type]> + BorrowMut<[Type]>;
 }
 
-pub trait TagTuple: Tuple + Copy + 'static {
-    type Types<'s>: TypeTuple<'s, Tags = Self>;
-    type Values<'s>: ValueTuple<'s, Tags = Self>;
+pub trait TagTuple: Tuple {
+    type Types<'s>: TypeTuple<'s, Tags = Self>
+    where
+        Self: 's;
+    type Values<'s>: ValueTuple<'s, Tags = Self>
+    where
+        Self: 's;
 }
 
-pub trait TypeTuple<'s>: Tuple + Sized {
+pub trait TypeTuple<'s>: Tuple + Sized + 's {
     type Tags: TagTuple<Types<'s> = Self>;
     fn try_from_array_any(array: &[&'s Type<any>]) -> Option<Self>;
     unsafe fn from_array_any_unchecked(array: &[&'s Type<any>]) -> Self;
     fn to_array_any(&self) -> Self::Array<&'s Type<any>>;
 }
 
-pub trait ValueTuple<'s>: Tuple + Sized {
+pub trait ValueTuple<'s>: Tuple + Sized + 's {
     type Tags: TagTuple<Values<'s> = Self>;
     fn try_from_array_any(array: &[&'s Value<any>]) -> Option<Self>;
     unsafe fn from_array_any_unchecked(array: &[&'s Value<any>]) -> Self;
@@ -385,17 +389,20 @@ macro_rules! impl_tuple {
     };
     (impl TagTuple for ($($arg:ident),*)) => {
         impl<$($arg: TypeTag),*> TagTuple for ($($arg,)*) {
-            type Types<'s> = ($(&'s Type<$arg>,)*);
-            type Values<'s> = ($(&'s Value<$arg>,)*);
+            type Types<'s> = ($(&'s Type<$arg>,)*)
+            where
+                Self:'s;
+            type Values<'s> = ($(&'s Value<$arg>,)*)
+            where
+                Self:'s;
         }
     };
     (impl TypeTuple for ($($arg:ident),*)) => {
-        impl<'s, $($arg: TypeTag),*> TypeTuple<'s> for ($(&'s Type<$arg>,)*) {
+        impl<'s, $($arg: TypeTag + 's),*> TypeTuple<'s> for ($(&'s Type<$arg>,)*) {
             type Tags = ($($arg,)*);
-            #[allow(unused_unsafe)]
             fn try_from_array_any(array: &[&'s Type<any>]) -> Option<Self> {
                 let &[$($arg,)*] = array else { panic!() };
-                unsafe { Some(($(Type::try_cast($arg)?,)*)) }
+                Some(($(Type::try_cast($arg)?,)*))
             }
             #[allow(unused_unsafe)]
             unsafe fn from_array_any_unchecked(array: &[&'s Type<any>]) -> Self {
@@ -409,12 +416,11 @@ macro_rules! impl_tuple {
         }
     };
     (impl ValueTuple for ($($arg:ident),*)) => {
-        impl<'s, $($arg: TypeTag),*> ValueTuple<'s> for ($(&'s Value<$arg>,)*) {
+        impl<'s, $($arg: TypeTag + 's),*> ValueTuple<'s> for ($(&'s Value<$arg>,)*) {
             type Tags = ($($arg,)*);
-            #[allow(unused_unsafe)]
             fn try_from_array_any(array: &[&'s Value<any>]) -> Option<Self> {
                 let &[$($arg,)*] = array else { panic!() };
-                unsafe { Some(($(Value::try_cast($arg)?,)*)) }
+                Some(($(Value::try_cast($arg)?,)*))
             }
             #[allow(unused_unsafe)]
             unsafe fn from_array_any_unchecked(array: &[&'s Value<any>]) -> Self {

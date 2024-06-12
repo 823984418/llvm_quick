@@ -43,7 +43,7 @@ impl<T: FunTypeTag> Value<T> {
     }
 
     pub fn get_basic_blocks<'a, 's>(
-        &self,
+        &'s self,
         basic_blocks: &'a mut [Option<&'s BasicBlock>],
     ) -> &'a mut [&'s BasicBlock] {
         assert_eq!(basic_blocks.len(), self.count_basic_block() as usize);
