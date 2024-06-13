@@ -2,7 +2,7 @@ use llvm_sys::core::*;
 
 use crate::opaque::Opaque;
 use crate::type_tag::{PtrTypeTag, TypeTag};
-use crate::{Type, Value};
+use crate::{Type, Value, ValueMetadataEntries};
 
 impl<T: TypeTag> Type<T> {
     pub fn const_null(&self) -> &Value<T> {
@@ -31,6 +31,14 @@ impl<T: TypeTag> Value<T> {
 impl<T: PtrTypeTag> Type<T> {
     pub fn const_pointer_null(&self) -> &Value<T> {
         unsafe { Value::from_ref(LLVMConstPointerNull(self.as_raw())) }
+    }
+}
+
+// TODO
+
+impl<'s> Drop for ValueMetadataEntries<'s> {
+    fn drop(&mut self) {
+        unsafe { LLVMDisposeValueMetadataEntries(self.as_raw()) }
     }
 }
 

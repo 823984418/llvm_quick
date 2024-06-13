@@ -13,7 +13,7 @@ impl<T: TypeTag> Value<T> {
         unsafe { Use::try_from_ref(LLVMGetOperandUse(self.as_raw(), index)) }
     }
 
-    pub fn set_operand<T: TypeTag>(&self, index: u32, val: &Value<T>) {
+    pub fn set_operand<O: TypeTag>(&self, index: u32, val: &Value<O>) {
         unsafe { LLVMSetOperand(self.as_raw(), index, val.as_raw()) }
     }
 

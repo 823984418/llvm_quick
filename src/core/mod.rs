@@ -7,8 +7,6 @@ use std::ptr::NonNull;
 
 use llvm_sys::core::*;
 
-use crate::ValueMetadataEntries;
-
 pub mod basic_block;
 pub mod contexts;
 pub mod instruction_builders;
@@ -103,8 +101,5 @@ impl Message {
     }
 }
 
-impl<'s> Drop for ValueMetadataEntries<'s> {
-    fn drop(&mut self) {
-        unsafe { LLVMDisposeValueMetadataEntries(self.as_raw()) }
-    }
-}
+#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
+pub struct IntrinsicId(pub u32);
