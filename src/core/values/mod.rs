@@ -7,7 +7,10 @@ use crate::core::Message;
 use crate::type_tag::*;
 use crate::{Opaque, Type, Value};
 
-pub mod functions;
+pub mod constants;
+pub mod function;
+pub mod usage;
+pub mod user_value;
 
 impl<T: TypeTag> Debug for Value<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -35,7 +38,9 @@ impl<T: TypeTag> Value<T> {
     pub fn to_any(&self) -> &Value<any> {
         unsafe { self.cast_unchecked() }
     }
+}
 
+impl<T: TypeTag> Value<T> {
     pub fn get_kind(&self) -> LLVMValueKind {
         unsafe { LLVMGetValueKind(self.as_raw()) }
     }

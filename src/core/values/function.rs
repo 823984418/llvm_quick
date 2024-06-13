@@ -11,19 +11,27 @@ impl<T: FunTypeTag> Value<T> {
     pub fn to_fun_any(&self) -> &Value<fun_any> {
         unsafe { self.cast_unchecked() }
     }
+}
+
+impl<T: FunTypeTag> Value<T> {
+    pub fn delete_function(&self) {
+        unsafe { LLVMDeleteFunction(self.as_raw()) }
+    }
+
+    // TODO
 
     /// Obtain the calling function of a function.
-    pub fn get_call_conv(&self) -> u32 {
+    pub fn get_function_call_conv(&self) -> u32 {
         unsafe { LLVMGetFunctionCallConv(self.as_raw()) }
     }
 
     /// Set the calling convention of a function.
-    pub fn set_call_conv(&self, conv: u32) {
+    pub fn set_function_call_conv(&self, conv: u32) {
         unsafe { LLVMSetFunctionCallConv(self.as_raw(), conv) }
     }
 
     /// Obtain the name of the garbage collector to use during code generation.
-    pub fn get_gc_raw(&self) -> Option<&CStr> {
+    pub fn get_gc(&self) -> Option<&CStr> {
         unsafe {
             let ptr = LLVMGetGC(self.as_raw());
             if ptr.is_null() {
@@ -39,6 +47,10 @@ impl<T: FunTypeTag> Value<T> {
         unsafe { LLVMSetGC(self.as_raw(), name.as_ptr()) }
     }
 
+    // TODO
+}
+
+impl<T: FunTypeTag> Value<T> {
     /// Obtain the number of parameters in a function.
     pub fn get_param_count(&self) -> u32 {
         unsafe { LLVMCountParams(self.as_raw()) }
@@ -66,6 +78,12 @@ impl<T: FunTypeTag> Value<T> {
             buffer
         }
     }
+
+    pub fn get_param(&self, index: u32) -> Option<&Value<any>> {
+        unsafe { Value::try_from_ref(LLVMGetParam(self.as_raw(), index)) }
+    }
+
+    // TODO
 }
 
 impl<Args: TagTuple, Output: TypeTag, const VAR: bool> Value<fun<Args, Output, VAR>> {

@@ -7,10 +7,10 @@ use crate::core::Message;
 use crate::type_tag::*;
 use crate::{Context, Opaque, Type};
 
-pub mod floats;
-pub mod functions;
-pub mod integers;
-pub mod others;
+pub mod float;
+pub mod function;
+pub mod integer;
+pub mod other;
 pub mod sequential;
 pub mod structs;
 
