@@ -1,9 +1,16 @@
 use std::ffi::CStr;
+use std::fmt::{Debug, Formatter};
 
 use llvm_sys::core::*;
 
 use crate::type_tag::*;
 use crate::{BasicBlock, Builder, Context, Opaque, Value};
+
+impl Debug for BasicBlock {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.get_name().to_str().unwrap())
+    }
+}
 
 impl BasicBlock {
     pub fn as_value(&self) -> &Value<label> {

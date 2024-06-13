@@ -5,7 +5,7 @@ use llvm_sys::*;
 
 use crate::opaque::Opaque;
 use crate::type_tag::{any, fun_any, metadata, TypeTag};
-use crate::{Attribute, BasicBlock, Type, Value, ValueMetadataEntries};
+use crate::{Attribute, BasicBlock, OperandBundle, Type, Value, ValueMetadataEntries};
 
 impl<T: TypeTag> Value<T> {
     pub fn has_metadata(&self) -> bool {
@@ -142,8 +142,8 @@ impl<T: TypeTag> Value<T> {
         }
     }
 
-    pub fn get_called_function_type(&self) -> &Type<fun_any> {
-        unsafe { Type::from_ref(LLVMGetCalledFunctionType(self.as_raw())) }
+    pub fn get_called_function_type(&self) -> Option<&Type<fun_any>> {
+        unsafe { Type::try_from_ref(LLVMGetCalledFunctionType(self.as_raw())) }
     }
 
     pub fn get_called_value(&self) -> &Value<fun_any> {
@@ -152,6 +152,30 @@ impl<T: TypeTag> Value<T> {
 
     pub fn get_num_operand_bundles(&self) -> u32 {
         unsafe { LLVMGetNumOperandBundles(self.as_raw()) }
+    }
+
+    pub fn get_operand_bundle_as_index(&self, index: u32) -> &OperandBundle {
+        unsafe { OperandBundle::from_ref(LLVMGetOperandBundleAtIndex(self.as_raw(), index)) }
+    }
+
+    pub fn is_tail_call(&self) -> bool {
+        unsafe { LLVMIsTailCall(self.as_raw()) != 0 }
+    }
+
+    pub fn set_tail_call(&self, is_tail_call: bool) {
+        unsafe { LLVMSetTailCall(self.as_raw(), is_tail_call as _) }
+    }
+
+    pub fn get_tail_call_kind(&self) -> LLVMTailCallKind {
+        unsafe { LLVMGetTailCallKind(self.as_raw()) }
+    }
+
+    pub fn set_tail_call_kind(&self, kind: LLVMTailCallKind) {
+        unsafe { LLVMSetTailCallKind(self.as_raw(), kind) }
+    }
+
+    pub fn get_normal_dest(&self) -> &BasicBlock {
+        unsafe { BasicBlock::from_ref(LLVMGetNormalDest(self.as_raw())) }
     }
 }
 

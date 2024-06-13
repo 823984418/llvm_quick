@@ -18,6 +18,7 @@ pub unsafe trait Opaque: Sized {
     }
 
     unsafe fn from_ref<'s>(ptr: *mut Self::Inner) -> &'s Self {
+        debug_assert!(!ptr.is_null());
         unsafe { &*(ptr as *mut Self) }
     }
 
