@@ -1,11 +1,11 @@
 use std::ptr::null_mut;
 
 use llvm_sys::core::*;
-use llvm_sys::{LLVMIntPredicate, LLVMOpcode, LLVMRealPredicate};
+use llvm_sys::*;
 
 use crate::opaque::Opaque;
-use crate::type_tag::{any, metadata, TypeTag};
-use crate::{BasicBlock, Value, ValueMetadataEntries};
+use crate::type_tag::{any, fun_any, metadata, TypeTag};
+use crate::{Attribute, BasicBlock, Type, Value, ValueMetadataEntries};
 
 impl<T: TypeTag> Value<T> {
     pub fn has_metadata(&self) -> bool {
@@ -88,6 +88,70 @@ impl<T: TypeTag> Value<T> {
 
     pub fn get_instruction_call_conv(&self) -> u32 {
         unsafe { LLVMGetInstructionCallConv(self.as_raw()) }
+    }
+
+    pub fn set_instr_param_alignment(&self, idx: LLVMAttributeIndex, align: u32) {
+        unsafe { LLVMSetInstrParamAlignment(self.as_raw(), idx, align) }
+    }
+
+    pub fn add_call_site_attribute(&self, idx: LLVMAttributeIndex, a: &Attribute) {
+        unsafe { LLVMAddCallSiteAttribute(self.as_raw(), idx, a.as_raw()) }
+    }
+
+    pub fn get_call_site_attribute_count(&self, idx: LLVMAttributeIndex) -> u32 {
+        unsafe { LLVMGetCallSiteAttributeCount(self.as_raw(), idx) }
+    }
+
+    pub fn get_call_site_attributes<'a, 's>(
+        &'s self,
+        idx: LLVMAttributeIndex,
+        slice: &'a mut [Option<&'s Attribute>],
+    ) -> &'a mut [&'s Attribute] {
+        unsafe {
+            LLVMGetCallSiteAttributes(self.as_raw(), idx, slice.as_mut_ptr() as _);
+            std::mem::transmute(slice)
+        }
+    }
+
+    pub fn get_call_site_enum_attribute(
+        &self,
+        idx: LLVMAttributeIndex,
+        kind_id: u32,
+    ) -> &Attribute {
+        unsafe { Attribute::from_ref(LLVMGetCallSiteEnumAttribute(self.as_raw(), idx, kind_id)) }
+    }
+
+    pub fn get_call_site_string_attribute(&self, idx: LLVMAttributeIndex, k: &[u8]) -> &Attribute {
+        unsafe {
+            Attribute::from_ref(LLVMGetCallSiteStringAttribute(
+                self.as_raw(),
+                idx,
+                k.as_ptr() as _,
+                k.len() as _,
+            ))
+        }
+    }
+
+    pub fn remove_call_site_enum_attribute(&self, idx: LLVMAttributeIndex, kind_id: u32) {
+        unsafe { LLVMRemoveCallSiteEnumAttribute(self.as_raw(), idx, kind_id) }
+    }
+
+    pub fn remove_call_site_string_attribute(&self, idx: LLVMAttributeIndex, k: &[u8]) {
+        unsafe {
+            LLVMRemoveCallSiteStringAttribute(self.as_raw(), idx, k.as_ptr() as _, k.len() as _)
+        }
+    }
+
+    pub fn get_called_function_type(&self) -> &Type<fun_any> {
+        unsafe { Type::from_ref(LLVMGetCalledFunctionType(self.as_raw())) }
+    }
+
+    pub fn get_called_value(&self) -> &Value<fun_any> {
+        unsafe { Value::from_ref(LLVMGetCalledValue(self.as_raw())) }
+    }
+
+    pub fn get_num_operand_bundles(&self) -> u32 {
+        unsafe { LLVMGetNumOperandBundles(self.as_raw()) }
     }
 }
 
