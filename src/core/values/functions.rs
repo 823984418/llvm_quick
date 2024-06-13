@@ -1,4 +1,4 @@
-use std::ffi::{CStr, CString};
+use std::ffi::CStr;
 use std::mem::MaybeUninit;
 
 use llvm_sys::core::*;
@@ -23,25 +23,13 @@ impl<T: FunTypeTag> Value<T> {
     }
 
     /// Obtain the name of the garbage collector to use during code generation.
-    pub fn get_gc_raw(&self) -> *const CStr {
+    pub fn get_gc_raw(&self) -> Option<&CStr> {
         unsafe {
             let ptr = LLVMGetGC(self.as_raw());
             if ptr.is_null() {
-                std::ptr::slice_from_raw_parts(ptr, 0) as *const CStr
-            } else {
-                CStr::from_ptr(ptr)
-            }
-        }
-    }
-
-    /// Obtain the name of the garbage collector to use during code generation.
-    pub fn get_gc(&self) -> Option<CString> {
-        unsafe {
-            let ptr = self.get_gc_raw();
-            if ptr.is_null() {
                 None
             } else {
-                Some(CString::from(&*ptr))
+                Some(CStr::from_ptr(ptr))
             }
         }
     }

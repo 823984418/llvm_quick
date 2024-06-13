@@ -1,4 +1,3 @@
-use std::ffi::CString;
 use std::fmt::{Debug, Formatter};
 
 use llvm_sys::core::*;
@@ -47,17 +46,12 @@ impl<T: TypeTag> Value<T> {
     }
 
     /// Obtain the string name of a value.
-    pub fn get_name(&self) -> *const [u8] {
+    pub fn get_name(&self) -> &[u8] {
         unsafe {
             let mut len = 0;
-            let s = LLVMGetValueName2(self.as_raw(), &mut len);
-            std::ptr::slice_from_raw_parts(s.cast(), len)
+            let ptr = LLVMGetValueName2(self.as_raw(), &mut len);
+            std::slice::from_raw_parts(ptr.cast(), len)
         }
-    }
-
-    /// Obtain the string name of a value.
-    pub fn get_name_string(&self) -> CString {
-        unsafe { CString::new(&*self.get_name()).unwrap() }
     }
 
     /// Set the string name of a value.

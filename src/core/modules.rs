@@ -1,4 +1,4 @@
-use std::ffi::{CStr, CString};
+use std::ffi::CStr;
 use std::fmt::{Debug, Formatter};
 use std::ptr::null_mut;
 
@@ -63,24 +63,16 @@ impl<'s> Module<'s> {
         unsafe { LLVMSetSourceFileName(self.as_raw(), ident.as_ptr() as _, ident.len()) }
     }
 
-    pub fn get_data_layout_str_raw(&self) -> *const CStr {
+    pub fn get_data_layout_str(&self) -> &CStr {
         unsafe { CStr::from_ptr(LLVMGetDataLayoutStr(self.as_raw())) }
-    }
-
-    pub fn get_data_layout_str(&self) -> CString {
-        unsafe { CString::from(&*self.get_data_layout_str_raw()) }
     }
 
     pub fn set_data_layout_str(&self, data_layout_str: &CStr) {
         unsafe { LLVMSetDataLayout(self.as_raw(), data_layout_str.as_ptr()) }
     }
 
-    pub fn get_target_raw(&self) -> *const CStr {
+    pub fn get_target(&self) -> &CStr {
         unsafe { CStr::from_ptr(LLVMGetTarget(self.as_raw())) }
-    }
-
-    pub fn get_target(&self) -> CString {
-        unsafe { CString::from(&*self.get_target_raw()) }
     }
 
     pub fn set_target(&self, triple: &CStr) {

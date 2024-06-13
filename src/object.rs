@@ -1,4 +1,4 @@
-use std::ffi::{CStr, CString};
+use std::ffi::CStr;
 use std::marker::PhantomData;
 use std::ptr::null_mut;
 
@@ -143,24 +143,16 @@ impl<'a, 's> SymbolIterator<'a, 's> {
 }
 
 impl<'a, 's> SectionIterator<'a, 's> {
-    pub fn get_section_name_raw(&self) -> *const CStr {
+    pub fn get_section_name(&self) -> &CStr {
         unsafe { CStr::from_ptr(LLVMGetSectionName(self.as_raw())) }
-    }
-
-    pub fn get_section_name(&self) -> CString {
-        unsafe { CString::from(&*self.get_section_name_raw()) }
     }
 
     pub fn get_section_size(&self) -> u64 {
         unsafe { LLVMGetSectionSize(self.as_raw()) }
     }
 
-    pub fn get_section_contents_raw(&self) -> *const CStr {
+    pub fn get_section_contents(&self) -> &CStr {
         unsafe { CStr::from_ptr(LLVMGetSectionContents(self.as_raw())) }
-    }
-
-    pub fn get_section_contents(&self) -> CString {
-        unsafe { CString::from(&*self.get_section_contents_raw()) }
     }
 
     pub fn get_section_address(&self) -> u64 {
@@ -195,12 +187,8 @@ impl<'a, 's> RelocationIterator<'a, 's> {
 }
 
 impl<'a, 's> SymbolIterator<'a, 's> {
-    pub fn get_symbol_name_raw(&self) -> *const CStr {
+    pub fn get_symbol_name(&self) -> &CStr {
         unsafe { CStr::from_ptr(LLVMGetSymbolName(self.as_raw())) }
-    }
-
-    pub fn get_symbol_name(&self) -> CString {
-        unsafe { CString::from(&*self.get_symbol_name_raw()) }
     }
 
     pub fn get_symbol_address(&self) -> u64 {
@@ -225,19 +213,11 @@ impl<'a, 's> RelocationIterator<'a, 's> {
         unsafe { LLVMGetRelocationType(self.as_raw()) }
     }
 
-    pub fn get_relocation_type_name_raw(&self) -> *const CStr {
+    pub fn get_relocation_type_name(&self) -> &CStr {
         unsafe { CStr::from_ptr(LLVMGetRelocationTypeName(self.as_raw())) }
     }
 
-    pub fn get_relocation_type_name(&self) -> CString {
-        unsafe { CString::from(&*self.get_relocation_type_name_raw()) }
-    }
-
-    pub fn get_relocation_value_string_raw(&self) -> *const CStr {
+    pub fn get_relocation_value_string(&self) -> &CStr {
         unsafe { CStr::from_ptr(LLVMGetRelocationValueString(self.as_raw())) }
-    }
-
-    pub fn get_relocation_value_string(&self) -> CString {
-        unsafe { CString::from(&*self.get_relocation_value_string_raw()) }
     }
 }

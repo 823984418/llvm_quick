@@ -7,12 +7,11 @@ use crate::core::Message;
 use crate::type_tag::*;
 use crate::{Context, Opaque, Type};
 
-pub mod arrays;
 pub mod floats;
 pub mod functions;
 pub mod integers;
 pub mod others;
-pub mod pointers;
+pub mod sequential;
 pub mod structs;
 
 impl<T: TypeTag> Debug for Type<T> {
@@ -63,5 +62,3 @@ impl<T: TypeTag> Type<T> {
         unsafe { Message::from_raw(LLVMPrintTypeToString(self.as_raw())) }
     }
 }
-
-// TODO

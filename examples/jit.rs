@@ -33,7 +33,7 @@ impl<'ctx> CodeGen<'ctx> {
         self.builder.return_value(sum);
 
         println!("{:?}", module);
-        println!("{:?}", function.get_name_string());
+        println!("{:?}", function.get_name());
 
         ExecutionEngine::create_mc_jit_compiler_for_module(
             module,

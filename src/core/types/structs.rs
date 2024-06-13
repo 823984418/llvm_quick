@@ -7,11 +7,7 @@ use crate::type_tag::{any, struct_any, TypeTag};
 use crate::{Context, Type};
 
 impl Context {
-    pub fn struct_type<T: TypeTag>(
-        &self,
-        element_types: &[Type<T>],
-        packed: bool,
-    ) -> &Type<struct_any> {
+    pub fn struct_type(&self, element_types: &[Type<any>], packed: bool) -> &Type<struct_any> {
         unsafe {
             Type::from_ref(LLVMStructTypeInContext(
                 self.as_raw(),

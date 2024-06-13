@@ -69,9 +69,47 @@ impl TypeTag for metadata {
     }
 }
 
-pub trait ArrayTypeTag: TypeTag {
+#[derive(Copy, Clone)]
+pub struct x86_mmx {}
+
+impl TypeTag for x86_mmx {
+    fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
+        unsafe { type_check_kind(ty, LLVMTypeKind::LLVMX86_MMXTypeKind) }
+    }
+}
+
+#[derive(Copy, Clone)]
+pub struct x86_amx {}
+
+impl TypeTag for x86_amx {
+    fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
+        unsafe { type_check_kind(ty, LLVMTypeKind::LLVMX86_AMXTypeKind) }
+    }
+}
+
+#[derive(Copy, Clone)]
+pub struct token {}
+
+impl TypeTag for token {
+    fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
+        unsafe { type_check_kind(ty, LLVMTypeKind::LLVMTokenTypeKind) }
+    }
+}
+
+#[derive(Copy, Clone)]
+pub struct target_ext_any {}
+
+impl TypeTag for target_ext_any {
+    fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
+        unsafe { type_check_kind(ty, LLVMTypeKind::LLVMTargetExtTypeKind) }
+    }
+}
+
+pub trait SequentialTypeTag: TypeTag {
     type ElementType: TypeTag;
 }
+
+pub trait ArrayTypeTag: SequentialTypeTag {}
 
 pub type array_any = array_any_len<any>;
 
@@ -93,9 +131,10 @@ impl<T: TypeTag> TypeTag for array_any_len<T> {
     }
 }
 
-impl<T: TypeTag> ArrayTypeTag for array_any_len<T> {
+impl<T: TypeTag> SequentialTypeTag for array_any_len<T> {
     type ElementType = T;
 }
+impl<T: TypeTag> ArrayTypeTag for array_any_len<T> {}
 
 #[derive(Copy, Clone)]
 pub struct array<T: TypeTag, const N: u64> {
@@ -105,7 +144,7 @@ pub struct array<T: TypeTag, const N: u64> {
 impl<T: TypeTag, const N: u64> TypeTag for array<T, N> {
     fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
         let ty = array_any_len::<T>::type_cast(ty)?;
-        if ty.length() == N {
+        if ty.get_length() == N {
             Some(unsafe { ty.cast_unchecked() })
         } else {
             None
@@ -113,9 +152,58 @@ impl<T: TypeTag, const N: u64> TypeTag for array<T, N> {
     }
 }
 
-impl<T: TypeTag, const N: u64> ArrayTypeTag for array<T, N> {
+impl<T: TypeTag, const N: u64> SequentialTypeTag for array<T, N> {
     type ElementType = T;
 }
+impl<T: TypeTag, const N: u64> ArrayTypeTag for array<T, N> {}
+
+pub trait VectorTypeTag: SequentialTypeTag {}
+
+pub type vector_any = vector_any_len<any>;
+
+#[derive(Copy, Clone)]
+pub struct vector_any_len<T: TypeTag> {
+    marker: PhantomData<fn(T) -> T>,
+}
+
+impl<T: TypeTag> TypeTag for vector_any_len<T> {
+    fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
+        unsafe {
+            let ty = type_check_kind::<vector_any>(ty, LLVMTypeKind::LLVMVectorTypeKind)?;
+            if ty.element_type().try_cast::<T>().is_some() {
+                Some(ty.cast_unchecked())
+            } else {
+                None
+            }
+        }
+    }
+}
+
+impl<T: TypeTag> SequentialTypeTag for vector_any_len<T> {
+    type ElementType = T;
+}
+impl<T: TypeTag> VectorTypeTag for vector_any_len<T> {}
+
+#[derive(Copy, Clone)]
+pub struct vector<T: TypeTag, const N: u32> {
+    marker: PhantomData<fn(T) -> T>,
+}
+
+impl<T: TypeTag, const N: u32> TypeTag for vector<T, N> {
+    fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
+        let ty = vector_any_len::<T>::type_cast(ty)?;
+        if ty.get_size() == N {
+            Some(unsafe { ty.cast_unchecked() })
+        } else {
+            None
+        }
+    }
+}
+
+impl<T: TypeTag, const N: u32> SequentialTypeTag for vector<T, N> {
+    type ElementType = T;
+}
+impl<T: TypeTag, const N: u32> VectorTypeTag for vector<T, N> {}
 
 pub trait FloatTypeTag: TypeTag {}
 
