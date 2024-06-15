@@ -1,7 +1,7 @@
 use std::fmt::{Debug, Formatter};
 use std::mem::forget;
 use std::ops::Deref;
-use std::ptr::NonNull;
+use std::ptr::{null_mut, NonNull};
 
 use crate::Opaque;
 
@@ -13,7 +13,6 @@ pub trait OpaqueClone {
     unsafe fn clone_raw(ptr: *mut Self) -> *mut Self;
 }
 
-#[repr(transparent)]
 pub struct Owning<T: Opaque<Inner: OpaqueDrop> + ?Sized> {
     ptr: NonNull<T>,
 }
@@ -63,7 +62,10 @@ impl<T: Opaque<Inner: OpaqueDrop> + ?Sized> Owning<T> {
         ptr
     }
 
-    pub fn option_into_raw(this: Option<Self>) -> *mut T::Inner {
-        unsafe { std::mem::transmute_copy(&this) }
+    pub fn option_into_raw(this: Option<Self>) -> *mut T::Inner
+    where
+        T::Inner: Sized,
+    {
+        this.map(Owning::into_raw).unwrap_or(null_mut())
     }
 }
