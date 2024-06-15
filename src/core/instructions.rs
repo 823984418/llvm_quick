@@ -4,6 +4,7 @@ use llvm_sys::core::*;
 use llvm_sys::*;
 
 use crate::opaque::Opaque;
+use crate::owning::Owning;
 use crate::type_tag::{any, fun_any, metadata, TypeTag};
 use crate::{Attribute, BasicBlock, OperandBundle, Type, Value, ValueMetadataEntries};
 
@@ -26,11 +27,13 @@ impl<T: TypeTag> Value<T> {
         }
     }
 
-    pub fn instruction_get_all_metadata_other_than_debug_loc(&self) -> ValueMetadataEntries {
+    pub fn instruction_get_all_metadata_other_than_debug_loc(
+        &self,
+    ) -> Owning<ValueMetadataEntries> {
         unsafe {
             let mut len = 0;
             let ptr = LLVMInstructionGetAllMetadataOtherThanDebugLoc(self.as_raw(), &mut len);
-            ValueMetadataEntries::from_raw(std::ptr::slice_from_raw_parts_mut(ptr as _, len))
+            Owning::from_raw(std::ptr::slice_from_raw_parts_mut(ptr as _, len))
         }
     }
 

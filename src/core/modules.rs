@@ -8,7 +8,7 @@ use llvm_sys::*;
 use crate::core::Message;
 use crate::owning::{OpaqueClone, OpaqueDrop, Owning};
 use crate::type_tag::*;
-use crate::{Context, Metadata, Module, ModuleFlagsMetadata, NamedMDNode, Opaque, Type, Value};
+use crate::*;
 
 impl<'s> Debug for Module<'s> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -26,7 +26,7 @@ impl Context {
     }
 }
 
-impl<'s> OpaqueClone for LLVMModule {
+impl OpaqueClone for LLVMModule {
     unsafe fn clone_raw(ptr: *mut Self) -> *mut Self {
         unsafe { LLVMCloneModule(ptr) }
     }
@@ -79,36 +79,36 @@ impl<'s> Module<'s> {
         unsafe { LLVMSetTarget(self.as_raw(), triple.as_ptr()) }
     }
 
-    pub fn copy_flags_metadata(&self) -> ModuleFlagsMetadata {
+    pub fn copy_flags_metadata(&self) -> Owning<ModuleFlagsMetadata> {
         unsafe {
             let mut len = 0;
             let ptr = LLVMCopyModuleFlagsMetadata(self.as_raw(), &mut len);
-            ModuleFlagsMetadata::from_raw(std::ptr::slice_from_raw_parts_mut(ptr as _, len))
+            Owning::from_raw(std::ptr::slice_from_raw_parts_mut(ptr as _, len))
         }
     }
 }
 
-impl<'s> Drop for ModuleFlagsMetadata<'s> {
-    fn drop(&mut self) {
-        unsafe { LLVMDisposeModuleFlagsMetadata(self.as_raw()) }
+impl<'s> OpaqueDrop for [&'s ModuleFlagEntry] {
+    unsafe fn drop_raw(ptr: *mut Self) {
+        unsafe { LLVMDisposeModuleFlagsMetadata(ptr as _) }
     }
 }
 
 impl<'s> ModuleFlagsMetadata<'s> {
     pub fn get_flag_behavior(&self, index: u32) -> LLVMModuleFlagBehavior {
-        unsafe { LLVMModuleFlagEntriesGetFlagBehavior(self.as_raw(), index) }
+        unsafe { LLVMModuleFlagEntriesGetFlagBehavior(self.as_raw() as _, index) }
     }
 
     pub fn get_key(&self, index: u32) -> &[u8] {
         unsafe {
             let mut len = 0;
-            let ptr = LLVMModuleFlagEntriesGetKey(self.as_raw(), index, &mut len);
+            let ptr = LLVMModuleFlagEntriesGetKey(self.as_raw() as _, index, &mut len);
             std::slice::from_raw_parts(ptr as _, len)
         }
     }
 
     pub fn get_metadata(&self, index: u32) -> &Metadata {
-        unsafe { Metadata::from_ref(LLVMModuleFlagEntriesGetMetadata(self.as_raw(), index)) }
+        unsafe { Metadata::from_ref(LLVMModuleFlagEntriesGetMetadata(self.as_raw() as _, index)) }
     }
 }
 

@@ -1,8 +1,9 @@
 use llvm_sys::core::*;
 
 use crate::opaque::Opaque;
+use crate::owning::OpaqueDrop;
 use crate::type_tag::{PtrTypeTag, TypeTag};
-use crate::{Type, Value, ValueMetadataEntries};
+use crate::{Type, Value, ValueMetadataEntry};
 
 impl<T: TypeTag> Type<T> {
     pub fn const_null(&self) -> &Value<T> {
@@ -36,9 +37,9 @@ impl<T: PtrTypeTag> Type<T> {
 
 // TODO
 
-impl<'s> Drop for ValueMetadataEntries<'s> {
-    fn drop(&mut self) {
-        unsafe { LLVMDisposeValueMetadataEntries(self.as_raw()) }
+impl<'s> OpaqueDrop for [&'s ValueMetadataEntry] {
+    unsafe fn drop_raw(ptr: *mut Self) {
+        unsafe { LLVMDisposeValueMetadataEntries(ptr as _) }
     }
 }
 
