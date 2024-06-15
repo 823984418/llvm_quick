@@ -44,7 +44,7 @@ impl<T: TypeTag> Type<T> {
         unsafe { LLVMGetTypeKind(self.as_raw()) }
     }
 
-    pub fn is_size(&self) -> bool {
+    pub fn is_sized(&self) -> bool {
         unsafe { LLVMTypeIsSized(self.as_raw()) != 0 }
     }
 
