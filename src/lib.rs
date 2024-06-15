@@ -1,7 +1,9 @@
 use std::marker::PhantomData;
 use std::ops::Deref;
+use std::ptr::NonNull;
 
 pub use llvm_sys;
+use llvm_sys::prelude::{LLVMModuleFlagEntry, LLVMValueMetadataEntry};
 use llvm_sys::*;
 
 use crate::opaque::{Opaque, PhantomOpaque};
@@ -219,34 +221,50 @@ unsafe impl Opaque for Attribute {
 
 #[repr(transparent)]
 pub struct ValueMetadataEntries<'s> {
-    inner: [&'s ValueMetadataEntry],
-}
-
-unsafe impl<'s> Opaque for ValueMetadataEntries<'s> {
-    type Inner = [&'s ValueMetadataEntry];
+    ptr: NonNull<[&'s ValueMetadataEntry]>,
 }
 
 impl<'s> Deref for ValueMetadataEntries<'s> {
     type Target = [&'s ValueMetadataEntry];
 
     fn deref(&self) -> &Self::Target {
-        &self.inner
+        unsafe { self.ptr.as_ref() }
+    }
+}
+
+impl<'s> ValueMetadataEntries<'s> {
+    pub unsafe fn from_raw(ptr: *mut LLVMValueMetadataEntry, len: usize) -> Self {
+        Self {
+            ptr: std::slice::from_raw_parts(ptr as _, len).into(),
+        }
+    }
+
+    pub fn as_raw(&self) -> *mut LLVMModuleFlagEntry {
+        self.ptr.as_ptr() as _
     }
 }
 
 #[repr(transparent)]
 pub struct ModuleFlagsMetadata<'s> {
-    inner: [&'s ModuleFlagEntry],
-}
-
-unsafe impl<'s> Opaque for ModuleFlagsMetadata<'s> {
-    type Inner = [&'s ModuleFlagEntry];
+    ptr: NonNull<[&'s ModuleFlagEntry]>,
 }
 
 impl<'s> Deref for ModuleFlagsMetadata<'s> {
     type Target = [&'s ModuleFlagEntry];
 
     fn deref(&self) -> &Self::Target {
-        &self.inner
+        unsafe { self.ptr.as_ref() }
+    }
+}
+
+impl<'s> ModuleFlagsMetadata<'s> {
+    pub unsafe fn from_raw(ptr: *mut LLVMModuleFlagEntry, len: usize) -> Self {
+        Self {
+            ptr: std::slice::from_raw_parts(ptr as _, len).into(),
+        }
+    }
+
+    pub fn as_raw(&self) -> *mut LLVMModuleFlagEntry {
+        self.ptr.as_ptr() as _
     }
 }

@@ -10,11 +10,11 @@ pub struct PhantomOpaque {
 }
 
 /// Mark an opaque type that associates with a corresponding inner type.
-pub unsafe trait Opaque {
-    type Inner: ?Sized;
+pub unsafe trait Opaque: Sized {
+    type Inner;
 
     unsafe fn try_from_ref<'s>(ptr: *mut Self::Inner) -> Option<&'s Self> {
-        unsafe { std::mem::transmute_copy::<*mut Self::Inner, *const Self>(&ptr).as_ref() }
+        unsafe { (ptr as *const Self).as_ref() }
     }
 
     unsafe fn from_ref<'a>(ptr: *mut Self::Inner) -> &'a Self {
@@ -22,6 +22,6 @@ pub unsafe trait Opaque {
     }
 
     fn as_raw(&self) -> *mut Self::Inner {
-        unsafe { std::mem::transmute_copy::<*const Self, *mut Self::Inner>(&(self as *const Self)) }
+        self as *const Self as *mut Self::Inner
     }
 }

@@ -79,11 +79,11 @@ impl<'s> Module<'s> {
         unsafe { LLVMSetTarget(self.as_raw(), triple.as_ptr()) }
     }
 
-    pub fn copy_flags_metadata(&self) -> Owning<ModuleFlagsMetadata> {
+    pub fn copy_flags_metadata(&self) -> ModuleFlagsMetadata {
         unsafe {
             let mut len = 0;
             let ptr = LLVMCopyModuleFlagsMetadata(self.as_raw(), &mut len);
-            Owning::from_raw(std::ptr::slice_from_raw_parts_mut(ptr as _, len))
+            ModuleFlagsMetadata::from_raw(ptr, len)
         }
     }
 }
