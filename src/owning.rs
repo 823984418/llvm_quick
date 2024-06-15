@@ -56,16 +56,16 @@ impl<T: Opaque<Inner: OpaqueDrop> + ?Sized> Owning<T> {
         unsafe { Self::try_from_raw(ptr).unwrap_unchecked() }
     }
 
-    pub unsafe fn into_raw(self) -> *mut T::Inner {
+    pub fn into_raw(self) -> *mut T::Inner {
         let ptr = self.as_raw();
         forget(self);
         ptr
     }
 
-    pub unsafe fn option_into_raw(this: Option<Self>) -> *mut T::Inner
+    pub fn option_into_raw(this: Option<Self>) -> *mut T::Inner
     where
         T::Inner: Sized,
     {
-        this.map(|x| unsafe { x.into_raw() }).unwrap_or(null_mut())
+        this.map(Owning::into_raw).unwrap_or(null_mut())
     }
 }
