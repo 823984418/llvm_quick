@@ -122,7 +122,7 @@ impl Metadata {
     }
 }
 
-impl<T: TypeTag> Value<T> {
+impl Value<metadata> {
     pub fn as_metadata(&self) -> &Metadata {
         unsafe { Metadata::from_ref(LLVMValueAsMetadata(self.as_raw())) }
     }
