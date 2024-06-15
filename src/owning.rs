@@ -62,10 +62,7 @@ impl<T: Opaque<Inner: OpaqueDrop>> Owning<T> {
         ptr
     }
 
-    pub fn option_into_raw(this: Option<Self>) -> *mut T::Inner
-    where
-        T::Inner: Sized,
-    {
+    pub fn option_into_raw(this: Option<Self>) -> *mut T::Inner {
         this.map(Owning::into_raw).unwrap_or(null_mut())
     }
 }
