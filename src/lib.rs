@@ -220,6 +220,93 @@ unsafe impl Opaque for Attribute {
 }
 
 #[repr(transparent)]
+pub struct EnumAttribute {
+    parent: Attribute,
+}
+
+unsafe impl Opaque for EnumAttribute {
+    type Inner = LLVMOpaqueAttributeRef;
+}
+
+impl Deref for EnumAttribute {
+    type Target = Attribute;
+
+    fn deref(&self) -> &Self::Target {
+        &self.parent
+    }
+}
+
+impl<'s> TryFrom<&'s Attribute> for &'s EnumAttribute {
+    type Error = ();
+
+    fn try_from(value: &'s Attribute) -> Result<Self, Self::Error> {
+        if value.is_enum_attribute() {
+            Ok(unsafe { value.cast_unchecked() })
+        } else {
+            Err(())
+        }
+    }
+}
+
+#[repr(transparent)]
+pub struct TypeAttribute {
+    parent: Attribute,
+}
+
+unsafe impl Opaque for TypeAttribute {
+    type Inner = LLVMOpaqueAttributeRef;
+}
+
+impl Deref for TypeAttribute {
+    type Target = Attribute;
+
+    fn deref(&self) -> &Self::Target {
+        &self.parent
+    }
+}
+
+impl<'s> TryFrom<&'s Attribute> for &'s TypeAttribute {
+    type Error = ();
+
+    fn try_from(value: &'s Attribute) -> Result<Self, Self::Error> {
+        if value.is_type_attribute() {
+            Ok(unsafe { value.cast_unchecked() })
+        } else {
+            Err(())
+        }
+    }
+}
+
+#[repr(transparent)]
+pub struct StringAttribute {
+    parent: Attribute,
+}
+
+unsafe impl Opaque for StringAttribute {
+    type Inner = LLVMOpaqueAttributeRef;
+}
+
+impl Deref for StringAttribute {
+    type Target = Attribute;
+
+    fn deref(&self) -> &Self::Target {
+        &self.parent
+    }
+}
+
+impl<'s> TryFrom<&'s Attribute> for &'s StringAttribute {
+    type Error = ();
+
+    fn try_from(value: &'s Attribute) -> Result<Self, Self::Error> {
+        if value.is_string_attribute() {
+            Ok(unsafe { value.cast_unchecked() })
+        } else {
+            Err(())
+        }
+    }
+}
+
+#[repr(transparent)]
 pub struct ValueMetadataEntries<'s> {
     ptr: NonNull<[&'s ValueMetadataEntry]>,
 }

@@ -24,4 +24,8 @@ pub unsafe trait Opaque: Sized {
     fn as_raw(&self) -> *mut Self::Inner {
         self as *const Self as *mut Self::Inner
     }
+
+    unsafe fn cast_unchecked<T: Opaque<Inner = Self::Inner>>(&self) -> &T {
+        T::from_ref(self.as_raw())
+    }
 }

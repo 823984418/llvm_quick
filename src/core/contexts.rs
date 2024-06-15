@@ -6,7 +6,9 @@ use llvm_sys::*;
 use crate::core::Message;
 use crate::owning::{OpaqueDrop, Owning};
 use crate::type_tag::*;
-use crate::{Attribute, Context, DiagnosticInfo, Opaque, Type};
+use crate::{
+    Attribute, Context, DiagnosticInfo, EnumAttribute, Opaque, StringAttribute, Type, TypeAttribute,
+};
 
 impl Context {
     /// Create a new context.
@@ -87,17 +89,17 @@ pub fn get_last_enum_attribute_kind() -> u32 {
 }
 
 impl Context {
-    pub fn create_enum_attribute(&self, kind_id: u32, val: u64) -> &Attribute {
-        unsafe { Attribute::from_ref(LLVMCreateEnumAttribute(self.as_raw(), kind_id, val)) }
+    pub fn create_enum_attribute(&self, kind_id: u32, val: u64) -> &EnumAttribute {
+        unsafe { EnumAttribute::from_ref(LLVMCreateEnumAttribute(self.as_raw(), kind_id, val)) }
     }
 }
 
-impl Attribute {
-    pub fn get_enum_attribute_kind(&self) -> u32 {
+impl EnumAttribute {
+    pub fn get_kind(&self) -> u32 {
         unsafe { LLVMGetEnumAttributeKind(self.as_raw()) }
     }
 
-    pub fn get_enum_attribute_value(&self) -> u64 {
+    pub fn get_value(&self) -> u64 {
         unsafe { LLVMGetEnumAttributeValue(self.as_raw()) }
     }
 }
@@ -107,9 +109,9 @@ impl Context {
         &self,
         kind_id: u32,
         type_ref: &Type<T>,
-    ) -> &Attribute {
+    ) -> &TypeAttribute {
         unsafe {
-            Attribute::from_ref(LLVMCreateTypeAttribute(
+            TypeAttribute::from_ref(LLVMCreateTypeAttribute(
                 self.as_raw(),
                 kind_id,
                 type_ref.as_raw(),
@@ -118,16 +120,16 @@ impl Context {
     }
 }
 
-impl Attribute {
-    pub fn get_type_attribute_value(&self) -> &Type<any> {
+impl TypeAttribute {
+    pub fn get_value(&self) -> &Type<any> {
         unsafe { Type::from_ref(LLVMGetTypeAttributeValue(self.as_raw())) }
     }
 }
 
 impl Context {
-    pub fn create_string_attribute(&self, k: &[u8], v: &[u8]) -> &Attribute {
+    pub fn create_string_attribute(&self, k: &[u8], v: &[u8]) -> &StringAttribute {
         unsafe {
-            Attribute::from_ref(LLVMCreateStringAttribute(
+            StringAttribute::from_ref(LLVMCreateStringAttribute(
                 self.as_raw(),
                 k.as_ptr() as _,
                 k.len() as _,
@@ -138,8 +140,8 @@ impl Context {
     }
 }
 
-impl Attribute {
-    pub fn get_string_attribute_kind(&self) -> &[u8] {
+impl StringAttribute {
+    pub fn get_kind(&self) -> &[u8] {
         unsafe {
             let mut len = 0;
             let ptr = LLVMGetStringAttributeKind(self.as_raw(), &mut len);
@@ -147,7 +149,7 @@ impl Attribute {
         }
     }
 
-    pub fn get_string_attribute_value(&self) -> &[u8] {
+    pub fn get_value(&self) -> &[u8] {
         unsafe {
             let mut len = 0;
             let ptr = LLVMGetStringAttributeValue(self.as_raw(), &mut len);
