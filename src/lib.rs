@@ -326,7 +326,7 @@ impl<'s> ValueMetadataEntries<'s> {
         }
     }
 
-    pub fn as_raw(&self) -> *mut LLVMModuleFlagEntry {
+    pub fn as_raw(&self) -> *mut LLVMValueMetadataEntry {
         self.ptr.as_ptr() as _
     }
 }

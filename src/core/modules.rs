@@ -88,9 +88,9 @@ impl<'s> Module<'s> {
     }
 }
 
-impl<'s> OpaqueDrop for [&'s ModuleFlagEntry] {
-    unsafe fn drop_raw(ptr: *mut Self) {
-        unsafe { LLVMDisposeModuleFlagsMetadata(ptr as _) }
+impl<'s> Drop for ModuleFlagsMetadata<'s> {
+    fn drop(&mut self) {
+        unsafe { LLVMDisposeModuleFlagsMetadata(self.as_raw()) }
     }
 }
 
