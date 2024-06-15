@@ -1,6 +1,7 @@
 use std::ptr::null_mut;
 
 use llvm_sys::core::*;
+use llvm_sys::LLVMOpaqueOperandBundle;
 
 use crate::owning::{OpaqueDrop, Owning};
 use crate::type_tag::*;
@@ -19,8 +20,8 @@ impl<'s> OperandBundle<'s> {
     }
 }
 
-impl<'s> OpaqueDrop for OperandBundle<'s> {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMOpaqueOperandBundle {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMDisposeOperandBundle(ptr) }
     }
 }

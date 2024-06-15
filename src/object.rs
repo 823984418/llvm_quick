@@ -62,8 +62,8 @@ impl<'s> Binary<'s> {
     }
 }
 
-impl<'s> OpaqueDrop for Binary<'s> {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMOpaqueBinary {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMDisposeBinary(ptr) }
     }
 }
@@ -114,8 +114,8 @@ impl<'s> Binary<'s> {
     }
 }
 
-impl<'a, 's> OpaqueDrop for SectionIterator<'a, 's> {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMOpaqueSectionIterator {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMDisposeSectionIterator(ptr) }
     }
 }
@@ -130,8 +130,8 @@ impl<'a, 's> SectionIterator<'a, 's> {
     }
 }
 
-impl<'a, 's> OpaqueDrop for SymbolIterator<'a, 's> {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMOpaqueSymbolIterator {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMDisposeSymbolIterator(ptr) }
     }
 }
@@ -168,8 +168,8 @@ impl<'a, 's> SectionIterator<'a, 's> {
     }
 }
 
-impl<'a, 's> OpaqueDrop for RelocationIterator<'a, 's> {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMOpaqueRelocationIterator {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMDisposeRelocationIterator(ptr) }
     }
 }

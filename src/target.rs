@@ -121,8 +121,8 @@ impl TargetData {
     }
 }
 
-impl OpaqueDrop for TargetData {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMOpaqueTargetData {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMDisposeTargetData(ptr) }
     }
 }

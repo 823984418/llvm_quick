@@ -1,4 +1,5 @@
 use llvm_sys::core::*;
+use llvm_sys::LLVMModuleProvider;
 
 use crate::owning::{OpaqueDrop, Owning};
 use crate::{Module, ModuleProvider, Opaque};
@@ -9,8 +10,8 @@ impl<'s> Module<'s> {
     }
 }
 
-impl OpaqueDrop for ModuleProvider {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMModuleProvider {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMDisposeModuleProvider(ptr) }
     }
 }

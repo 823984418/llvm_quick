@@ -91,8 +91,8 @@ impl TargetMachineOptions {
     }
 }
 
-impl OpaqueDrop for TargetMachineOptions {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMOpaqueTargetMachineOptions {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMDisposeTargetMachineOptions(ptr) }
     }
 }
@@ -161,8 +161,8 @@ impl Target {
     }
 }
 
-impl OpaqueDrop for TargetMachine {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMOpaqueTargetMachine {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMDisposeTargetMachine(ptr) }
     }
 }

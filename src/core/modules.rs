@@ -26,14 +26,14 @@ impl Context {
     }
 }
 
-impl<'s> OpaqueClone for Module<'s> {
-    unsafe fn clone_raw(ptr: *mut Self::Inner) -> *mut Self::Inner {
+impl<'s> OpaqueClone for LLVMModule {
+    unsafe fn clone_raw(ptr: *mut Self) -> *mut Self {
         unsafe { LLVMCloneModule(ptr) }
     }
 }
 
-impl<'s> OpaqueDrop for Module<'s> {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMModule {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMDisposeModule(ptr) }
     }
 }

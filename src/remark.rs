@@ -84,8 +84,8 @@ unsafe impl Opaque for RemarkEntry {
     type Inner = LLVMRemarkOpaqueEntry;
 }
 
-impl OpaqueDrop for RemarkEntry {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMRemarkOpaqueEntry {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMRemarkEntryDispose(ptr) }
     }
 }
@@ -177,8 +177,8 @@ impl<'s> RemarkParser<'s> {
     }
 }
 
-impl<'s> OpaqueDrop for RemarkParser<'s> {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMRemarkOpaqueParser {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMRemarkParserDispose(ptr) }
     }
 }

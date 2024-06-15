@@ -2,6 +2,7 @@ use std::ffi::CStr;
 use std::ptr::null_mut;
 
 use llvm_sys::core::*;
+use llvm_sys::LLVMMemoryBuffer;
 
 use crate::core::Message;
 use crate::owning::{OpaqueDrop, Owning};
@@ -66,8 +67,8 @@ impl MemoryBuffer {
     }
 }
 
-impl OpaqueDrop for MemoryBuffer {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMMemoryBuffer {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMDisposeMemoryBuffer(ptr) }
     }
 }

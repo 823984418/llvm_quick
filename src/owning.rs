@@ -5,31 +5,31 @@ use std::ptr::{null_mut, NonNull};
 
 use crate::Opaque;
 
-pub trait OpaqueDrop: Opaque {
-    unsafe fn drop_raw(ptr: *mut Self::Inner);
+pub trait OpaqueDrop {
+    unsafe fn drop_raw(ptr: *mut Self);
 }
 
-pub trait OpaqueClone: OpaqueDrop {
-    unsafe fn clone_raw(ptr: *mut Self::Inner) -> *mut Self::Inner;
+pub trait OpaqueClone {
+    unsafe fn clone_raw(ptr: *mut Self) -> *mut Self;
 }
 
-pub struct Owning<T: OpaqueDrop> {
+pub struct Owning<T: Opaque<Inner: OpaqueDrop>> {
     ptr: NonNull<T>,
 }
 
-impl<T: OpaqueClone> Clone for Owning<T> {
+impl<T: Opaque<Inner: OpaqueDrop + OpaqueClone>> Clone for Owning<T> {
     fn clone(&self) -> Self {
-        unsafe { Self::from_raw(T::clone_raw(self.as_raw())) }
+        unsafe { Self::from_raw(T::Inner::clone_raw(self.as_raw())) }
     }
 }
 
-impl<T: OpaqueDrop> Drop for Owning<T> {
+impl<T: Opaque<Inner: OpaqueDrop>> Drop for Owning<T> {
     fn drop(&mut self) {
-        unsafe { T::drop_raw(self.as_raw()) }
+        unsafe { T::Inner::drop_raw(self.as_raw()) }
     }
 }
 
-impl<T: OpaqueDrop> Deref for Owning<T> {
+impl<T: Opaque<Inner: OpaqueDrop>> Deref for Owning<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -37,13 +37,13 @@ impl<T: OpaqueDrop> Deref for Owning<T> {
     }
 }
 
-impl<T: OpaqueDrop + Debug> Debug for Owning<T> {
+impl<T: Opaque<Inner: OpaqueDrop> + Debug> Debug for Owning<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         Debug::fmt(self.deref(), f)
     }
 }
 
-impl<T: OpaqueDrop> Owning<T> {
+impl<T: Opaque<Inner: OpaqueDrop>> Owning<T> {
     pub unsafe fn try_from_raw(ptr: *mut T::Inner) -> Option<Self> {
         NonNull::new(ptr as *mut T).map(|ptr| Self { ptr })
     }

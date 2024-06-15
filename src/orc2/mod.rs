@@ -33,14 +33,14 @@ unsafe impl Opaque for OrcSymbolStringPoolEntry {
     type Inner = LLVMOrcOpaqueSymbolStringPoolEntry;
 }
 
-impl OpaqueDrop for OrcSymbolStringPoolEntry {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMOrcOpaqueSymbolStringPoolEntry {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMOrcReleaseSymbolStringPoolEntry(ptr) }
     }
 }
 
-impl OpaqueClone for OrcSymbolStringPoolEntry {
-    unsafe fn clone_raw(ptr: *mut Self::Inner) -> *mut Self::Inner {
+impl OpaqueClone for LLVMOrcOpaqueSymbolStringPoolEntry {
+    unsafe fn clone_raw(ptr: *mut Self) -> *mut Self {
         unsafe { LLVMOrcRetainSymbolStringPoolEntry(ptr) }
         ptr
     }
@@ -118,8 +118,8 @@ unsafe impl Opaque for OrcThreadSafeModule {
     type Inner = LLVMOrcOpaqueThreadSafeModule;
 }
 
-impl OpaqueDrop for OrcThreadSafeModule {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMOrcOpaqueThreadSafeModule {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMOrcDisposeThreadSafeModule(ptr) }
     }
 }
@@ -133,8 +133,8 @@ unsafe impl Opaque for OrcJitTargetMachineBuilder {
     type Inner = LLVMOrcOpaqueJITTargetMachineBuilder;
 }
 
-impl OpaqueDrop for OrcJitTargetMachineBuilder {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMOrcOpaqueJITTargetMachineBuilder {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMOrcDisposeJITTargetMachineBuilder(ptr) }
     }
 }
@@ -148,8 +148,8 @@ unsafe impl Opaque for OrcObjectLayer {
     type Inner = LLVMOrcOpaqueObjectLayer;
 }
 
-impl OpaqueDrop for OrcObjectLayer {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMOrcOpaqueObjectLayer {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMOrcDisposeObjectLayer(ptr) }
     }
 }
@@ -190,8 +190,8 @@ unsafe impl Opaque for OrcIndirectStubsManager {
     type Inner = LLVMOrcOpaqueIndirectStubsManager;
 }
 
-impl OpaqueDrop for OrcIndirectStubsManager {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMOrcOpaqueIndirectStubsManager {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMOrcDisposeIndirectStubsManager(ptr) }
     }
 }
@@ -205,8 +205,8 @@ unsafe impl Opaque for OrcLazyCallThroughManager {
     type Inner = LLVMOrcOpaqueLazyCallThroughManager;
 }
 
-impl OpaqueDrop for OrcLazyCallThroughManager {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMOrcOpaqueLazyCallThroughManager {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMOrcDisposeLazyCallThroughManager(ptr) }
     }
 }
@@ -220,8 +220,8 @@ unsafe impl Opaque for OrcDumpObjects {
     type Inner = LLVMOrcOpaqueDumpObjects;
 }
 
-impl OpaqueDrop for OrcDumpObjects {
-    unsafe fn drop_raw(ptr: *mut Self::Inner) {
+impl OpaqueDrop for LLVMOrcOpaqueDumpObjects {
+    unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMOrcDisposeDumpObjects(ptr) }
     }
 }
