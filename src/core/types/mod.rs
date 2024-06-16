@@ -22,7 +22,7 @@ impl<T: TypeTag> Debug for Type<T> {
 
 impl<T: TypeTag> Type<T> {
     pub fn to_any(&self) -> &Type<any> {
-        unsafe { self.cast_unchecked() }
+        self.cast()
     }
 }
 

@@ -116,6 +116,27 @@ impl<T: TypeTag> Deref for Argument<T> {
 }
 
 #[repr(transparent)]
+pub struct Constant<T: TypeTag> {
+    parent: Value<T>,
+}
+
+unsafe impl<T: TypeTag> Opaque for Constant<T> {
+    type Inner = LLVMValue;
+
+    unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
+        unsafe { Value::<T>::try_from_raw(ptr)?.is_a_constant() }
+    }
+}
+
+impl<T: TypeTag> Deref for Constant<T> {
+    type Target = Value<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.parent
+    }
+}
+
+#[repr(transparent)]
 pub struct Instruction<T: TypeTag> {
     parent: Value<T>,
 }

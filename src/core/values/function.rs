@@ -224,7 +224,7 @@ impl<T: FunTypeTag> Value<T> {
     }
 
     /// Obtain the types of a function's parameters.
-    pub fn get_param_vec_any(&self) -> Vec<&Value<any>> {
+    pub fn get_param_vec_any(&self) -> Vec<&Argument<any>> {
         unsafe {
             let count = self.get_param_count() as usize;
             let mut buffer = Vec::with_capacity(count);
@@ -234,13 +234,13 @@ impl<T: FunTypeTag> Value<T> {
         }
     }
 
-    pub fn get_param(&self, index: u32) -> Option<&Value<any>> {
-        unsafe { Value::from_ptr(LLVMGetParam(self.as_raw(), index)) }
+    pub fn get_param(&self, index: u32) -> Option<&Argument<any>> {
+        unsafe { Argument::from_ptr(LLVMGetParam(self.as_raw(), index)) }
     }
 }
 
-impl<T: TypeTag> Value<T> {
-    pub fn get_param_parent(&self) -> &Value<fun_any> {
+impl<T: TypeTag> Argument<T> {
+    pub fn get_parent(&self) -> &Value<fun_any> {
         unsafe { Value::from_raw(LLVMGetParamParent(self.as_raw())) }
     }
 }
@@ -255,13 +255,13 @@ impl<T: FunTypeTag> Value<T> {
     }
 }
 
-impl<T: TypeTag> Value<T> {
-    pub fn get_next_param(&self) -> Option<&Value<any>> {
-        unsafe { Value::from_ptr(LLVMGetNextParam(self.as_raw())) }
+impl<T: TypeTag> Argument<T> {
+    pub fn get_next_param(&self) -> Option<&Argument<any>> {
+        unsafe { Argument::from_ptr(LLVMGetNextParam(self.as_raw())) }
     }
 
-    pub fn get_previous_param(&self) -> Option<&Value<any>> {
-        unsafe { Value::from_ptr(LLVMGetPreviousParam(self.as_raw())) }
+    pub fn get_previous_param(&self) -> Option<&Argument<any>> {
+        unsafe { Argument::from_ptr(LLVMGetPreviousParam(self.as_raw())) }
     }
 
     pub fn set_param_alignment(&self, align: u32) {

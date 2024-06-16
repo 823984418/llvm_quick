@@ -1,11 +1,12 @@
 use std::fmt::{Debug, Formatter};
+use std::ops::Deref;
 
 use llvm_sys::core::*;
 use llvm_sys::*;
 
 use crate::core::Message;
 use crate::type_tag::*;
-use crate::{Argument, Instruction, Opaque, Type, Value};
+use crate::{Argument, Constant, Instruction, Opaque, Type, Value};
 
 pub mod constants;
 pub mod function;
@@ -20,19 +21,31 @@ impl<T: TypeTag> Debug for Value<T> {
 
 impl<T: TypeTag> Value<T> {
     pub fn to_any(&self) -> &Value<any> {
-        unsafe { self.cast_unchecked() }
+        self.cast()
+    }
+}
+
+impl<T: TypeTag> Debug for Argument<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Debug::fmt(self.deref(), f)
     }
 }
 
 impl<T: TypeTag> Argument<T> {
     pub fn to_any(&self) -> &Argument<any> {
-        unsafe { self.cast_unchecked() }
+        self.cast()
+    }
+}
+
+impl<T: TypeTag> Debug for Instruction<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Debug::fmt(self.deref(), f)
     }
 }
 
 impl<T: TypeTag> Instruction<T> {
     pub fn to_any(&self) -> &Instruction<any> {
-        unsafe { self.cast_unchecked() }
+        self.cast()
     }
 }
 
@@ -121,8 +134,8 @@ impl<T: TypeTag> Value<T> {
         unsafe { Value::from_ptr(LLVMIsAUser(self.as_raw())) }
     }
 
-    pub fn is_a_constant(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAConstant(self.as_raw())) }
+    pub fn is_a_constant(&self) -> Option<&Constant<T>> {
+        unsafe { Constant::from_ptr(LLVMIsAConstant(self.as_raw())) }
     }
 
     pub fn is_a_block_address(&self) -> Option<&Value<T>> {

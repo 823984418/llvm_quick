@@ -2,23 +2,23 @@ use llvm_sys::core::*;
 
 use crate::opaque::Opaque;
 use crate::type_tag::{PtrTypeTag, TypeTag};
-use crate::{Type, Value, ValueMetadataEntries};
+use crate::{Constant, Type, Value, ValueMetadataEntries};
 
 impl<T: TypeTag> Type<T> {
-    pub fn const_null(&self) -> &Value<T> {
-        unsafe { Value::from_raw(LLVMConstNull(self.as_raw())) }
+    pub fn const_null(&self) -> &Constant<T> {
+        unsafe { Constant::from_raw(LLVMConstNull(self.as_raw())) }
     }
 
-    pub fn const_all_ones(&self) -> &Value<T> {
-        unsafe { Value::from_raw(LLVMConstAllOnes(self.as_raw())) }
+    pub fn const_all_ones(&self) -> &Constant<T> {
+        unsafe { Constant::from_raw(LLVMConstAllOnes(self.as_raw())) }
     }
 
-    pub fn get_undef(&self) -> &Value<T> {
-        unsafe { Value::from_raw(LLVMGetUndef(self.as_raw())) }
+    pub fn get_undef(&self) -> &Constant<T> {
+        unsafe { Constant::from_raw(LLVMGetUndef(self.as_raw())) }
     }
 
-    pub fn get_poison(&self) -> &Value<T> {
-        unsafe { Value::from_raw(LLVMGetPoison(self.as_raw())) }
+    pub fn get_poison(&self) -> &Constant<T> {
+        unsafe { Constant::from_raw(LLVMGetPoison(self.as_raw())) }
     }
 }
 
@@ -29,8 +29,8 @@ impl<T: TypeTag> Value<T> {
 }
 
 impl<T: PtrTypeTag> Type<T> {
-    pub fn const_pointer_null(&self) -> &Value<T> {
-        unsafe { Value::from_raw(LLVMConstPointerNull(self.as_raw())) }
+    pub fn const_pointer_null(&self) -> &Constant<T> {
+        unsafe { Constant::from_raw(LLVMConstPointerNull(self.as_raw())) }
     }
 }
 
