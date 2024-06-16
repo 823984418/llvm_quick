@@ -95,6 +95,27 @@ unsafe impl<T: TypeTag> Opaque for Value<T> {
 }
 
 #[repr(transparent)]
+pub struct Argument<T: TypeTag> {
+    parent: Value<T>,
+}
+
+unsafe impl<T: TypeTag> Opaque for Argument<T> {
+    type Inner = LLVMValue;
+
+    unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
+        unsafe { Value::<T>::try_from_raw(ptr)?.is_a_argument() }
+    }
+}
+
+impl<T: TypeTag> Deref for Argument<T> {
+    type Target = Value<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.parent
+    }
+}
+
+#[repr(transparent)]
 pub struct Instruction<T: TypeTag> {
     parent: Value<T>,
 }

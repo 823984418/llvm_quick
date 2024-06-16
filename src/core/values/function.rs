@@ -8,10 +8,22 @@ use llvm_sys::LLVMAttributeIndex;
 use crate::core::IntrinsicId;
 use crate::opaque::Opaque;
 use crate::type_tag::*;
-use crate::{Attribute, Context, Module, Type, Value};
+use crate::{Argument, Attribute, Context, Instruction, Module, Type, Value};
 
 impl<T: FunTypeTag> Value<T> {
     pub fn to_fun_any(&self) -> &Value<fun_any> {
+        unsafe { self.cast_unchecked() }
+    }
+}
+
+impl<T: FunTypeTag> Argument<T> {
+    pub fn to_fun_any(&self) -> &Argument<fun_any> {
+        unsafe { self.cast_unchecked() }
+    }
+}
+
+impl<T: FunTypeTag> Instruction<T> {
+    pub fn to_fun_any(&self) -> &Instruction<fun_any> {
         unsafe { self.cast_unchecked() }
     }
 }
@@ -202,8 +214,8 @@ impl<T: FunTypeTag> Value<T> {
     /// Obtain the types of a function's parameters.
     pub fn get_param_into_slice<'a, 's>(
         &'s self,
-        slice: &'a mut [Option<&'s Value<any>>],
-    ) -> &'a mut [&'s Value<any>] {
+        slice: &'a mut [Option<&'s Argument<any>>],
+    ) -> &'a mut [&'s Argument<any>] {
         assert_eq!(slice.len(), self.get_param_count() as usize);
         unsafe {
             LLVMGetParams(self.as_raw(), slice.as_mut_ptr() as _);
@@ -259,13 +271,14 @@ impl<T: TypeTag> Value<T> {
 
 impl<Args: TagTuple, Output: TypeTag, const VAR: bool> Value<fun<Args, Output, VAR>> {
     /// Obtain the parameters in a function.
-    pub fn get_params(&self) -> Args::Values<'_> {
+    pub fn get_params(&self) -> Args::Arguments<'_> {
         unsafe {
-            let mut array =
-                MaybeUninit::<<Args::Values<'_> as Tuple>::Array<Option<&Value<any>>>>::zeroed()
-                    .assume_init();
+            let mut array = MaybeUninit::<
+                <Args::Arguments<'_> as Tuple>::Array<Option<&Argument<any>>>,
+            >::zeroed()
+            .assume_init();
             self.get_param_into_slice(array.as_mut());
-            Args::Values::from_array_any_unchecked(std::mem::transmute(array.as_ref()))
+            Args::Arguments::from_array_any_unchecked(std::mem::transmute(array.as_ref()))
         }
     }
 }

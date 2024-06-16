@@ -5,7 +5,7 @@ use llvm_sys::*;
 
 use crate::core::Message;
 use crate::type_tag::*;
-use crate::{Instruction, Opaque, Type, Value};
+use crate::{Argument, Instruction, Opaque, Type, Value};
 
 pub mod constants;
 pub mod function;
@@ -20,6 +20,18 @@ impl<T: TypeTag> Debug for Value<T> {
 
 impl<T: TypeTag> Value<T> {
     pub fn to_any(&self) -> &Value<any> {
+        unsafe { self.cast_unchecked() }
+    }
+}
+
+impl<T: TypeTag> Argument<T> {
+    pub fn to_any(&self) -> &Argument<any> {
+        unsafe { self.cast_unchecked() }
+    }
+}
+
+impl<T: TypeTag> Instruction<T> {
+    pub fn to_any(&self) -> &Instruction<any> {
         unsafe { self.cast_unchecked() }
     }
 }
@@ -93,8 +105,8 @@ impl<T: TypeTag> Value<T> {
 }
 
 impl<T: TypeTag> Value<T> {
-    pub fn is_a_argument(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAArgument(self.as_raw())) }
+    pub fn is_a_argument(&self) -> Option<&Argument<T>> {
+        unsafe { Argument::from_ptr(LLVMIsAArgument(self.as_raw())) }
     }
 
     pub fn is_a_basic_block(&self) -> Option<&Value<T>> {
@@ -209,12 +221,12 @@ impl<T: TypeTag> Value<T> {
         unsafe { Value::from_ptr(LLVMIsABinaryOperator(self.as_raw())) }
     }
 
-    pub fn is_a_call_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsACallInst(self.as_raw())) }
+    pub fn is_a_call_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsACallInst(self.as_raw())) }
     }
 
-    pub fn is_a_intrinsic_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAIntrinsicInst(self.as_raw())) }
+    pub fn is_a_intrinsic_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAIntrinsicInst(self.as_raw())) }
     }
 
     pub fn is_a_dbg_info_intrinsic(&self) -> Option<&Value<T>> {
@@ -237,212 +249,212 @@ impl<T: TypeTag> Value<T> {
         unsafe { Value::from_ptr(LLVMIsAMemIntrinsic(self.as_raw())) }
     }
 
-    pub fn is_a_mem_cpy_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAMemCpyInst(self.as_raw())) }
+    pub fn is_a_mem_cpy_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAMemCpyInst(self.as_raw())) }
     }
 
-    pub fn is_a_mem_move_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAMemMoveInst(self.as_raw())) }
+    pub fn is_a_mem_move_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAMemMoveInst(self.as_raw())) }
     }
 
-    pub fn is_a_mem_set_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAMemSetInst(self.as_raw())) }
+    pub fn is_a_mem_set_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAMemSetInst(self.as_raw())) }
     }
 
-    pub fn is_a_cmp_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsACmpInst(self.as_raw())) }
+    pub fn is_a_cmp_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsACmpInst(self.as_raw())) }
     }
 
-    pub fn is_a_f_cmp_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAFCmpInst(self.as_raw())) }
+    pub fn is_a_f_cmp_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAFCmpInst(self.as_raw())) }
     }
 
-    pub fn is_a_icmp_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAICmpInst(self.as_raw())) }
+    pub fn is_a_i_cmp_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAICmpInst(self.as_raw())) }
     }
 
-    pub fn is_a_extract_element_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAExtractElementInst(self.as_raw())) }
+    pub fn is_a_extract_element_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAExtractElementInst(self.as_raw())) }
     }
 
-    pub fn is_a_get_element_ptr_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAGetElementPtrInst(self.as_raw())) }
+    pub fn is_a_get_element_ptr_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAGetElementPtrInst(self.as_raw())) }
     }
 
-    pub fn is_a_insert_element_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAInsertElementInst(self.as_raw())) }
+    pub fn is_a_insert_element_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAInsertElementInst(self.as_raw())) }
     }
 
-    pub fn is_a_insert_value_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAInsertValueInst(self.as_raw())) }
+    pub fn is_a_insert_value_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAInsertValueInst(self.as_raw())) }
     }
 
-    pub fn is_a_landing_pad_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsALandingPadInst(self.as_raw())) }
+    pub fn is_a_landing_pad_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsALandingPadInst(self.as_raw())) }
     }
 
     pub fn is_a_phi_node(&self) -> Option<&Value<T>> {
         unsafe { Value::from_ptr(LLVMIsAPHINode(self.as_raw())) }
     }
 
-    pub fn is_a_select_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsASelectInst(self.as_raw())) }
+    pub fn is_a_select_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsASelectInst(self.as_raw())) }
     }
 
-    pub fn is_a_shuffle_vector_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAShuffleVectorInst(self.as_raw())) }
+    pub fn is_a_shuffle_vector_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAShuffleVectorInst(self.as_raw())) }
     }
 
-    pub fn is_a_store_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAStoreInst(self.as_raw())) }
+    pub fn is_a_store_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAStoreInst(self.as_raw())) }
     }
 
-    pub fn is_a_branch_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsABranchInst(self.as_raw())) }
+    pub fn is_a_branch_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsABranchInst(self.as_raw())) }
     }
 
-    pub fn is_a_indirect_br_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAIndirectBrInst(self.as_raw())) }
+    pub fn is_a_indirect_br_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAIndirectBrInst(self.as_raw())) }
     }
 
-    pub fn is_a_invoke_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAInvokeInst(self.as_raw())) }
+    pub fn is_a_invoke_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAInvokeInst(self.as_raw())) }
     }
 
-    pub fn is_a_return_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAReturnInst(self.as_raw())) }
+    pub fn is_a_return_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAReturnInst(self.as_raw())) }
     }
 
-    pub fn is_a_switch_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsASwitchInst(self.as_raw())) }
+    pub fn is_a_switch_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsASwitchInst(self.as_raw())) }
     }
 
-    pub fn is_a_unreachable_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAUnreachableInst(self.as_raw())) }
+    pub fn is_a_unreachable_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAUnreachableInst(self.as_raw())) }
     }
 
-    pub fn is_a_resume_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAResumeInst(self.as_raw())) }
+    pub fn is_a_resume_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAResumeInst(self.as_raw())) }
     }
 
-    pub fn is_a_cleanup_return_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsACleanupReturnInst(self.as_raw())) }
+    pub fn is_a_cleanup_return_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsACleanupReturnInst(self.as_raw())) }
     }
 
-    pub fn is_a_catch_return_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsACatchReturnInst(self.as_raw())) }
+    pub fn is_a_catch_return_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsACatchReturnInst(self.as_raw())) }
     }
 
-    pub fn is_a_catch_switch_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsACatchSwitchInst(self.as_raw())) }
+    pub fn is_a_catch_switch_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsACatchSwitchInst(self.as_raw())) }
     }
 
-    pub fn is_a_call_br_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsACallBrInst(self.as_raw())) }
+    pub fn is_a_call_br_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsACallBrInst(self.as_raw())) }
     }
 
-    pub fn is_a_funclet_pad_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAFuncletPadInst(self.as_raw())) }
+    pub fn is_a_funclet_pad_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAFuncletPadInst(self.as_raw())) }
     }
 
-    pub fn is_a_catch_pad_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsACatchPadInst(self.as_raw())) }
+    pub fn is_a_catch_pad_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsACatchPadInst(self.as_raw())) }
     }
 
-    pub fn is_a_cleanup_pad_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsACleanupPadInst(self.as_raw())) }
+    pub fn is_a_cleanup_pad_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsACleanupPadInst(self.as_raw())) }
     }
 
-    pub fn is_a_unary_instruction(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAUnaryInstruction(self.as_raw())) }
+    pub fn is_a_unary_instruction(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAUnaryInstruction(self.as_raw())) }
     }
 
-    pub fn is_a_alloca_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAAllocaInst(self.as_raw())) }
+    pub fn is_a_alloca_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAAllocaInst(self.as_raw())) }
     }
 
-    pub fn is_a_cast_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsACastInst(self.as_raw())) }
+    pub fn is_a_cast_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsACastInst(self.as_raw())) }
     }
 
-    pub fn is_a_addr_space_cast_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAAddrSpaceCastInst(self.as_raw())) }
+    pub fn is_a_addr_space_cast_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAAddrSpaceCastInst(self.as_raw())) }
     }
 
-    pub fn is_a_bit_cast_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsABitCastInst(self.as_raw())) }
+    pub fn is_a_bit_cast_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsABitCastInst(self.as_raw())) }
     }
 
-    pub fn is_a_fp_ext_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAFPExtInst(self.as_raw())) }
+    pub fn is_a_fp_ext_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAFPExtInst(self.as_raw())) }
     }
 
-    pub fn is_a_fp_to_si_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAFPToSIInst(self.as_raw())) }
+    pub fn is_a_fp_to_si_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAFPToSIInst(self.as_raw())) }
     }
 
-    pub fn is_a_fp_to_ui_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAFPToUIInst(self.as_raw())) }
+    pub fn is_a_fp_to_ui_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAFPToUIInst(self.as_raw())) }
     }
 
-    pub fn is_a_fp_trunc_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAFPTruncInst(self.as_raw())) }
+    pub fn is_a_fp_trunc_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAFPTruncInst(self.as_raw())) }
     }
 
-    pub fn is_a_int_to_ptr_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAIntToPtrInst(self.as_raw())) }
+    pub fn is_a_int_to_ptr_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAIntToPtrInst(self.as_raw())) }
     }
 
-    pub fn is_a_ptr_to_int_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAPtrToIntInst(self.as_raw())) }
+    pub fn is_a_ptr_to_int_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAPtrToIntInst(self.as_raw())) }
     }
 
-    pub fn is_a_s_ext_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsASExtInst(self.as_raw())) }
+    pub fn is_a_s_ext_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsASExtInst(self.as_raw())) }
     }
 
-    pub fn is_a_si_to_fp_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsASIToFPInst(self.as_raw())) }
+    pub fn is_a_si_to_fp_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsASIToFPInst(self.as_raw())) }
     }
 
-    pub fn is_a_trunc_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsATruncInst(self.as_raw())) }
+    pub fn is_a_trunc_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsATruncInst(self.as_raw())) }
     }
 
-    pub fn is_a_ui_to_fp_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAUIToFPInst(self.as_raw())) }
+    pub fn is_a_ui_to_fp_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAUIToFPInst(self.as_raw())) }
     }
 
-    pub fn is_a_z_ext_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAZExtInst(self.as_raw())) }
+    pub fn is_a_z_ext_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAZExtInst(self.as_raw())) }
     }
 
-    pub fn is_a_extract_value_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAExtractValueInst(self.as_raw())) }
+    pub fn is_a_extract_value_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAExtractValueInst(self.as_raw())) }
     }
 
-    pub fn is_a_load_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsALoadInst(self.as_raw())) }
+    pub fn is_a_load_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsALoadInst(self.as_raw())) }
     }
 
-    pub fn is_a_va_arg_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAVAArgInst(self.as_raw())) }
+    pub fn is_a_va_arg_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAVAArgInst(self.as_raw())) }
     }
 
-    pub fn is_a_freeze_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAFreezeInst(self.as_raw())) }
+    pub fn is_a_freeze_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAFreezeInst(self.as_raw())) }
     }
 
-    pub fn is_a_atomic_cmp_xchg_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAAtomicCmpXchgInst(self.as_raw())) }
+    pub fn is_a_atomic_cmp_xchg_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAAtomicCmpXchgInst(self.as_raw())) }
     }
 
-    pub fn is_a_atomic_rmw_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAAtomicRMWInst(self.as_raw())) }
+    pub fn is_a_atomic_rmw_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAAtomicRMWInst(self.as_raw())) }
     }
 
-    pub fn is_a_fence_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAFenceInst(self.as_raw())) }
+    pub fn is_a_fence_inst(&self) -> Option<&Instruction<T>> {
+        unsafe { Instruction::from_ptr(LLVMIsAFenceInst(self.as_raw())) }
     }
 }
 
