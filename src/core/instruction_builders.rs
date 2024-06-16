@@ -122,12 +122,11 @@ impl<'s> Builder<'s> {
         cases: &[(&Value<int<N>>, &BasicBlock)],
     ) -> &'s Instruction<void> {
         unsafe {
-            let value =
-                LLVMBuildSwitch(self.as_raw(), v.as_raw(), els.as_raw(), cases.len() as u32);
-            for &(case, basic_block) in cases {
-                LLVMAddCase(value, case.as_raw(), basic_block.as_raw());
+            let ptr = LLVMBuildSwitch(self.as_raw(), v.as_raw(), els.as_raw(), cases.len() as u32);
+            for &(i, j) in cases {
+                LLVMAddCase(ptr, i.as_raw(), j.as_raw());
             }
-            Instruction::from_raw(value)
+            Instruction::from_raw(ptr)
         }
     }
 
@@ -137,12 +136,11 @@ impl<'s> Builder<'s> {
         destinations: &[&BasicBlock],
     ) -> &'s Instruction<void> {
         unsafe {
-            let value =
-                LLVMBuildIndirectBr(self.as_raw(), addr.as_raw(), destinations.len() as u32);
-            for &destination in destinations {
-                LLVMAddDestination(value, destination.as_raw());
+            let ptr = LLVMBuildIndirectBr(self.as_raw(), addr.as_raw(), destinations.len() as u32);
+            for &i in destinations {
+                LLVMAddDestination(ptr, i.as_raw());
             }
-            Instruction::from_raw(value)
+            Instruction::from_raw(ptr)
         }
     }
 
@@ -207,17 +205,21 @@ impl<'s> Builder<'s> {
         &self,
         ty: &Type<any>,
         pers_fn: &Value<F>,
-        num_clauses: u32,
+        clauses: &[&Value<any>],
         name: &CStr,
     ) -> &'s Instruction<any> {
         unsafe {
-            Instruction::from_raw(LLVMBuildLandingPad(
+            let ptr = LLVMBuildLandingPad(
                 self.as_raw(),
                 ty.as_raw(),
                 pers_fn.as_raw(),
-                num_clauses,
+                clauses.len() as _,
                 name.as_ptr(),
-            ))
+            );
+            for &i in clauses {
+                LLVMAddClause(ptr, i.as_raw())
+            }
+            Instruction::from_raw(ptr)
         }
     }
 
@@ -231,8 +233,121 @@ impl<'s> Builder<'s> {
         }
     }
 
-    // TODO
+    pub fn catch_return(&self, catch_pad: &Value<any>, bb: &BasicBlock) -> &Instruction<void> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildCatchRet(
+                self.as_raw(),
+                catch_pad.as_raw(),
+                bb.as_raw(),
+            ))
+        }
+    }
 
+    pub fn catch_pad(
+        &self,
+        parent_pad: &Value<any>,
+        args: &[&Value<any>],
+        name: &CStr,
+    ) -> &Value<any> {
+        unsafe {
+            Value::from_raw(LLVMBuildCatchPad(
+                self.as_raw(),
+                parent_pad.as_raw(),
+                args.as_ptr() as _,
+                args.len() as _,
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn cleanup_pad(
+        &self,
+        parent_pad: &Value<any>,
+        args: &[&Value<any>],
+        name: &CStr,
+    ) -> &Value<any> {
+        unsafe {
+            Value::from_raw(LLVMBuildCleanupPad(
+                self.as_raw(),
+                parent_pad.as_raw(),
+                args.as_ptr() as _,
+                args.len() as _,
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn catch_switch(
+        &self,
+        parent_pad: &Value<any>,
+        unwind_bb: &BasicBlock,
+        handlers: &[&BasicBlock],
+        name: &CStr,
+    ) -> &Instruction<any> {
+        unsafe {
+            let ptr = LLVMBuildCatchSwitch(
+                self.as_raw(),
+                parent_pad.as_raw(),
+                unwind_bb.as_raw(),
+                handlers.len() as _,
+                name.as_ptr(),
+            );
+            for &i in handlers {
+                LLVMAddHandler(ptr, i.as_raw());
+            }
+            Instruction::from_raw(ptr)
+        }
+    }
+}
+
+impl<T: TypeTag> Instruction<T> {
+    pub fn is_cleanup(&self) -> bool {
+        unsafe { LLVMIsCleanup(self.as_raw()) != 0 }
+    }
+
+    pub fn set_cleanup(&self, val: bool) {
+        unsafe { LLVMSetCleanup(self.as_raw(), val as _) }
+    }
+}
+
+impl<T: TypeTag> Instruction<T> {
+    pub fn get_num_handles(&self) -> u32 {
+        unsafe { LLVMGetNumHandlers(self.as_raw()) }
+    }
+
+    pub fn get_handlers<'a, 's>(
+        &'s self,
+        slice: &'a mut [Option<&'s BasicBlock>],
+    ) -> &'a mut [&'s BasicBlock] {
+        assert_eq!(slice.len(), self.get_num_handles() as usize);
+        unsafe {
+            LLVMGetHandlers(self.as_raw(), slice.as_mut_ptr() as _);
+            std::mem::transmute(slice)
+        }
+    }
+}
+
+impl<T: FunTypeTag> Value<T> {
+    pub fn get_arg_operand(&self, i: u32) -> &Value<any> {
+        unsafe { Value::from_raw(LLVMGetArgOperand(self.as_raw(), i)) }
+    }
+
+    pub fn set_arg_operand(&self, i: u32, value: &Value<any>) {
+        unsafe { LLVMSetArgOperand(self.as_raw(), i, value.as_raw()) }
+    }
+}
+
+impl<T: TypeTag> Value<T> {
+    pub fn get_parent_catch_switch(&self) -> &Value<any> {
+        unsafe { Value::from_raw(LLVMGetParentCatchSwitch(self.as_raw())) }
+    }
+
+    pub fn set_parent_catch_switch(&self, catch_switch: &Value<any>) {
+        unsafe { LLVMSetParentCatchSwitch(self.as_raw(), catch_switch.as_raw()) }
+    }
+}
+
+impl<'s> Builder<'s> {
     pub fn add<T: IntMathTypeTag>(
         &self,
         lhs: &Value<T>,
