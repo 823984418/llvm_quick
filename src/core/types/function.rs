@@ -84,6 +84,11 @@ impl<T: FunTypeTag> Type<T> {
 }
 
 impl<Args: TagTuple, Output: TypeTag, const VAR: bool> Type<fun<Args, Output, VAR>> {
+    /// Obtain the Type this function Type returns.
+    pub fn get_return(&self) -> &Type<Output> {
+        unsafe { self.get_return_any().cast_unchecked() }
+    }
+
     /// Obtain the types of a function's parameters.
     pub fn get_params(&self) -> Args::Types<'_> {
         unsafe {

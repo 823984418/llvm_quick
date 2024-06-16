@@ -431,19 +431,19 @@ impl OpaqueDrop for LLVMOpaqueMCJITMemoryManager {
 }
 
 impl JITEventListener {
-    pub fn create_gdb_registration_listener() -> &'static Self {
-        unsafe { Self::from_raw(LLVMCreateGDBRegistrationListener()) }
+    pub fn create_gdb_registration_listener() -> &'static JITEventListener {
+        unsafe { JITEventListener::from_raw(LLVMCreateGDBRegistrationListener()) }
     }
 
-    pub fn create_intel_jit_event_listener() -> &'static Self {
-        unsafe { Self::from_raw(LLVMCreateIntelJITEventListener()) }
+    pub fn create_intel_jit_event_listener() -> &'static JITEventListener {
+        unsafe { JITEventListener::from_raw(LLVMCreateIntelJITEventListener()) }
     }
 
-    pub fn create_oprofile_jit_event_listener() -> &'static Self {
-        unsafe { Self::from_raw(LLVMCreateOProfileJITEventListener()) }
+    pub fn create_oprofile_jit_event_listener() -> &'static JITEventListener {
+        unsafe { JITEventListener::from_raw(LLVMCreateOProfileJITEventListener()) }
     }
 
-    pub fn create_perf_jit_event_listener() -> &'static Self {
-        unsafe { Self::from_raw(LLVMCreatePerfJITEventListener()) }
+    pub fn create_perf_jit_event_listener() -> &'static JITEventListener {
+        unsafe { JITEventListener::from_raw(LLVMCreatePerfJITEventListener()) }
     }
 }

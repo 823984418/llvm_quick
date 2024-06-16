@@ -177,6 +177,10 @@ impl<T: TypeTag> Instruction<T> {
     pub fn get_normal_dest(&self) -> &BasicBlock {
         unsafe { BasicBlock::from_raw(LLVMGetNormalDest(self.as_raw())) }
     }
+
+    pub fn get_unwind_dest(&self) -> &BasicBlock {
+        unsafe { BasicBlock::from_raw(LLVMGetUnwindDest(self.as_raw())) }
+    }
 }
 
 // TODO

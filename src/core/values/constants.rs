@@ -1,8 +1,10 @@
+use std::ffi::CStr;
+
 use llvm_sys::core::*;
 
 use crate::opaque::Opaque;
-use crate::type_tag::{PtrTypeTag, TypeTag};
-use crate::{Constant, Type, Value, ValueMetadataEntries};
+use crate::type_tag::{IntTypeTag, PtrTypeTag, TypeTag};
+use crate::{Constant, Module, Type, Value, ValueMetadataEntries};
 
 impl<T: TypeTag> Type<T> {
     pub fn const_null(&self) -> &Constant<T> {
@@ -34,6 +36,12 @@ impl<T: PtrTypeTag> Type<T> {
     }
 }
 
+impl<T: IntTypeTag> Type<T> {
+    pub fn const_int(&self, n: u64, sign_extend: bool) -> &Constant<T> {
+        unsafe { Constant::from_raw(LLVMConstInt(self.as_raw(), n, sign_extend as _)) }
+    }
+}
+
 // TODO
 
 impl<'s> Drop for ValueMetadataEntries<'s> {
@@ -43,3 +51,23 @@ impl<'s> Drop for ValueMetadataEntries<'s> {
 }
 
 // TODO
+
+impl<'s> Module<'s> {
+    pub fn add_alias<T: TypeTag>(
+        &self,
+        value_type: &Type<T>,
+        addr_space: u32,
+        aliasee: &Value<T>,
+        name: &CStr,
+    ) -> &Value<T> {
+        unsafe {
+            Value::from_raw(LLVMAddAlias2(
+                self.as_raw(),
+                value_type.as_raw(),
+                addr_space,
+                aliasee.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+}
