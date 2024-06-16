@@ -183,6 +183,7 @@ impl OpaqueDrop for LLVMRemarkOpaqueParser {
     }
 }
 
+#[inline(always)]
 pub fn remark_version() -> u32 {
     unsafe { LLVMRemarkVersion() }
 }
