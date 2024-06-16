@@ -13,15 +13,18 @@ pub struct PhantomOpaque {
 pub unsafe trait Opaque: Sized {
     type Inner;
 
+    /// Try to create ref from nonnull raw pointer and check cond.
     unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
         unsafe { Some(Self::from_raw(ptr)) }
     }
 
+    /// Try to create ref from nonnull raw pointer but don't check cond.
     unsafe fn from_raw<'a>(ptr: *mut Self::Inner) -> &'a Self {
         debug_assert!(!ptr.is_null());
         unsafe { &*(ptr as *const Self) }
     }
 
+    /// Try to create ref from nullable raw pointer.
     unsafe fn from_ptr<'s>(ptr: *mut Self::Inner) -> Option<&'s Self> {
         if ptr.is_null() {
             None
@@ -30,26 +33,22 @@ pub unsafe trait Opaque: Sized {
         }
     }
 
+    /// Get raw pointer.
     fn as_raw(&self) -> *mut Self::Inner {
         self as *const Self as *mut Self::Inner
     }
 
+    /// Cast to target but don't check cond.
     unsafe fn cast_unchecked<T: Opaque<Inner = Self::Inner>>(&self) -> &T {
         T::from_raw(self.as_raw())
     }
 
-    fn cast<T: Opaque<Inner = Self::Inner>>(&self) -> Option<&T> {
-        unsafe { T::try_from_raw(self.as_raw()) }
+    fn cast<T: Opaque<Inner = Self::Inner>>(&self) -> &T {
+        Self::try_cast(self).unwrap()
     }
 
-    unsafe fn cast_check<T: Opaque<Inner = Self::Inner>, F: FnOnce(&Self) -> bool>(
-        &self,
-        f: F,
-    ) -> Option<&T> {
-        if f(self) {
-            unsafe { Some(self.cast_unchecked()) }
-        } else {
-            None
-        }
+    /// Cast to target and check cond.
+    fn try_cast<T: Opaque<Inner = Self::Inner>>(&self) -> Option<&T> {
+        unsafe { T::try_from_raw(self.as_raw()) }
     }
 }

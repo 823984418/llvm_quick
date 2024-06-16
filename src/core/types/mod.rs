@@ -21,18 +21,6 @@ impl<T: TypeTag> Debug for Type<T> {
 }
 
 impl<T: TypeTag> Type<T> {
-    pub unsafe fn cast_unchecked<N: TypeTag>(&self) -> &Type<N> {
-        unsafe { Type::from_raw(self.as_raw()) }
-    }
-
-    pub fn try_cast<N: TypeTag>(&self) -> Option<&Type<N>> {
-        N::type_cast(self.to_any())
-    }
-
-    pub fn cast<N: TypeTag>(&self) -> &Type<N> {
-        self.try_cast().unwrap()
-    }
-
     pub fn to_any(&self) -> &Type<any> {
         unsafe { self.cast_unchecked() }
     }

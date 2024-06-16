@@ -5,9 +5,9 @@ use llvm_sys::*;
 
 use crate::opaque::Opaque;
 use crate::type_tag::{any, fun_any, metadata, TypeTag};
-use crate::{Attribute, BasicBlock, OperandBundle, Type, Value, ValueMetadataEntries};
+use crate::{Attribute, BasicBlock, Instruction, OperandBundle, Type, Value, ValueMetadataEntries};
 
-impl<T: TypeTag> Value<T> {
+impl<T: TypeTag> Instruction<T> {
     pub fn has_metadata(&self) -> bool {
         unsafe { LLVMHasMetadata(self.as_raw()) != 0 }
     }

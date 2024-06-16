@@ -70,6 +70,10 @@ pub struct Type<T: TypeTag> {
 
 unsafe impl<T: TypeTag> Opaque for Type<T> {
     type Inner = LLVMType;
+
+    unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
+        unsafe { T::type_cast(Type::from_raw(ptr)) }
+    }
 }
 
 #[repr(transparent)]
@@ -80,6 +84,35 @@ pub struct Value<T: TypeTag> {
 
 unsafe impl<T: TypeTag> Opaque for Value<T> {
     type Inner = LLVMValue;
+
+    unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
+        unsafe {
+            let x = Value::<any>::from_raw(ptr);
+            x.get_type().try_cast::<Type<T>>()?;
+            Some(x.cast_unchecked())
+        }
+    }
+}
+
+#[repr(transparent)]
+pub struct Instruction<T: TypeTag> {
+    parent: Value<T>,
+}
+
+unsafe impl<T: TypeTag> Opaque for Instruction<T> {
+    type Inner = LLVMValue;
+
+    unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
+        unsafe { Value::<T>::try_from_raw(ptr)?.is_a_instruction() }
+    }
+}
+
+impl<T: TypeTag> Deref for Instruction<T> {
+    type Target = Value<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.parent
+    }
 }
 
 #[repr(transparent)]
@@ -228,7 +261,14 @@ unsafe impl Opaque for EnumAttribute {
     type Inner = LLVMOpaqueAttributeRef;
 
     unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
-        unsafe { Attribute::try_from_raw(ptr)?.cast_check(|x| x.is_enum_attribute()) }
+        unsafe {
+            let x = Attribute::try_from_raw(ptr)?;
+            if x.is_enum_attribute() {
+                Some(x.cast_unchecked())
+            } else {
+                None
+            }
+        }
     }
 }
 
@@ -249,7 +289,14 @@ unsafe impl Opaque for TypeAttribute {
     type Inner = LLVMOpaqueAttributeRef;
 
     unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
-        unsafe { Attribute::try_from_raw(ptr)?.cast_check(|x| x.is_type_attribute()) }
+        unsafe {
+            let x = Attribute::try_from_raw(ptr)?;
+            if x.is_type_attribute() {
+                Some(x.cast_unchecked())
+            } else {
+                None
+            }
+        }
     }
 }
 
@@ -270,7 +317,14 @@ unsafe impl Opaque for StringAttribute {
     type Inner = LLVMOpaqueAttributeRef;
 
     unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
-        unsafe { Attribute::try_from_raw(ptr)?.cast_check(|x| x.is_string_attribute()) }
+        unsafe {
+            let x = Attribute::try_from_raw(ptr)?;
+            if x.is_string_attribute() {
+                Some(x.cast_unchecked())
+            } else {
+                None
+            }
+        }
     }
 }
 

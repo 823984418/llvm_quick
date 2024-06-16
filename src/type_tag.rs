@@ -7,6 +7,7 @@ use std::mem::MaybeUninit;
 
 use llvm_sys::*;
 
+use crate::opaque::Opaque;
 use crate::{Type, Value};
 
 pub trait TypeTag: Sized {
@@ -122,7 +123,7 @@ impl<T: TypeTag> TypeTag for array_any_len<T> {
     fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
         unsafe {
             let ty = type_check_kind::<array_any>(ty, LLVMTypeKind::LLVMArrayTypeKind)?;
-            if ty.element_type().try_cast::<T>().is_some() {
+            if ty.element_type().try_cast::<Type<T>>().is_some() {
                 Some(ty.cast_unchecked())
             } else {
                 None
@@ -170,7 +171,7 @@ impl<T: TypeTag> TypeTag for vector_any_len<T> {
     fn type_cast(ty: &Type<any>) -> Option<&Type<Self>> {
         unsafe {
             let ty = type_check_kind::<vector_any>(ty, LLVMTypeKind::LLVMVectorTypeKind)?;
-            if ty.element_type().try_cast::<T>().is_some() {
+            if ty.element_type().try_cast::<Type<T>>().is_some() {
                 Some(ty.cast_unchecked())
             } else {
                 None
@@ -331,7 +332,7 @@ impl<Args: TagTuple, Output: TypeTag, const VAR: bool> TypeTag for fun<Args, Out
         if ty.get_param_count() as usize != Args::COUNT {
             return None;
         }
-        ty.get_return_any().try_cast::<Output>()?;
+        ty.get_return_any().try_cast::<Type<Output>>()?;
         unsafe {
             let mut array =
                 MaybeUninit::<<Args::Types<'_> as Tuple>::Array<Option<&Type<any>>>>::zeroed()
