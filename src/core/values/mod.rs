@@ -214,11 +214,11 @@ impl<T: TypeTag> Value<T> {
         unsafe { Value::from_ptr(LLVMIsAConstantVector(self.as_raw())) }
     }
 
-    pub fn is_a_global_value(&self) -> Option<&GlobalValue<T>> {
+    pub fn is_a_global_value(&self) -> Option<&GlobalValue<any>> {
         unsafe { GlobalValue::from_ptr(LLVMIsAGlobalValue(self.as_raw())) }
     }
 
-    pub fn is_a_global_alias(&self) -> Option<&GlobalAlias<T>> {
+    pub fn is_a_global_alias(&self) -> Option<&GlobalAlias<any>> {
         unsafe { GlobalAlias::from_ptr(LLVMIsAGlobalAlias(self.as_raw())) }
     }
 

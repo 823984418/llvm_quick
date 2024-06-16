@@ -124,7 +124,11 @@ unsafe impl<T: TypeTag> Opaque for Constant<T> {
     type Inner = LLVMValue;
 
     unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
-        unsafe { Value::<T>::try_from_raw(ptr)?.is_a_constant() }
+        unsafe {
+            let x = Value::<any>::try_from_raw(ptr)?.is_a_constant()?;
+            x.get_type().try_cast::<Type<T>>()?;
+            Some(x.cast_unchecked())
+        }
     }
 }
 
@@ -146,7 +150,11 @@ unsafe impl<T: TypeTag> Opaque for GlobalValue<T> {
     type Inner = LLVMValue;
 
     unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
-        unsafe { Constant::<T>::try_from_raw(ptr)?.is_a_global_value() }
+        unsafe {
+            let x = Value::<any>::try_from_raw(ptr)?.is_a_global_value()?;
+            x.get_value_type().try_cast::<Type<T>>()?;
+            Some(x.cast_unchecked())
+        }
     }
 }
 
@@ -167,12 +175,14 @@ unsafe impl<T: TypeTag> Opaque for GlobalAlias<T> {
     type Inner = LLVMValue;
 
     unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
-        unsafe { GlobalValue::<T>::try_from_raw(ptr)?.is_a_global_alias() }
+        let x = Value::<any>::try_from_raw(ptr)?.is_a_global_alias()?;
+        x.get_value_type().try_cast::<Type<T>>()?;
+        Some(x.cast_unchecked())
     }
 }
 
 impl<T: TypeTag> Deref for GlobalAlias<T> {
-    type Target = GlobalValue<ptr_any>;
+    type Target = GlobalValue<T>;
 
     fn deref(&self) -> &Self::Target {
         &self.parent
