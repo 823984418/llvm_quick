@@ -144,10 +144,10 @@ impl<'s> Builder<'s> {
         }
     }
 
-    pub fn invoke<T: FunTypeTag>(
+    pub fn invoke_raw<T: FunTypeTag>(
         &self,
         ty: &Type<T>,
-        f: &Value<T>,
+        fun: &Value<T>,
         args: &[&Value<any>],
         then: &BasicBlock,
         catch: &BasicBlock,
@@ -157,13 +157,28 @@ impl<'s> Builder<'s> {
             Instruction::from_raw(LLVMBuildInvoke2(
                 self.as_raw(),
                 ty.as_raw(),
-                f.as_raw(),
+                fun.as_raw(),
                 args.as_ptr() as _,
                 args.len() as _,
                 then.as_raw(),
                 catch.as_raw(),
                 name.as_ptr(),
             ))
+        }
+    }
+
+    pub fn invoke<Args: TagTuple, Output: TypeTag, const VAR: bool>(
+        &self,
+        fun: &Value<fun<Args, Output, VAR>>,
+        args: Args::Values<'_>,
+        then: &BasicBlock,
+        catch: &BasicBlock,
+        name: &CStr,
+    ) -> &'s Instruction<Output> {
+        let args = args.to_array_any();
+        unsafe {
+            self.invoke_raw(fun.get_type(), fun, args.as_ref(), then, catch, name)
+                .cast_unchecked()
         }
     }
 
@@ -1007,7 +1022,649 @@ impl<'s> Builder<'s> {
         }
     }
 
-    // TODO
+    pub fn z_ext<T: TypeTag, D: TypeTag>(
+        &self,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        name: &CStr,
+    ) -> &'s Instruction<D> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildZExt(
+                self.as_raw(),
+                val.as_raw(),
+                dest_ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn s_ext<T: TypeTag, D: TypeTag>(
+        &self,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        name: &CStr,
+    ) -> &'s Instruction<D> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildSExt(
+                self.as_raw(),
+                val.as_raw(),
+                dest_ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn fp_to_ui<T: TypeTag, D: TypeTag>(
+        &self,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        name: &CStr,
+    ) -> &'s Instruction<D> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildFPToUI(
+                self.as_raw(),
+                val.as_raw(),
+                dest_ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn fp_to_si<T: TypeTag, D: TypeTag>(
+        &self,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        name: &CStr,
+    ) -> &'s Instruction<D> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildFPToSI(
+                self.as_raw(),
+                val.as_raw(),
+                dest_ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn ui_to_fp<T: TypeTag, D: TypeTag>(
+        &self,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        name: &CStr,
+    ) -> &'s Instruction<D> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildUIToFP(
+                self.as_raw(),
+                val.as_raw(),
+                dest_ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn si_to_fp<T: TypeTag, D: TypeTag>(
+        &self,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        name: &CStr,
+    ) -> &'s Instruction<D> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildSIToFP(
+                self.as_raw(),
+                val.as_raw(),
+                dest_ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn fp_trunc<T: TypeTag, D: TypeTag>(
+        &self,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        name: &CStr,
+    ) -> &'s Instruction<D> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildFPTrunc(
+                self.as_raw(),
+                val.as_raw(),
+                dest_ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn fp_ext<T: TypeTag, D: TypeTag>(
+        &self,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        name: &CStr,
+    ) -> &'s Instruction<D> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildFPExt(
+                self.as_raw(),
+                val.as_raw(),
+                dest_ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn ptr_to_int<T: TypeTag, D: TypeTag>(
+        &self,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        name: &CStr,
+    ) -> &'s Instruction<D> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildPtrToInt(
+                self.as_raw(),
+                val.as_raw(),
+                dest_ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn int_to_ptr<T: TypeTag, D: TypeTag>(
+        &self,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        name: &CStr,
+    ) -> &'s Instruction<D> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildIntToPtr(
+                self.as_raw(),
+                val.as_raw(),
+                dest_ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn bit_cast<T: TypeTag, D: TypeTag>(
+        &self,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        name: &CStr,
+    ) -> &'s Instruction<D> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildBitCast(
+                self.as_raw(),
+                val.as_raw(),
+                dest_ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn addr_space_cast<T: TypeTag, D: TypeTag>(
+        &self,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        name: &CStr,
+    ) -> &'s Instruction<D> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildAddrSpaceCast(
+                self.as_raw(),
+                val.as_raw(),
+                dest_ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn z_ext_or_bit_cast<T: TypeTag, D: TypeTag>(
+        &self,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        name: &CStr,
+    ) -> &'s Instruction<D> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildZExtOrBitCast(
+                self.as_raw(),
+                val.as_raw(),
+                dest_ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn s_ext_or_bit_cast<T: TypeTag, D: TypeTag>(
+        &self,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        name: &CStr,
+    ) -> &'s Instruction<D> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildSExtOrBitCast(
+                self.as_raw(),
+                val.as_raw(),
+                dest_ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn trunc_or_bit_cast<T: TypeTag, D: TypeTag>(
+        &self,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        name: &CStr,
+    ) -> &'s Instruction<D> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildTruncOrBitCast(
+                self.as_raw(),
+                val.as_raw(),
+                dest_ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn cast<T: TypeTag, D: TypeTag>(
+        &self,
+        op: LLVMOpcode,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        name: &CStr,
+    ) -> &'s Instruction<D> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildCast(
+                self.as_raw(),
+                op,
+                val.as_raw(),
+                dest_ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn pointer_cast<T: TypeTag, D: TypeTag>(
+        &self,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        name: &CStr,
+    ) -> &'s Instruction<D> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildPointerCast(
+                self.as_raw(),
+                val.as_raw(),
+                dest_ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn int_cast<T: TypeTag, D: TypeTag>(
+        &self,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        is_signed: bool,
+        name: &CStr,
+    ) -> &'s Instruction<D> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildIntCast2(
+                self.as_raw(),
+                val.as_raw(),
+                dest_ty.as_raw(),
+                is_signed as _,
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn fp_cast<T: TypeTag, D: TypeTag>(
+        &self,
+        val: &Value<T>,
+        dest_ty: &Type<D>,
+        name: &CStr,
+    ) -> &'s Instruction<D> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildFPCast(
+                self.as_raw(),
+                val.as_raw(),
+                dest_ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+}
+
+impl<T: TypeTag> Instruction<T> {
+    pub fn get_cast_opcode<D: TypeTag>(
+        &self,
+        src_is_signed: bool,
+        dest_ty: &Type<D>,
+        dest_is_signed: bool,
+    ) -> LLVMOpcode {
+        unsafe {
+            LLVMGetCastOpcode(
+                self.as_raw(),
+                src_is_signed as _,
+                dest_ty.as_raw(),
+                dest_is_signed as _,
+            )
+        }
+    }
+}
+
+impl<'s> Builder<'s> {
+    pub fn i_cmp<T: TypeTag>(
+        &self,
+        op: LLVMIntPredicate,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
+        name: &CStr,
+    ) -> &'s Instruction<any> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildICmp(
+                self.as_raw(),
+                op,
+                lhs.as_raw(),
+                rhs.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn f_cmp<T: TypeTag>(
+        &self,
+        op: LLVMRealPredicate,
+        lhs: &Value<T>,
+        rhs: &Value<T>,
+        name: &CStr,
+    ) -> &'s Instruction<any> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildFCmp(
+                self.as_raw(),
+                op,
+                lhs.as_raw(),
+                rhs.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn phi<T: TypeTag>(&self, ty: &Type<T>, name: &CStr) -> &'s Instruction<any> {
+        unsafe { Instruction::from_raw(LLVMBuildPhi(self.as_raw(), ty.as_raw(), name.as_ptr())) }
+    }
+
+    pub fn call_raw<F: FunTypeTag>(
+        &self,
+        fun_ty: &Type<F>,
+        fun: &Value<F>,
+        args: &[&Value<any>],
+        name: &CStr,
+    ) -> &'s Instruction<any> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildCall2(
+                self.as_raw(),
+                fun_ty.as_raw(),
+                fun.as_raw(),
+                args.as_ptr() as _,
+                args.len() as _,
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn call<Args: TagTuple, Output: TypeTag, const VAR: bool>(
+        &self,
+        fun: &Value<fun<Args, Output, VAR>>,
+        args: Args::Values<'_>,
+        name: &CStr,
+    ) -> &'s Instruction<Output> {
+        let args = args.to_array_any();
+        unsafe {
+            self.call_raw(fun.get_type(), fun, args.as_ref(), name)
+                .cast_unchecked()
+        }
+    }
+
+    pub fn call_with_operand_bundles_raw<F: FunTypeTag>(
+        &self,
+        fun_ty: &Type<F>,
+        fun: &Value<F>,
+        args: &[&Value<any>],
+        bundles: &[&OperandBundle],
+        name: &CStr,
+    ) -> &'s Instruction<any> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildCallWithOperandBundles(
+                self.as_raw(),
+                fun_ty.as_raw(),
+                fun.as_raw(),
+                args.as_ptr() as _,
+                args.len() as _,
+                bundles.as_ptr() as _,
+                bundles.len() as _,
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn select<I: TypeTag, V: TypeTag>(
+        &self,
+        if_cond: &Value<I>,
+        then_value: &Value<V>,
+        else_value: &Value<V>,
+        name: &CStr,
+    ) -> &'s Instruction<V> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildSelect(
+                self.as_raw(),
+                if_cond.as_raw(),
+                then_value.as_raw(),
+                else_value.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn va_arg<V: TypeTag, T: TypeTag>(
+        &self,
+        list: &Value<V>,
+        ty: &Type<T>,
+        name: &CStr,
+    ) -> &'s Value<any> {
+        unsafe {
+            Value::from_raw(LLVMBuildVAArg(
+                self.as_raw(),
+                list.as_raw(),
+                ty.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn extract_element<V: TypeTag, I: IntTypeTag>(
+        &self,
+        vec_val: &Value<V>,
+        index: &Value<I>,
+        name: &CStr,
+    ) -> &'s Instruction<any> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildExtractElement(
+                self.as_raw(),
+                vec_val.as_raw(),
+                index.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn insert_element<A: TypeTag, E: TypeTag, I: IntTypeTag>(
+        &self,
+        agg_val: &Value<A>,
+        elt_val: &Value<E>,
+        index: &Value<E>,
+        name: &CStr,
+    ) -> &'s Instruction<any> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildInsertElement(
+                self.as_raw(),
+                agg_val.as_raw(),
+                elt_val.as_raw(),
+                index.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn shuffle_vector<V: TypeTag>(
+        &self,
+        v1: &Value<V>,
+        v2: &Value<V>,
+        mask: &Value<V>,
+        name: &CStr,
+    ) -> &'s Instruction<any> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildShuffleVector(
+                self.as_raw(),
+                v1.as_raw(),
+                v2.as_raw(),
+                mask.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn extract_value<A: TypeTag>(
+        &self,
+        agg_val: &Value<A>,
+        index: u32,
+        name: &CStr,
+    ) -> &'s Instruction<any> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildExtractValue(
+                self.as_raw(),
+                agg_val.as_raw(),
+                index,
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn insert_value<A: TypeTag, E: TypeTag>(
+        &self,
+        agg_val: &Value<A>,
+        elt_val: &Value<E>,
+        index: u32,
+        name: &CStr,
+    ) -> &'s Instruction<any> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildInsertValue(
+                self.as_raw(),
+                agg_val.as_raw(),
+                elt_val.as_raw(),
+                index,
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn freeze<T: TypeTag>(&self, val: &Value<T>, name: &CStr) -> &'s Instruction<any> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildFreeze(self.as_raw(), val.as_raw(), name.as_ptr()))
+        }
+    }
+
+    pub fn is_null<T: TypeTag>(&self, val: &Value<T>, name: &CStr) -> &'s Instruction<any> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildIsNotNull(
+                self.as_raw(),
+                val.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn is_not_null<T: TypeTag>(&self, val: &Value<T>, name: &CStr) -> &'s Instruction<any> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildIsNotNull(
+                self.as_raw(),
+                val.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn ptr_diff<T: TypeTag, P: TypeTag>(
+        &self,
+        elem_ty: &Type<T>,
+        lhs: &Value<P>,
+        rhs: &Value<P>,
+        name: &CStr,
+    ) -> &'s Instruction<any> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildPtrDiff2(
+                self.as_raw(),
+                elem_ty.as_raw(),
+                lhs.as_raw(),
+                rhs.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn fence(
+        &self,
+        ordering: LLVMAtomicOrdering,
+        single_thread: bool,
+        name: &CStr,
+    ) -> &'s Instruction<any> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildFence(
+                self.as_raw(),
+                ordering,
+                single_thread as _,
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn atomic_rmw<P: TypeTag, V: TypeTag>(
+        &self,
+        op: LLVMAtomicRMWBinOp,
+        ptr: &Value<P>,
+        val: &Value<V>,
+        ordering: LLVMAtomicOrdering,
+        single_thread: bool,
+    ) -> &'s Instruction<any> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildAtomicRMW(
+                self.as_raw(),
+                op,
+                ptr.as_raw(),
+                val.as_raw(),
+                ordering,
+                single_thread as _,
+            ))
+        }
+    }
+
+    pub fn atomic_cmp_xchg<P: TypeTag, C: TypeTag, N: TypeTag>(
+        &self,
+        ptr: &Value<P>,
+        cmp: &Value<C>,
+        new: &Value<N>,
+        success_ordering: LLVMAtomicOrdering,
+        failure_ordering: LLVMAtomicOrdering,
+        single_thread: bool,
+    ) -> &'s Instruction<any> {
+        unsafe {
+            Instruction::from_raw(LLVMBuildAtomicCmpXchg(
+                self.as_raw(),
+                ptr.as_raw(),
+                cmp.as_raw(),
+                new.as_raw(),
+                success_ordering,
+                failure_ordering,
+                single_thread as _,
+            ))
+        }
+    }
 }
 
 impl<T: TypeTag> Instruction<T> {

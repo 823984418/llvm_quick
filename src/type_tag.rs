@@ -8,7 +8,7 @@ use std::mem::MaybeUninit;
 use llvm_sys::*;
 
 use crate::opaque::Opaque;
-use crate::{Argument, Type};
+use crate::{Argument, Type, Value};
 
 pub trait TypeTag: Sized {
     fn type_cast(ty: &Type<any>) -> Option<&Type<Self>>;
@@ -464,6 +464,9 @@ pub trait TagTuple: Tuple {
     type Types<'s>: TypeTuple<'s, Tags = Self>
     where
         Self: 's;
+    type Values<'s>: ValueTuple<'s, Tags = Self>
+    where
+        Self: 's;
     type Arguments<'s>: ArgumentTuple<'s, Tags = Self>
     where
         Self: 's;
@@ -474,6 +477,13 @@ pub trait TypeTuple<'s>: Tuple + Sized + 's {
     fn try_from_array_any(array: &[&'s Type<any>]) -> Option<Self>;
     unsafe fn from_array_any_unchecked(array: &[&'s Type<any>]) -> Self;
     fn to_array_any(&self) -> Self::Array<&'s Type<any>>;
+}
+
+pub trait ValueTuple<'s>: Tuple + Sized + 's {
+    type Tags: TagTuple<Values<'s> = Self>;
+    fn try_from_array_any(array: &[&'s Value<any>]) -> Option<Self>;
+    unsafe fn from_array_any_unchecked(array: &[&'s Value<any>]) -> Self;
+    fn to_array_any(&self) -> Self::Array<&'s Value<any>>;
 }
 
 pub trait ArgumentTuple<'s>: Tuple + Sized + 's {
@@ -493,6 +503,9 @@ macro_rules! impl_tuple {
     (impl TagTuple for ($($arg:ident),*)) => {
         impl<$($arg: TypeTag),*> TagTuple for ($($arg,)*) {
             type Types<'s> = ($(&'s Type<$arg>,)*)
+            where
+                Self:'s;
+            type Values<'s> = ($(&'s Value<$arg>,)*)
             where
                 Self:'s;
             type Arguments<'s> = ($(&'s Argument<$arg>,)*)
@@ -515,6 +528,24 @@ macro_rules! impl_tuple {
             fn to_array_any(&self) -> Self::Array<&'s Type<any>> {
                 let ($($arg,)*) = self;
                 [$(Type::to_any($arg),)*]
+            }
+        }
+    };
+    (impl ValueTuple for ($($arg:ident),*)) => {
+        impl<'s, $($arg: TypeTag + 's),*> ValueTuple<'s> for ($(&'s Value<$arg>,)*) {
+            type Tags = ($($arg,)*);
+            fn try_from_array_any(array: &[&'s Value<any>]) -> Option<Self> {
+                let &[$($arg,)*] = array else { panic!() };
+                Some(($(Value::try_cast($arg)?,)*))
+            }
+            #[allow(unused_unsafe)]
+            unsafe fn from_array_any_unchecked(array: &[&'s Value<any>]) -> Self {
+                let &[$($arg,)*] = array else { panic!() };
+                unsafe { ($(Value::cast_unchecked($arg),)*) }
+            }
+            fn to_array_any(&self) -> Self::Array<&'s Value<any>> {
+                let ($($arg,)*) = self;
+                [$(Value::to_any($arg),)*]
             }
         }
     };
@@ -543,6 +574,7 @@ macro_rules! impl_tuple {
         impl_tuple!(impl Tuple for ($($arg),*)[$count]);
         impl_tuple!(impl TagTuple for ($($arg),*));
         impl_tuple!(impl TypeTuple for ($($arg),*));
+        impl_tuple!(impl ValueTuple for ($($arg),*));
         impl_tuple!(impl ArgumentTuple for ($($arg),*));
         impl_tuple!(impl InstanceTagTuple for ($($arg),*));
     };
