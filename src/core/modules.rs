@@ -96,10 +96,12 @@ impl<'s> Drop for ModuleFlagsMetadata<'s> {
 
 impl<'s> ModuleFlagsMetadata<'s> {
     pub fn get_flag_behavior(&self, index: u32) -> LLVMModuleFlagBehavior {
+        assert!((index as usize) < self.len);
         unsafe { LLVMModuleFlagEntriesGetFlagBehavior(self.as_raw() as _, index) }
     }
 
     pub fn get_key(&self, index: u32) -> &[u8] {
+        assert!((index as usize) < self.len);
         unsafe {
             let mut len = 0;
             let ptr = LLVMModuleFlagEntriesGetKey(self.as_raw() as _, index, &mut len);
@@ -108,6 +110,7 @@ impl<'s> ModuleFlagsMetadata<'s> {
     }
 
     pub fn get_metadata(&self, index: u32) -> &Metadata {
+        assert!((index as usize) < self.len);
         unsafe { Metadata::from_raw(LLVMModuleFlagEntriesGetMetadata(self.as_raw() as _, index)) }
     }
 }

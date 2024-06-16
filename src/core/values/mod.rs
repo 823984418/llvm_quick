@@ -6,7 +6,7 @@ use llvm_sys::*;
 
 use crate::core::Message;
 use crate::type_tag::*;
-use crate::{Argument, Constant, Instruction, Opaque, Type, Value};
+use crate::{Argument, Constant, GlobalAlias, GlobalValue, Instruction, Opaque, Type, Value};
 
 pub mod constants;
 pub mod function;
@@ -37,18 +37,6 @@ impl<T: TypeTag> Argument<T> {
     }
 }
 
-impl<T: TypeTag> Debug for Instruction<T> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        Debug::fmt(self.deref(), f)
-    }
-}
-
-impl<T: TypeTag> Instruction<T> {
-    pub fn to_any(&self) -> &Instruction<any> {
-        self.cast()
-    }
-}
-
 impl<T: TypeTag> Debug for Constant<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         Debug::fmt(self.deref(), f)
@@ -57,6 +45,30 @@ impl<T: TypeTag> Debug for Constant<T> {
 
 impl<T: TypeTag> Constant<T> {
     pub fn to_any(&self) -> &Constant<any> {
+        self.cast()
+    }
+}
+
+impl<T: TypeTag> Debug for GlobalValue<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Debug::fmt(self.deref(), f)
+    }
+}
+
+impl<T: TypeTag> GlobalValue<T> {
+    pub fn to_any(&self) -> &GlobalValue<any> {
+        self.cast()
+    }
+}
+
+impl<T: TypeTag> Debug for Instruction<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Debug::fmt(self.deref(), f)
+    }
+}
+
+impl<T: TypeTag> Instruction<T> {
+    pub fn to_any(&self) -> &Instruction<any> {
         self.cast()
     }
 }
@@ -202,12 +214,12 @@ impl<T: TypeTag> Value<T> {
         unsafe { Value::from_ptr(LLVMIsAConstantVector(self.as_raw())) }
     }
 
-    pub fn is_a_global_value(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAGlobalValue(self.as_raw())) }
+    pub fn is_a_global_value(&self) -> Option<&GlobalValue<T>> {
+        unsafe { GlobalValue::from_ptr(LLVMIsAGlobalValue(self.as_raw())) }
     }
 
-    pub fn is_a_global_alias(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAGlobalAlias(self.as_raw())) }
+    pub fn is_a_global_alias(&self) -> Option<&GlobalAlias<T>> {
+        unsafe { GlobalAlias::from_ptr(LLVMIsAGlobalAlias(self.as_raw())) }
     }
 
     pub fn is_a_global_i_func(&self) -> Option<&Value<T>> {

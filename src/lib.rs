@@ -137,6 +137,49 @@ impl<T: TypeTag> Deref for Constant<T> {
 }
 
 #[repr(transparent)]
+pub struct GlobalValue<T: TypeTag> {
+    parent: Constant<ptr_any>,
+    _marker: PhantomData<fn(T) -> T>,
+}
+
+unsafe impl<T: TypeTag> Opaque for GlobalValue<T> {
+    type Inner = LLVMValue;
+
+    unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
+        unsafe { Constant::<T>::try_from_raw(ptr)?.is_a_global_value() }
+    }
+}
+
+impl<T: TypeTag> Deref for GlobalValue<T> {
+    type Target = Constant<ptr_any>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.parent
+    }
+}
+
+#[repr(transparent)]
+pub struct GlobalAlias<T: TypeTag> {
+    parent: GlobalValue<T>,
+}
+
+unsafe impl<T: TypeTag> Opaque for GlobalAlias<T> {
+    type Inner = LLVMValue;
+
+    unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
+        unsafe { GlobalValue::<T>::try_from_raw(ptr)?.is_a_global_alias() }
+    }
+}
+
+impl<T: TypeTag> Deref for GlobalAlias<T> {
+    type Target = GlobalValue<ptr_any>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.parent
+    }
+}
+
+#[repr(transparent)]
 pub struct Instruction<T: TypeTag> {
     parent: Value<T>,
 }
@@ -378,52 +421,46 @@ impl Deref for StringAttribute {
     }
 }
 
-#[repr(transparent)]
 pub struct ValueMetadataEntries<'s> {
-    ptr: NonNull<[&'s ValueMetadataEntry]>,
-}
-
-impl<'s> Deref for ValueMetadataEntries<'s> {
-    type Target = [&'s ValueMetadataEntry];
-
-    fn deref(&self) -> &Self::Target {
-        unsafe { self.ptr.as_ref() }
-    }
+    ptr: NonNull<LLVMValueMetadataEntry>,
+    len: usize,
+    marker: PhantomData<&'s Metadata>,
 }
 
 impl<'s> ValueMetadataEntries<'s> {
     pub unsafe fn from_raw(ptr: *mut LLVMValueMetadataEntry, len: usize) -> Self {
-        Self {
-            ptr: std::slice::from_raw_parts(ptr as _, len).into(),
+        unsafe {
+            Self {
+                ptr: NonNull::new(ptr).unwrap_unchecked(),
+                len,
+                marker: PhantomData,
+            }
         }
     }
 
     pub fn as_raw(&self) -> *mut LLVMValueMetadataEntry {
-        self.ptr.as_ptr() as _
+        self.ptr.as_ptr()
     }
 }
 
-#[repr(transparent)]
 pub struct ModuleFlagsMetadata<'s> {
-    ptr: NonNull<[&'s ModuleFlagEntry]>,
-}
-
-impl<'s> Deref for ModuleFlagsMetadata<'s> {
-    type Target = [&'s ModuleFlagEntry];
-
-    fn deref(&self) -> &Self::Target {
-        unsafe { self.ptr.as_ref() }
-    }
+    ptr: NonNull<LLVMModuleFlagEntry>,
+    len: usize,
+    marker: PhantomData<&'s Metadata>,
 }
 
 impl<'s> ModuleFlagsMetadata<'s> {
     pub unsafe fn from_raw(ptr: *mut LLVMModuleFlagEntry, len: usize) -> Self {
-        Self {
-            ptr: std::slice::from_raw_parts(ptr as _, len).into(),
+        unsafe {
+            Self {
+                ptr: NonNull::new(ptr).unwrap_unchecked(),
+                len,
+                marker: PhantomData,
+            }
         }
     }
 
     pub fn as_raw(&self) -> *mut LLVMModuleFlagEntry {
-        self.ptr.as_ptr() as _
+        self.ptr.as_ptr()
     }
 }
