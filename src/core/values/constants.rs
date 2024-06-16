@@ -6,19 +6,19 @@ use crate::{Type, Value, ValueMetadataEntries};
 
 impl<T: TypeTag> Type<T> {
     pub fn const_null(&self) -> &Value<T> {
-        unsafe { Value::from_ref(LLVMConstNull(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMConstNull(self.as_raw())) }
     }
 
     pub fn const_all_ones(&self) -> &Value<T> {
-        unsafe { Value::from_ref(LLVMConstAllOnes(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMConstAllOnes(self.as_raw())) }
     }
 
     pub fn get_undef(&self) -> &Value<T> {
-        unsafe { Value::from_ref(LLVMGetUndef(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMGetUndef(self.as_raw())) }
     }
 
     pub fn get_poison(&self) -> &Value<T> {
-        unsafe { Value::from_ref(LLVMGetPoison(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMGetPoison(self.as_raw())) }
     }
 }
 
@@ -30,7 +30,7 @@ impl<T: TypeTag> Value<T> {
 
 impl<T: PtrTypeTag> Type<T> {
     pub fn const_pointer_null(&self) -> &Value<T> {
-        unsafe { Value::from_ref(LLVMConstPointerNull(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMConstPointerNull(self.as_raw())) }
     }
 }
 

@@ -9,7 +9,7 @@ use crate::{Context, Type};
 impl Context {
     pub fn struct_type(&self, element_types: &[Type<any>], packed: bool) -> &Type<struct_any> {
         unsafe {
-            Type::from_ref(LLVMStructTypeInContext(
+            Type::from_raw(LLVMStructTypeInContext(
                 self.as_raw(),
                 element_types.as_ptr() as _,
                 element_types.len() as _,
@@ -19,7 +19,7 @@ impl Context {
     }
 
     pub fn struct_create_named(&self, name: &CStr) -> &Type<struct_any> {
-        unsafe { Type::from_ref(LLVMStructCreateNamed(self.as_raw(), name.as_ptr())) }
+        unsafe { Type::from_raw(LLVMStructCreateNamed(self.as_raw(), name.as_ptr())) }
     }
 }
 
@@ -54,7 +54,7 @@ impl Type<struct_any> {
     }
 
     pub fn get_type_at_index(&self, i: u32) -> Option<&Type<any>> {
-        unsafe { Type::try_from_ref(LLVMStructGetTypeAtIndex(self.as_raw(), i)) }
+        unsafe { Type::from_ptr(LLVMStructGetTypeAtIndex(self.as_raw(), i)) }
     }
 
     pub fn is_packed_struct(&self) -> bool {

@@ -40,14 +40,14 @@ impl<'s> OperandBundle<'s> {
     }
 
     pub fn get_arg_at_index(&self, index: u32) -> &'s Value<any> {
-        unsafe { Value::from_ref(LLVMGetOperandBundleArgAtIndex(self.as_raw(), index)) }
+        unsafe { Value::from_raw(LLVMGetOperandBundleArgAtIndex(self.as_raw(), index)) }
     }
 }
 
 impl<'s> Module<'s> {
     pub fn get_named_global_i_func(&self, name: &[u8]) -> &'s Value<any> {
         unsafe {
-            Value::from_ref(LLVMGetNamedGlobalIFunc(
+            Value::from_raw(LLVMGetNamedGlobalIFunc(
                 self.as_raw(),
                 name.as_ptr() as _,
                 name.len(),
@@ -56,25 +56,25 @@ impl<'s> Module<'s> {
     }
 
     pub fn get_first_global_i_func(&self) -> &'s Value<any> {
-        unsafe { Value::from_ref(LLVMGetFirstGlobalIFunc(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMGetFirstGlobalIFunc(self.as_raw())) }
     }
 
     pub fn get_last_global_i_func(&self) -> &'s Value<any> {
-        unsafe { Value::from_ref(LLVMGetLastGlobalIFunc(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMGetLastGlobalIFunc(self.as_raw())) }
     }
 }
 
 impl<T: TypeTag> Value<T> {
     pub fn get_next_global_i_func(&self) -> Option<&Value<any>> {
-        unsafe { Value::try_from_ref(LLVMGetNextGlobalIFunc(self.as_raw())) }
+        unsafe { Value::from_ptr(LLVMGetNextGlobalIFunc(self.as_raw())) }
     }
 
     pub fn get_previous_global_i_func(&self) -> Option<&Value<any>> {
-        unsafe { Value::try_from_ref(LLVMGetPreviousGlobalIFunc(self.as_raw())) }
+        unsafe { Value::from_ptr(LLVMGetPreviousGlobalIFunc(self.as_raw())) }
     }
 
     pub fn get_global_i_func_resolver(&self) -> Option<&Value<any>> {
-        unsafe { Value::try_from_ref(LLVMGetGlobalIFuncResolver(self.as_raw())) }
+        unsafe { Value::from_ptr(LLVMGetGlobalIFuncResolver(self.as_raw())) }
     }
 
     pub fn set_global_i_func_resolver<S: TypeTag>(&self, resolver: Option<&Value<S>>) {
@@ -98,7 +98,7 @@ impl<T: TypeTag> Value<T> {
 impl Context {
     pub fn md_string(&self, str: &[u8]) -> &Metadata {
         unsafe {
-            Metadata::from_ref(LLVMMDStringInContext2(
+            Metadata::from_raw(LLVMMDStringInContext2(
                 self.as_raw(),
                 str.as_ptr() as _,
                 str.len(),
@@ -108,7 +108,7 @@ impl Context {
 
     pub fn md_node(&self, mds: &[&Metadata]) -> &Metadata {
         unsafe {
-            Metadata::from_ref(LLVMMDNodeInContext2(
+            Metadata::from_raw(LLVMMDNodeInContext2(
                 self.as_raw(),
                 mds.as_ptr() as _,
                 mds.len(),
@@ -119,13 +119,13 @@ impl Context {
 
 impl Metadata {
     pub fn as_value<'s>(&self, context: &'s Context) -> &'s Value<metadata> {
-        unsafe { Value::from_ref(LLVMMetadataAsValue(context.as_raw(), self.as_raw())) }
+        unsafe { Value::from_raw(LLVMMetadataAsValue(context.as_raw(), self.as_raw())) }
     }
 }
 
 impl Value<metadata> {
     pub fn as_metadata(&self) -> &Metadata {
-        unsafe { Metadata::from_ref(LLVMValueAsMetadata(self.as_raw())) }
+        unsafe { Metadata::from_raw(LLVMValueAsMetadata(self.as_raw())) }
     }
 }
 

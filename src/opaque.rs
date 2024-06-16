@@ -13,12 +13,21 @@ pub struct PhantomOpaque {
 pub unsafe trait Opaque: Sized {
     type Inner;
 
-    unsafe fn try_from_ref<'s>(ptr: *mut Self::Inner) -> Option<&'s Self> {
-        unsafe { (ptr as *const Self).as_ref() }
+    unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
+        unsafe { Some(Self::from_raw(ptr)) }
     }
 
-    unsafe fn from_ref<'a>(ptr: *mut Self::Inner) -> &'a Self {
-        unsafe { Self::try_from_ref(ptr).unwrap_unchecked() }
+    unsafe fn from_raw<'a>(ptr: *mut Self::Inner) -> &'a Self {
+        debug_assert!(!ptr.is_null());
+        unsafe { &*(ptr as *const Self) }
+    }
+
+    unsafe fn from_ptr<'s>(ptr: *mut Self::Inner) -> Option<&'s Self> {
+        if ptr.is_null() {
+            None
+        } else {
+            unsafe { Some(Self::from_raw(ptr)) }
+        }
     }
 
     fn as_raw(&self) -> *mut Self::Inner {
@@ -26,6 +35,21 @@ pub unsafe trait Opaque: Sized {
     }
 
     unsafe fn cast_unchecked<T: Opaque<Inner = Self::Inner>>(&self) -> &T {
-        T::from_ref(self.as_raw())
+        T::from_raw(self.as_raw())
+    }
+
+    fn cast<T: Opaque<Inner = Self::Inner>>(&self) -> Option<&T> {
+        unsafe { T::try_from_raw(self.as_raw()) }
+    }
+
+    unsafe fn cast_check<T: Opaque<Inner = Self::Inner>, F: FnOnce(&Self) -> bool>(
+        &self,
+        f: F,
+    ) -> Option<&T> {
+        if f(self) {
+            unsafe { Some(self.cast_unchecked()) }
+        } else {
+            None
+        }
     }
 }

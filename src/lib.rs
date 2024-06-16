@@ -226,6 +226,10 @@ pub struct EnumAttribute {
 
 unsafe impl Opaque for EnumAttribute {
     type Inner = LLVMOpaqueAttributeRef;
+
+    unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
+        unsafe { Attribute::try_from_raw(ptr)?.cast_check(|x| x.is_enum_attribute()) }
+    }
 }
 
 impl Deref for EnumAttribute {
@@ -236,18 +240,6 @@ impl Deref for EnumAttribute {
     }
 }
 
-impl<'s> TryFrom<&'s Attribute> for &'s EnumAttribute {
-    type Error = ();
-
-    fn try_from(value: &'s Attribute) -> Result<Self, Self::Error> {
-        if value.is_enum_attribute() {
-            Ok(unsafe { value.cast_unchecked() })
-        } else {
-            Err(())
-        }
-    }
-}
-
 #[repr(transparent)]
 pub struct TypeAttribute {
     parent: Attribute,
@@ -255,6 +247,10 @@ pub struct TypeAttribute {
 
 unsafe impl Opaque for TypeAttribute {
     type Inner = LLVMOpaqueAttributeRef;
+
+    unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
+        unsafe { Attribute::try_from_raw(ptr)?.cast_check(|x| x.is_type_attribute()) }
+    }
 }
 
 impl Deref for TypeAttribute {
@@ -265,18 +261,6 @@ impl Deref for TypeAttribute {
     }
 }
 
-impl<'s> TryFrom<&'s Attribute> for &'s TypeAttribute {
-    type Error = ();
-
-    fn try_from(value: &'s Attribute) -> Result<Self, Self::Error> {
-        if value.is_type_attribute() {
-            Ok(unsafe { value.cast_unchecked() })
-        } else {
-            Err(())
-        }
-    }
-}
-
 #[repr(transparent)]
 pub struct StringAttribute {
     parent: Attribute,
@@ -284,6 +268,10 @@ pub struct StringAttribute {
 
 unsafe impl Opaque for StringAttribute {
     type Inner = LLVMOpaqueAttributeRef;
+
+    unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
+        unsafe { Attribute::try_from_raw(ptr)?.cast_check(|x| x.is_string_attribute()) }
+    }
 }
 
 impl Deref for StringAttribute {
@@ -291,18 +279,6 @@ impl Deref for StringAttribute {
 
     fn deref(&self) -> &Self::Target {
         &self.parent
-    }
-}
-
-impl<'s> TryFrom<&'s Attribute> for &'s StringAttribute {
-    type Error = ();
-
-    fn try_from(value: &'s Attribute) -> Result<Self, Self::Error> {
-        if value.is_string_attribute() {
-            Ok(unsafe { value.cast_unchecked() })
-        } else {
-            Err(())
-        }
     }
 }
 

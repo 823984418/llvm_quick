@@ -8,27 +8,27 @@ use crate::{Context, Opaque, Type};
 impl Context {
     /// Create a void type in a context.
     pub fn void_type(&self) -> &Type<void> {
-        unsafe { Type::from_ref(LLVMVoidTypeInContext(self.as_raw())) }
+        unsafe { Type::from_raw(LLVMVoidTypeInContext(self.as_raw())) }
     }
 
     pub fn label_type(&self) -> &Type<label> {
-        unsafe { Type::from_ref(LLVMLabelTypeInContext(self.as_raw())) }
+        unsafe { Type::from_raw(LLVMLabelTypeInContext(self.as_raw())) }
     }
 
     pub fn x86_mmx_type(&self) -> &Type<x86_mmx> {
-        unsafe { Type::from_ref(LLVMX86MMXTypeInContext(self.as_raw())) }
+        unsafe { Type::from_raw(LLVMX86MMXTypeInContext(self.as_raw())) }
     }
 
     pub fn x86_amx_type(&self) -> &Type<x86_amx> {
-        unsafe { Type::from_ref(LLVMX86AMXTypeInContext(self.as_raw())) }
+        unsafe { Type::from_raw(LLVMX86AMXTypeInContext(self.as_raw())) }
     }
 
     pub fn token_type(&self) -> &Type<token> {
-        unsafe { Type::from_ref(LLVMTokenTypeInContext(self.as_raw())) }
+        unsafe { Type::from_raw(LLVMTokenTypeInContext(self.as_raw())) }
     }
 
     pub fn metadata_type(&self) -> &Type<metadata> {
-        unsafe { Type::from_ref(LLVMMetadataTypeInContext(self.as_raw())) }
+        unsafe { Type::from_raw(LLVMMetadataTypeInContext(self.as_raw())) }
     }
 
     pub fn target_ext_type(
@@ -38,7 +38,7 @@ impl Context {
         int_params: &[u32],
     ) -> &Type<target_ext_any> {
         unsafe {
-            Type::from_ref(LLVMTargetExtTypeInContext(
+            Type::from_raw(LLVMTargetExtTypeInContext(
                 self.as_raw(),
                 name.as_ptr(),
                 type_params.as_ptr() as _,

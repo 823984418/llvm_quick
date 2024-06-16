@@ -24,7 +24,7 @@ unsafe impl Opaque for Error {
 
 impl Error {
     pub unsafe fn check(ptr: *mut LLVMOpaqueError) -> Result<(), Owning<Self>> {
-        if let Some(e) = unsafe { Owning::try_from_raw(ptr) } {
+        if let Some(e) = unsafe { Owning::from_ptr(ptr) } {
             Err(e)
         } else {
             Ok(())
@@ -52,7 +52,7 @@ impl Error {
 
 impl Drop for ErrorMessage {
     fn drop(&mut self) {
-        unsafe { LLVMDisposeErrorMessage(self.as_ptr()) }
+        unsafe { LLVMDisposeErrorMessage(self.as_raw()) }
     }
 }
 
@@ -107,7 +107,7 @@ impl ErrorMessage {
         Self { ptr }
     }
 
-    pub fn as_ptr(&self) -> *mut c_char {
+    pub fn as_raw(&self) -> *mut c_char {
         self.ptr.as_ptr() as _
     }
 }

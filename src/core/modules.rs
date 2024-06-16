@@ -108,14 +108,14 @@ impl<'s> ModuleFlagsMetadata<'s> {
     }
 
     pub fn get_metadata(&self, index: u32) -> &Metadata {
-        unsafe { Metadata::from_ref(LLVMModuleFlagEntriesGetMetadata(self.as_raw() as _, index)) }
+        unsafe { Metadata::from_raw(LLVMModuleFlagEntriesGetMetadata(self.as_raw() as _, index)) }
     }
 }
 
 impl<'s> Module<'s> {
     pub fn get_flag(&self, key: &[u8]) -> &Metadata {
         unsafe {
-            Metadata::from_ref(LLVMGetModuleFlag(
+            Metadata::from_raw(LLVMGetModuleFlag(
                 self.as_raw(),
                 key.as_ptr() as _,
                 key.len(),
@@ -186,7 +186,7 @@ impl<T: TypeTag> Type<T> {
         can_throw: bool,
     ) -> &Value<T> {
         unsafe {
-            Value::from_ref(LLVMGetInlineAsm(
+            Value::from_raw(LLVMGetInlineAsm(
                 self.as_raw(),
                 asm_string.as_ptr() as _,
                 asm_string.len(),
@@ -215,7 +215,7 @@ impl<T: TypeTag> Value<T> {
     }
 
     pub fn get_inline_asm_function_type(&self) -> &Type<T> {
-        unsafe { Type::from_ref(LLVMGetInlineAsmFunctionType(self.as_raw())) }
+        unsafe { Type::from_raw(LLVMGetInlineAsmFunctionType(self.as_raw())) }
     }
 
     pub fn get_inline_asm_has_side_effects(&self) -> bool {
@@ -234,32 +234,32 @@ impl<T: TypeTag> Value<T> {
 impl<'s> Module<'s> {
     /// Obtain the context to which this module is associated.
     pub fn context(&self) -> &'s Context {
-        unsafe { Context::from_ref(LLVMGetModuleContext(self.as_raw())) }
+        unsafe { Context::from_raw(LLVMGetModuleContext(self.as_raw())) }
     }
 
     pub fn get_first_named_metadata(&self) -> &NamedMDNode {
-        unsafe { NamedMDNode::from_ref(LLVMGetFirstNamedMetadata(self.as_raw())) }
+        unsafe { NamedMDNode::from_raw(LLVMGetFirstNamedMetadata(self.as_raw())) }
     }
 
     pub fn get_last_named_metadata(&self) -> &NamedMDNode {
-        unsafe { NamedMDNode::from_ref(LLVMGetLastNamedMetadata(self.as_raw())) }
+        unsafe { NamedMDNode::from_raw(LLVMGetLastNamedMetadata(self.as_raw())) }
     }
 }
 
 impl NamedMDNode {
     pub fn get_next(&self) -> &NamedMDNode {
-        unsafe { NamedMDNode::from_ref(LLVMGetNextNamedMetadata(self.as_raw())) }
+        unsafe { NamedMDNode::from_raw(LLVMGetNextNamedMetadata(self.as_raw())) }
     }
 
     pub fn get_previous(&self) -> &NamedMDNode {
-        unsafe { NamedMDNode::from_ref(LLVMGetPreviousNamedMetadata(self.as_raw())) }
+        unsafe { NamedMDNode::from_raw(LLVMGetPreviousNamedMetadata(self.as_raw())) }
     }
 }
 
 impl<'s> Module<'s> {
     pub fn get_named_metadata(&self, name: &[u8]) -> &NamedMDNode {
         unsafe {
-            NamedMDNode::from_ref(LLVMGetNamedMetadata(
+            NamedMDNode::from_raw(LLVMGetNamedMetadata(
                 self.as_raw(),
                 name.as_ptr() as _,
                 name.len(),
@@ -269,7 +269,7 @@ impl<'s> Module<'s> {
 
     pub fn get_or_insert_named_metadata(&self, name: &[u8]) -> &NamedMDNode {
         unsafe {
-            NamedMDNode::from_ref(LLVMGetOrInsertNamedMetadata(
+            NamedMDNode::from_raw(LLVMGetOrInsertNamedMetadata(
                 self.as_raw(),
                 name.as_ptr() as _,
                 name.len(),
@@ -342,29 +342,29 @@ impl<T: TypeTag> Value<T> {
 impl<'s> Module<'s> {
     /// Add a function to a module under a specified name.
     pub fn add_function<T: FunTypeTag>(&self, name: &CStr, ty: &'s Type<T>) -> &'s Value<T> {
-        unsafe { Value::from_ref(LLVMAddFunction(self.as_raw(), name.as_ptr(), ty.as_raw())) }
+        unsafe { Value::from_raw(LLVMAddFunction(self.as_raw(), name.as_ptr(), ty.as_raw())) }
     }
 
     /// Obtain a Function value from a Module by its name.
     pub fn get_named_function<T: FunTypeTag>(&self, name: &CStr) -> &'s Value<T> {
-        unsafe { Value::<any>::from_ref(LLVMGetNamedFunction(self.as_raw(), name.as_ptr())).cast() }
+        unsafe { Value::<any>::from_raw(LLVMGetNamedFunction(self.as_raw(), name.as_ptr())).cast() }
     }
 
     pub fn get_first_function(&self) -> &'s Value<fun_any> {
-        unsafe { Value::from_ref(LLVMGetFirstFunction(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMGetFirstFunction(self.as_raw())) }
     }
 
     pub fn get_last_function(&self) -> &'s Value<fun_any> {
-        unsafe { Value::from_ref(LLVMGetLastFunction(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMGetLastFunction(self.as_raw())) }
     }
 }
 
 impl<T: FunTypeTag> Value<T> {
     pub fn get_next_function(&self) -> &Value<fun_any> {
-        unsafe { Value::from_ref(LLVMGetNextFunction(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMGetNextFunction(self.as_raw())) }
     }
 
     pub fn get_previous_function(&self) -> &Value<fun_any> {
-        unsafe { Value::from_ref(LLVMGetPreviousFunction(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMGetPreviousFunction(self.as_raw())) }
     }
 }

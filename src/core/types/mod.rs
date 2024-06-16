@@ -22,7 +22,7 @@ impl<T: TypeTag> Debug for Type<T> {
 
 impl<T: TypeTag> Type<T> {
     pub unsafe fn cast_unchecked<N: TypeTag>(&self) -> &Type<N> {
-        unsafe { Type::from_ref(self.as_raw()) }
+        unsafe { Type::from_raw(self.as_raw()) }
     }
 
     pub fn try_cast<N: TypeTag>(&self) -> Option<&Type<N>> {
@@ -50,7 +50,7 @@ impl<T: TypeTag> Type<T> {
 
     /// Obtain the context to which this type instance is associated.
     pub fn get_context(&self) -> &Context {
-        unsafe { Context::from_ref(LLVMGetTypeContext(self.as_raw())) }
+        unsafe { Context::from_raw(LLVMGetTypeContext(self.as_raw())) }
     }
 
     pub fn dump(&self) {

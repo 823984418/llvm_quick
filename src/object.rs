@@ -206,7 +206,7 @@ impl<'a, 's> RelocationIterator<'a, 's> {
     }
 
     pub fn get_relocation_symbol(&self) -> &SymbolIterator<'a, 's> {
-        unsafe { SymbolIterator::from_ref(LLVMGetRelocationSymbol(self.as_raw())) }
+        unsafe { SymbolIterator::from_raw(LLVMGetRelocationSymbol(self.as_raw())) }
     }
 
     pub fn get_relocation_type(&self) -> u64 {

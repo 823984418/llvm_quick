@@ -13,7 +13,7 @@ impl<T: TypeTag> Value<T> {
     }
 
     pub fn get_metadata(&self, kind_id: u32) -> Option<&Value<metadata>> {
-        unsafe { Value::try_from_ref(LLVMGetMetadata(self.as_raw(), kind_id)) }
+        unsafe { Value::from_ptr(LLVMGetMetadata(self.as_raw(), kind_id)) }
     }
 
     pub fn set_metadata(&self, kind_id: u32, node: Option<&Value<metadata>>) {
@@ -35,15 +35,15 @@ impl<T: TypeTag> Value<T> {
     }
 
     pub fn get_instruction_parent(&self) -> &BasicBlock {
-        unsafe { BasicBlock::from_ref(LLVMGetInstructionParent(self.as_raw())) }
+        unsafe { BasicBlock::from_raw(LLVMGetInstructionParent(self.as_raw())) }
     }
 
     pub fn get_next_instruction(&self) -> Option<&Value<any>> {
-        unsafe { Value::try_from_ref(LLVMGetNextInstruction(self.as_raw())) }
+        unsafe { Value::from_ptr(LLVMGetNextInstruction(self.as_raw())) }
     }
 
     pub fn get_previous_instruction(&self) -> Option<&Value<any>> {
-        unsafe { Value::try_from_ref(LLVMGetPreviousInstruction(self.as_raw())) }
+        unsafe { Value::from_ptr(LLVMGetPreviousInstruction(self.as_raw())) }
     }
 
     pub fn instruction_remove_from_parent(&self) {
@@ -71,11 +71,11 @@ impl<T: TypeTag> Value<T> {
     }
 
     pub fn instruction_clone(&self) -> &Value<T> {
-        unsafe { Value::from_ref(LLVMInstructionClone(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMInstructionClone(self.as_raw())) }
     }
 
     pub fn is_a_terminator_inst(&self) -> Option<&Value<T>> {
-        unsafe { Value::try_from_ref(LLVMIsATerminatorInst(self.as_raw())) }
+        unsafe { Value::from_ptr(LLVMIsATerminatorInst(self.as_raw())) }
     }
 
     pub fn get_num_arg_operands(&self) -> u32 {
@@ -118,12 +118,12 @@ impl<T: TypeTag> Value<T> {
         idx: LLVMAttributeIndex,
         kind_id: u32,
     ) -> &Attribute {
-        unsafe { Attribute::from_ref(LLVMGetCallSiteEnumAttribute(self.as_raw(), idx, kind_id)) }
+        unsafe { Attribute::from_raw(LLVMGetCallSiteEnumAttribute(self.as_raw(), idx, kind_id)) }
     }
 
     pub fn get_call_site_string_attribute(&self, idx: LLVMAttributeIndex, k: &[u8]) -> &Attribute {
         unsafe {
-            Attribute::from_ref(LLVMGetCallSiteStringAttribute(
+            Attribute::from_raw(LLVMGetCallSiteStringAttribute(
                 self.as_raw(),
                 idx,
                 k.as_ptr() as _,
@@ -143,11 +143,11 @@ impl<T: TypeTag> Value<T> {
     }
 
     pub fn get_called_function_type(&self) -> Option<&Type<fun_any>> {
-        unsafe { Type::try_from_ref(LLVMGetCalledFunctionType(self.as_raw())) }
+        unsafe { Type::from_ptr(LLVMGetCalledFunctionType(self.as_raw())) }
     }
 
     pub fn get_called_value(&self) -> &Value<fun_any> {
-        unsafe { Value::from_ref(LLVMGetCalledValue(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMGetCalledValue(self.as_raw())) }
     }
 
     pub fn get_num_operand_bundles(&self) -> u32 {
@@ -155,7 +155,7 @@ impl<T: TypeTag> Value<T> {
     }
 
     pub fn get_operand_bundle_as_index(&self, index: u32) -> &OperandBundle {
-        unsafe { OperandBundle::from_ref(LLVMGetOperandBundleAtIndex(self.as_raw(), index)) }
+        unsafe { OperandBundle::from_raw(LLVMGetOperandBundleAtIndex(self.as_raw(), index)) }
     }
 
     pub fn is_tail_call(&self) -> bool {
@@ -175,7 +175,7 @@ impl<T: TypeTag> Value<T> {
     }
 
     pub fn get_normal_dest(&self) -> &BasicBlock {
-        unsafe { BasicBlock::from_ref(LLVMGetNormalDest(self.as_raw())) }
+        unsafe { BasicBlock::from_raw(LLVMGetNormalDest(self.as_raw())) }
     }
 }
 

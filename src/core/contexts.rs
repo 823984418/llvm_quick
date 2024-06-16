@@ -18,7 +18,7 @@ impl Context {
 
     /// Obtain the global context instance.
     pub fn get_global() -> &'static Self {
-        unsafe { Self::from_ref(LLVMGetGlobalContext()) }
+        unsafe { Self::from_raw(LLVMGetGlobalContext()) }
     }
 
     pub fn set_diagnostic_handler(&self, handle: LLVMDiagnosticHandler, handle_ctx: *mut ()) {
@@ -32,7 +32,7 @@ impl Context {
             handle: *mut c_void,
         ) {
             let handle = handle as *mut T;
-            unsafe { (*handle)(DiagnosticInfo::from_ref(info)) }
+            unsafe { (*handle)(DiagnosticInfo::from_raw(info)) }
         }
         self.set_diagnostic_handler(Some(handler_raw::<T>), Box::into_raw(Box::new(handle)) as _);
     }
@@ -90,7 +90,7 @@ pub fn get_last_enum_attribute_kind() -> u32 {
 
 impl Context {
     pub fn create_enum_attribute(&self, kind_id: u32, val: u64) -> &EnumAttribute {
-        unsafe { EnumAttribute::from_ref(LLVMCreateEnumAttribute(self.as_raw(), kind_id, val)) }
+        unsafe { EnumAttribute::from_raw(LLVMCreateEnumAttribute(self.as_raw(), kind_id, val)) }
     }
 }
 
@@ -111,7 +111,7 @@ impl Context {
         type_ref: &Type<T>,
     ) -> &TypeAttribute {
         unsafe {
-            TypeAttribute::from_ref(LLVMCreateTypeAttribute(
+            TypeAttribute::from_raw(LLVMCreateTypeAttribute(
                 self.as_raw(),
                 kind_id,
                 type_ref.as_raw(),
@@ -122,14 +122,14 @@ impl Context {
 
 impl TypeAttribute {
     pub fn get_value(&self) -> &Type<any> {
-        unsafe { Type::from_ref(LLVMGetTypeAttributeValue(self.as_raw())) }
+        unsafe { Type::from_raw(LLVMGetTypeAttributeValue(self.as_raw())) }
     }
 }
 
 impl Context {
     pub fn create_string_attribute(&self, k: &[u8], v: &[u8]) -> &StringAttribute {
         unsafe {
-            StringAttribute::from_ref(LLVMCreateStringAttribute(
+            StringAttribute::from_raw(LLVMCreateStringAttribute(
                 self.as_raw(),
                 k.as_ptr() as _,
                 k.len() as _,
@@ -174,6 +174,6 @@ impl Attribute {
 
 impl Context {
     pub fn get_type_by_name(&self, name: &CStr) -> &Type<any> {
-        unsafe { Type::from_ref(LLVMGetTypeByName2(self.as_raw(), name.as_ptr())) }
+        unsafe { Type::from_raw(LLVMGetTypeByName2(self.as_raw(), name.as_ptr())) }
     }
 }

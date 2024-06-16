@@ -7,13 +7,13 @@ use crate::{Comdat, Module, Opaque, Value};
 
 impl<'s> Module<'s> {
     pub fn get_or_insert_comdat(&self, name: &CStr) -> &Comdat {
-        unsafe { Comdat::from_ref(LLVMGetOrInsertComdat(self.as_raw(), name.as_ptr())) }
+        unsafe { Comdat::from_raw(LLVMGetOrInsertComdat(self.as_raw(), name.as_ptr())) }
     }
 }
 
 impl<T: TypeTag> Value<T> {
     pub fn get_comdat(&self) -> &Comdat {
-        unsafe { Comdat::from_ref(LLVMGetComdat(self.as_raw())) }
+        unsafe { Comdat::from_raw(LLVMGetComdat(self.as_raw())) }
     }
 
     pub fn set_comdat(&self, c: &Comdat) {

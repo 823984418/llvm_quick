@@ -26,7 +26,7 @@ impl<T: FunTypeTag> Value<T> {
     }
 
     pub fn get_personality_fn(&self) -> &Value<any> {
-        unsafe { Value::from_ref(LLVMGetPersonalityFn(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMGetPersonalityFn(self.as_raw())) }
     }
 
     pub fn set_personality_fn<F: FunTypeTag>(&self, personality_fn: Option<&Value<F>>) {
@@ -56,7 +56,7 @@ impl<'s> Module<'s> {
         param_types: &[&Type<any>],
     ) -> &Value<any> {
         unsafe {
-            Value::from_ref(LLVMGetIntrinsicDeclaration(
+            Value::from_raw(LLVMGetIntrinsicDeclaration(
                 self.as_raw(),
                 id.0,
                 param_types.as_ptr() as _,
@@ -69,7 +69,7 @@ impl<'s> Module<'s> {
 impl Context {
     pub fn intrinsic_get_type(&self, id: IntrinsicId, param_types: &[&Type<any>]) -> &Type<any> {
         unsafe {
-            Type::from_ref(LLVMIntrinsicGetType(
+            Type::from_raw(LLVMIntrinsicGetType(
                 self.as_raw(),
                 id.0,
                 param_types.as_ptr() as _,
@@ -164,12 +164,12 @@ impl<T: FunTypeTag> Value<T> {
     }
 
     pub fn get_enum_attribute_at_index(&self, idx: LLVMAttributeIndex, kind_id: u32) -> &Attribute {
-        unsafe { Attribute::from_ref(LLVMGetEnumAttributeAtIndex(self.as_raw(), idx, kind_id)) }
+        unsafe { Attribute::from_raw(LLVMGetEnumAttributeAtIndex(self.as_raw(), idx, kind_id)) }
     }
 
     pub fn get_string_attribute_at_index(&self, idx: LLVMAttributeIndex, k: &[u8]) -> &Attribute {
         unsafe {
-            Attribute::from_ref(LLVMGetStringAttributeAtIndex(
+            Attribute::from_raw(LLVMGetStringAttributeAtIndex(
                 self.as_raw(),
                 idx,
                 k.as_ptr() as _,
@@ -223,33 +223,33 @@ impl<T: FunTypeTag> Value<T> {
     }
 
     pub fn get_param(&self, index: u32) -> Option<&Value<any>> {
-        unsafe { Value::try_from_ref(LLVMGetParam(self.as_raw(), index)) }
+        unsafe { Value::from_ptr(LLVMGetParam(self.as_raw(), index)) }
     }
 }
 
 impl<T: TypeTag> Value<T> {
     pub fn get_param_parent(&self) -> &Value<fun_any> {
-        unsafe { Value::from_ref(LLVMGetParamParent(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMGetParamParent(self.as_raw())) }
     }
 }
 
 impl<T: FunTypeTag> Value<T> {
     pub fn get_first_param(&self) -> Option<&Value<any>> {
-        unsafe { Value::try_from_ref(LLVMGetFirstParam(self.as_raw())) }
+        unsafe { Value::from_ptr(LLVMGetFirstParam(self.as_raw())) }
     }
 
     pub fn get_last_param(&self) -> Option<&Value<any>> {
-        unsafe { Value::try_from_ref(LLVMGetLastParam(self.as_raw())) }
+        unsafe { Value::from_ptr(LLVMGetLastParam(self.as_raw())) }
     }
 }
 
 impl<T: TypeTag> Value<T> {
     pub fn get_next_param(&self) -> Option<&Value<any>> {
-        unsafe { Value::try_from_ref(LLVMGetNextParam(self.as_raw())) }
+        unsafe { Value::from_ptr(LLVMGetNextParam(self.as_raw())) }
     }
 
     pub fn get_previous_param(&self) -> Option<&Value<any>> {
-        unsafe { Value::try_from_ref(LLVMGetPreviousParam(self.as_raw())) }
+        unsafe { Value::from_ptr(LLVMGetPreviousParam(self.as_raw())) }
     }
 
     pub fn set_param_alignment(&self, align: u32) {

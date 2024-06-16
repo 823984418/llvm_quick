@@ -70,7 +70,7 @@ impl OrcLLJITBuilder {
             triple: *const c_char,
         ) -> *mut LLVMOrcOpaqueObjectLayer {
             unsafe {
-                (*(ctx as *const F))(OrcExecutionSession::from_ref(es), CStr::from_ptr(triple))
+                (*(ctx as *const F))(OrcExecutionSession::from_raw(es), CStr::from_ptr(triple))
                     .into_raw()
             }
         }
@@ -84,7 +84,7 @@ impl OrcLLJIT {
             let mut ptr = null_mut();
             Error::check(LLVMOrcCreateLLJIT(
                 &mut ptr,
-                Owning::option_into_raw(builder),
+                builder.map(Owning::into_raw).unwrap_or(null_mut()),
             ))?;
             Ok(Owning::from_raw(ptr))
         }
@@ -100,11 +100,11 @@ impl OpaqueDrop for LLVMOrcOpaqueLLJIT {
 
 impl OrcLLJIT {
     pub fn get_execution_session(&self) -> &OrcExecutionSession {
-        unsafe { OrcExecutionSession::from_ref(LLVMOrcLLJITGetExecutionSession(self.as_raw())) }
+        unsafe { OrcExecutionSession::from_raw(LLVMOrcLLJITGetExecutionSession(self.as_raw())) }
     }
 
     pub fn get_main_jit_dylib(&self) -> &OrcJitDylib {
-        unsafe { OrcJitDylib::from_ref(LLVMOrcLLJITGetMainJITDylib(self.as_raw())) }
+        unsafe { OrcJitDylib::from_raw(LLVMOrcLLJITGetMainJITDylib(self.as_raw())) }
     }
 
     pub fn get_triple(&self) -> &CStr {
@@ -193,17 +193,17 @@ impl OrcLLJIT {
     }
 
     pub fn get_obj_linking_layer(&self) -> &OrcObjectLayer {
-        unsafe { OrcObjectLayer::from_ref(LLVMOrcLLJITGetObjLinkingLayer(self.as_raw())) }
+        unsafe { OrcObjectLayer::from_raw(LLVMOrcLLJITGetObjLinkingLayer(self.as_raw())) }
     }
 
     pub fn get_obj_transform_layer(&self) -> &OrcObjectTransformLayer {
         unsafe {
-            OrcObjectTransformLayer::from_ref(LLVMOrcLLJITGetObjTransformLayer(self.as_raw()))
+            OrcObjectTransformLayer::from_raw(LLVMOrcLLJITGetObjTransformLayer(self.as_raw()))
         }
     }
 
     pub fn get_ir_transform_layer(&self) -> &OrcIrTransformLayer {
-        unsafe { OrcIrTransformLayer::from_ref(LLVMOrcLLJITGetIRTransformLayer(self.as_raw())) }
+        unsafe { OrcIrTransformLayer::from_raw(LLVMOrcLLJITGetIRTransformLayer(self.as_raw())) }
     }
 
     pub fn get_data_layout_str(&self) -> &CStr {

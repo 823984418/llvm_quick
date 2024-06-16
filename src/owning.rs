@@ -1,7 +1,7 @@
 use std::fmt::{Debug, Formatter};
 use std::mem::forget;
 use std::ops::Deref;
-use std::ptr::{null_mut, NonNull};
+use std::ptr::NonNull;
 
 use crate::Opaque;
 
@@ -44,25 +44,25 @@ impl<T: Opaque<Inner: OpaqueDrop> + Debug> Debug for Owning<T> {
 }
 
 impl<T: Opaque<Inner: OpaqueDrop>> Owning<T> {
-    pub unsafe fn try_from_raw(ptr: *mut T::Inner) -> Option<Self> {
-        unsafe {
-            Some(Self {
-                ptr: NonNull::from(T::try_from_ref(ptr)?),
-            })
+    pub unsafe fn from_ptr(ptr: *mut T::Inner) -> Option<Self> {
+        if ptr.is_null() {
+            None
+        } else {
+            unsafe { Some(Self::from_raw(ptr)) }
         }
     }
 
     pub unsafe fn from_raw(ptr: *mut T::Inner) -> Self {
-        unsafe { Self::try_from_raw(ptr).unwrap_unchecked() }
+        unsafe {
+            Self {
+                ptr: T::from_raw(ptr).into(),
+            }
+        }
     }
 
     pub fn into_raw(self) -> *mut T::Inner {
         let ptr = self.as_raw();
         forget(self);
         ptr
-    }
-
-    pub fn option_into_raw(this: Option<Self>) -> *mut T::Inner {
-        this.map(Owning::into_raw).unwrap_or(null_mut())
     }
 }

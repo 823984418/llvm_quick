@@ -27,7 +27,7 @@ impl<'s> Builder<'s> {
     }
 
     pub fn get_insert_block(&self) -> &'s BasicBlock {
-        unsafe { BasicBlock::from_ref(LLVMGetInsertBlock(self.as_raw())) }
+        unsafe { BasicBlock::from_raw(LLVMGetInsertBlock(self.as_raw())) }
     }
 
     pub fn clear_insertion_position(&self) {
@@ -52,7 +52,7 @@ impl OpaqueDrop for LLVMBuilder {
 impl<'s> Builder<'s> {
     /// Get location information used by debugging information.
     pub fn get_current_debug_location(&self) -> &'s Metadata {
-        unsafe { Metadata::from_ref(LLVMGetCurrentDebugLocation2(self.as_raw())) }
+        unsafe { Metadata::from_raw(LLVMGetCurrentDebugLocation2(self.as_raw())) }
     }
 
     /// Set location information used by debugging information.
@@ -67,7 +67,7 @@ impl<'s> Builder<'s> {
 
     /// Get the default floating-point math metadata for a given builder.
     pub fn get_default_fp_math_tag(&self) -> &'s Metadata {
-        unsafe { Metadata::from_ref(LLVMBuilderGetDefaultFPMathTag(self.as_raw())) }
+        unsafe { Metadata::from_raw(LLVMBuilderGetDefaultFPMathTag(self.as_raw())) }
     }
 
     /// Set the default floating-point math metadata for the given builder.
@@ -76,16 +76,16 @@ impl<'s> Builder<'s> {
     }
 
     pub fn return_void(&self) -> &'s Value<void> {
-        unsafe { Value::from_ref(LLVMBuildRetVoid(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMBuildRetVoid(self.as_raw())) }
     }
 
     pub fn return_value<T: TypeTag>(&self, value: &Value<T>) -> &'s Value<void> {
-        unsafe { Value::from_ref(LLVMBuildRet(self.as_raw(), value.as_raw())) }
+        unsafe { Value::from_raw(LLVMBuildRet(self.as_raw(), value.as_raw())) }
     }
 
     pub fn return_aggregate<T: TypeTag>(&self, ret_vals: &[&Value<T>]) -> &'s Value<void> {
         unsafe {
-            Value::from_ref(LLVMBuildAggregateRet(
+            Value::from_raw(LLVMBuildAggregateRet(
                 self.as_raw(),
                 ret_vals.as_ptr() as _,
                 ret_vals.len() as _,
@@ -94,7 +94,7 @@ impl<'s> Builder<'s> {
     }
 
     pub fn branch(&self, dest: &BasicBlock) -> &'s Value<void> {
-        unsafe { Value::from_ref(LLVMBuildBr(self.as_raw(), dest.as_raw())) }
+        unsafe { Value::from_raw(LLVMBuildBr(self.as_raw(), dest.as_raw())) }
     }
 
     pub fn cond_branch<T: IntTypeTag>(
@@ -104,7 +104,7 @@ impl<'s> Builder<'s> {
         els: &BasicBlock,
     ) -> &'s Value<void> {
         unsafe {
-            Value::from_ref(LLVMBuildCondBr(
+            Value::from_raw(LLVMBuildCondBr(
                 self.as_raw(),
                 cond.as_raw(),
                 then.as_raw(),
@@ -125,7 +125,7 @@ impl<'s> Builder<'s> {
             for &(case, basic_block) in cases {
                 LLVMAddCase(value, case.as_raw(), basic_block.as_raw());
             }
-            Value::from_ref(value)
+            Value::from_raw(value)
         }
     }
 
@@ -140,7 +140,7 @@ impl<'s> Builder<'s> {
             for &destination in destinations {
                 LLVMAddDestination(value, destination.as_raw());
             }
-            Value::from_ref(value)
+            Value::from_raw(value)
         }
     }
 
@@ -154,7 +154,7 @@ impl<'s> Builder<'s> {
         name: &CStr,
     ) -> &'s Value<any> {
         unsafe {
-            Value::from_ref(LLVMBuildInvoke2(
+            Value::from_raw(LLVMBuildInvoke2(
                 self.as_raw(),
                 ty.as_raw(),
                 f.as_raw(),
@@ -178,7 +178,7 @@ impl<'s> Builder<'s> {
         name: &CStr,
     ) -> &'s Value<any> {
         unsafe {
-            Value::from_ref(LLVMBuildInvokeWithOperandBundles(
+            Value::from_raw(LLVMBuildInvokeWithOperandBundles(
                 self.as_raw(),
                 ty.as_raw(),
                 f.as_raw(),
@@ -194,11 +194,11 @@ impl<'s> Builder<'s> {
     }
 
     pub fn unreachable(&self) -> &'s Value<void> {
-        unsafe { Value::from_ref(LLVMBuildUnreachable(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMBuildUnreachable(self.as_raw())) }
     }
 
     pub fn resume<T: TypeTag>(&self, exn: &Value<T>) -> &'s Value<any> {
-        unsafe { Value::from_ref(LLVMBuildResume(self.as_raw(), exn.as_raw())) }
+        unsafe { Value::from_raw(LLVMBuildResume(self.as_raw(), exn.as_raw())) }
     }
 
     pub fn landing_pad<F: FunTypeTag>(
@@ -209,7 +209,7 @@ impl<'s> Builder<'s> {
         name: &CStr,
     ) -> &'s Value<any> {
         unsafe {
-            Value::from_ref(LLVMBuildLandingPad(
+            Value::from_raw(LLVMBuildLandingPad(
                 self.as_raw(),
                 ty.as_raw(),
                 pers_fn.as_raw(),
@@ -221,7 +221,7 @@ impl<'s> Builder<'s> {
 
     pub fn cleanup_return(&self, catch_pad: &Value<any>, bb: &BasicBlock) -> &'s Value<any> {
         unsafe {
-            Value::from_ref(LLVMBuildCleanupRet(
+            Value::from_raw(LLVMBuildCleanupRet(
                 self.as_raw(),
                 catch_pad.as_raw(),
                 bb.as_raw(),
@@ -239,7 +239,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildAdd(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -251,7 +251,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildNSWAdd(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -263,7 +263,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildNUWAdd(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -275,7 +275,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildFAdd(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -287,7 +287,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildSub(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -299,7 +299,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildNSWSub(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -311,7 +311,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildNUWSub(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -323,7 +323,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildFSub(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -335,7 +335,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildMul(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -347,7 +347,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildNSWMul(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -359,7 +359,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildNUWMul(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -371,7 +371,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildFMul(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -383,7 +383,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildUDiv(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -395,7 +395,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildExactUDiv(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -407,7 +407,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildSDiv(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -419,7 +419,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildExactSDiv(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -431,7 +431,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildFDiv(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -443,7 +443,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildURem(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -455,7 +455,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildSRem(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -467,7 +467,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildFRem(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -479,7 +479,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildShl(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -491,7 +491,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildLShr(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -503,7 +503,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildAShr(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -515,7 +515,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildAnd(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -527,7 +527,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildOr(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -539,7 +539,7 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildXor(self.as_raw(), lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
@@ -552,28 +552,28 @@ impl<'s> Builder<'s> {
     ) -> &'s Value<T> {
         unsafe {
             let ptr = LLVMBuildBinOp(self.as_raw(), op, lhs.as_raw(), rhs.as_raw(), name.as_ptr());
-            Value::from_ref(ptr)
+            Value::from_raw(ptr)
         }
     }
 
     pub fn neg<T: IntMathTypeTag>(&self, v: &Value<T>, name: &CStr) -> &'s Value<T> {
-        unsafe { Value::from_ref(LLVMBuildNeg(self.as_raw(), v.as_raw(), name.as_ptr())) }
+        unsafe { Value::from_raw(LLVMBuildNeg(self.as_raw(), v.as_raw(), name.as_ptr())) }
     }
 
     pub fn nsw_neg<T: IntMathTypeTag>(&self, v: &Value<T>, name: &CStr) -> &'s Value<T> {
-        unsafe { Value::from_ref(LLVMBuildNSWNeg(self.as_raw(), v.as_raw(), name.as_ptr())) }
+        unsafe { Value::from_raw(LLVMBuildNSWNeg(self.as_raw(), v.as_raw(), name.as_ptr())) }
     }
 
     pub fn nuw_neg<T: IntMathTypeTag>(&self, v: &Value<T>, name: &CStr) -> &'s Value<T> {
-        unsafe { Value::from_ref(LLVMBuildNUWNeg(self.as_raw(), v.as_raw(), name.as_ptr())) }
+        unsafe { Value::from_raw(LLVMBuildNUWNeg(self.as_raw(), v.as_raw(), name.as_ptr())) }
     }
 
     pub fn float_neg<T: FloatMathTypeTag>(&self, v: &Value<T>, name: &CStr) -> &'s Value<T> {
-        unsafe { Value::from_ref(LLVMBuildFNeg(self.as_raw(), v.as_raw(), name.as_ptr())) }
+        unsafe { Value::from_raw(LLVMBuildFNeg(self.as_raw(), v.as_raw(), name.as_ptr())) }
     }
 
     pub fn not<T: IntMathTypeTag>(&self, v: &Value<T>, name: &CStr) -> &'s Value<T> {
-        unsafe { Value::from_ref(LLVMBuildNot(self.as_raw(), v.as_raw(), name.as_ptr())) }
+        unsafe { Value::from_raw(LLVMBuildNot(self.as_raw(), v.as_raw(), name.as_ptr())) }
     }
 }
 
@@ -637,7 +637,7 @@ impl<T: TypeTag> Value<T> {
 
 impl<'s> Builder<'s> {
     pub fn malloc<T: TypeTag>(&self, ty: &Type<T>, name: &CStr) -> &'s Value<T> {
-        unsafe { Value::from_ref(LLVMBuildMalloc(self.as_raw(), ty.as_raw(), name.as_ptr())) }
+        unsafe { Value::from_raw(LLVMBuildMalloc(self.as_raw(), ty.as_raw(), name.as_ptr())) }
     }
 
     pub fn array_malloc<T: TypeTag, L: IntTypeTag>(
@@ -647,7 +647,7 @@ impl<'s> Builder<'s> {
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
-            Value::from_ref(LLVMBuildArrayMalloc(
+            Value::from_raw(LLVMBuildArrayMalloc(
                 self.as_raw(),
                 ty.as_raw(),
                 val.as_raw(),
@@ -664,7 +664,7 @@ impl<'s> Builder<'s> {
         align: u32,
     ) -> &'s Value<void> {
         unsafe {
-            Value::from_ref(LLVMBuildMemSet(
+            Value::from_raw(LLVMBuildMemSet(
                 self.as_raw(),
                 ptr.as_raw(),
                 val.as_raw(),
@@ -683,7 +683,7 @@ impl<'s> Builder<'s> {
         size: &Value<L>,
     ) -> &'s Value<void> {
         unsafe {
-            Value::from_ref(LLVMBuildMemCpy(
+            Value::from_raw(LLVMBuildMemCpy(
                 self.as_raw(),
                 dst.as_raw(),
                 dst_align,
@@ -703,7 +703,7 @@ impl<'s> Builder<'s> {
         size: &Value<L>,
     ) -> &'s Value<void> {
         unsafe {
-            Value::from_ref(LLVMBuildMemMove(
+            Value::from_raw(LLVMBuildMemMove(
                 self.as_raw(),
                 dst.as_raw(),
                 dst_align,
@@ -715,7 +715,7 @@ impl<'s> Builder<'s> {
     }
 
     pub fn alloc<T: TypeTag>(&self, ty: &Type<T>, name: &CStr) -> &'s Value<T> {
-        unsafe { Value::from_ref(LLVMBuildAlloca(self.as_raw(), ty.as_raw(), name.as_ptr())) }
+        unsafe { Value::from_raw(LLVMBuildAlloca(self.as_raw(), ty.as_raw(), name.as_ptr())) }
     }
 
     pub fn array_alloc<T: TypeTag, L: IntTypeTag>(
@@ -725,7 +725,7 @@ impl<'s> Builder<'s> {
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
-            Value::from_ref(LLVMBuildArrayAlloca(
+            Value::from_raw(LLVMBuildArrayAlloca(
                 self.as_raw(),
                 ty.as_raw(),
                 val.as_raw(),
@@ -735,7 +735,7 @@ impl<'s> Builder<'s> {
     }
 
     pub fn free<P: PtrTypeTag>(&self, pointer_val: &Value<P>) -> &'s Value<void> {
-        unsafe { Value::from_ref(LLVMBuildFree(self.as_raw(), pointer_val.as_raw())) }
+        unsafe { Value::from_raw(LLVMBuildFree(self.as_raw(), pointer_val.as_raw())) }
     }
 
     pub fn load<T: TypeTag, P: PtrTypeTag>(
@@ -745,7 +745,7 @@ impl<'s> Builder<'s> {
         name: &CStr,
     ) -> &'s Value<T> {
         unsafe {
-            Value::from_ref(LLVMBuildLoad2(
+            Value::from_raw(LLVMBuildLoad2(
                 self.as_raw(),
                 ty.as_raw(),
                 pointer_val.as_raw(),
@@ -759,7 +759,7 @@ impl<'s> Builder<'s> {
         val: &Value<T>,
         ptr: &Value<P>,
     ) -> &'s Value<void> {
-        unsafe { Value::from_ref(LLVMBuildStore(self.as_raw(), val.as_raw(), ptr.as_raw())) }
+        unsafe { Value::from_raw(LLVMBuildStore(self.as_raw(), val.as_raw(), ptr.as_raw())) }
     }
 
     pub fn get_element_ptr<T: ElementTypeTag, P: PtrTypeTag, I: IntTypeTag>(
@@ -770,7 +770,7 @@ impl<'s> Builder<'s> {
         name: &CStr,
     ) -> &'s Value<any> {
         unsafe {
-            Value::from_ref(LLVMBuildGEP2(
+            Value::from_raw(LLVMBuildGEP2(
                 self.as_raw(),
                 ty.as_raw(),
                 pointer.as_raw(),
@@ -789,7 +789,7 @@ impl<'s> Builder<'s> {
         name: &CStr,
     ) -> &'s Value<any> {
         unsafe {
-            Value::from_ref(LLVMBuildInBoundsGEP2(
+            Value::from_raw(LLVMBuildInBoundsGEP2(
                 self.as_raw(),
                 ty.as_raw(),
                 pointer.as_raw(),
@@ -808,7 +808,7 @@ impl<'s> Builder<'s> {
         name: &CStr,
     ) -> &'s Value<any> {
         unsafe {
-            Value::from_ref(LLVMBuildStructGEP2(
+            Value::from_raw(LLVMBuildStructGEP2(
                 self.as_raw(),
                 ty.as_raw(),
                 pointer.as_raw(),
@@ -820,7 +820,7 @@ impl<'s> Builder<'s> {
 
     pub fn global_string(&self, str: &CStr, name: &CStr) -> &'s Value<any> {
         unsafe {
-            Value::from_ref(LLVMBuildGlobalString(
+            Value::from_raw(LLVMBuildGlobalString(
                 self.as_raw(),
                 str.as_ptr(),
                 name.as_ptr(),
@@ -830,7 +830,7 @@ impl<'s> Builder<'s> {
 
     pub fn global_string_ptr(&self, str: &CStr, name: &CStr) -> &'s Value<any> {
         unsafe {
-            Value::from_ref(LLVMBuildGlobalStringPtr(
+            Value::from_raw(LLVMBuildGlobalStringPtr(
                 self.as_raw(),
                 str.as_ptr(),
                 name.as_ptr(),
@@ -881,7 +881,7 @@ impl<'s> Builder<'s> {
         name: &CStr,
     ) -> &'s Value<D> {
         unsafe {
-            Value::from_ref(LLVMBuildTrunc(
+            Value::from_raw(LLVMBuildTrunc(
                 self.as_raw(),
                 val.as_raw(),
                 dest_ty.as_raw(),

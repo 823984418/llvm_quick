@@ -38,11 +38,11 @@ unsafe impl Opaque for Target {
 impl Target {
     pub fn iter_all() -> impl Iterator<Item = &'static Self> {
         unsafe {
-            let mut ptr = Self::try_from_ref(LLVMGetFirstTarget());
+            let mut ptr = Self::from_ptr(LLVMGetFirstTarget());
             std::iter::from_fn(move || {
                 let ret = ptr;
                 if let Some(v) = ptr {
-                    ptr = Self::try_from_ref(LLVMGetNextTarget(v.as_raw()));
+                    ptr = Self::from_ptr(LLVMGetNextTarget(v.as_raw()));
                 }
                 ret
             })
@@ -50,7 +50,7 @@ impl Target {
     }
 
     pub fn from_name(name: &CStr) -> Option<&'static Self> {
-        unsafe { Self::try_from_ref(LLVMGetTargetFromName(name.as_ptr())) }
+        unsafe { Self::from_ptr(LLVMGetTargetFromName(name.as_ptr())) }
     }
 
     pub fn from_triple(triple: &CStr) -> Result<&'static Self, Message> {
@@ -60,7 +60,7 @@ impl Target {
             if LLVMGetTargetFromTriple(triple.as_ptr(), &mut ptr, &mut err) != 0 {
                 return Err(Message::from_raw(err));
             }
-            Ok(Self::from_ref(ptr))
+            Ok(Self::from_raw(ptr))
         }
     }
 
@@ -169,7 +169,7 @@ impl OpaqueDrop for LLVMOpaqueTargetMachine {
 
 impl TargetMachine {
     pub fn get_target(&self) -> &Target {
-        unsafe { Target::from_ref(LLVMGetTargetMachineTarget(self.as_raw())) }
+        unsafe { Target::from_raw(LLVMGetTargetMachineTarget(self.as_raw())) }
     }
 
     pub fn get_triple(&self) -> Message {

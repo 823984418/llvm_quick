@@ -17,7 +17,7 @@ impl<T: VectorTypeTag> Type<T> {
 
 impl<T: SequentialTypeTag> Type<T> {
     pub fn element_type(&self) -> &Type<T::ElementType> {
-        unsafe { Type::from_ref(LLVMGetElementType(self.as_raw())) }
+        unsafe { Type::from_raw(LLVMGetElementType(self.as_raw())) }
     }
 }
 
@@ -41,7 +41,7 @@ impl<T: TypeTag> Type<T> {
     ///
     /// The created type will exist in the context that its element type exists in.
     pub fn array_type_any_len(&self, count: u64) -> &Type<array_any_len<T>> {
-        unsafe { Type::from_ref(LLVMArrayType2(self.as_raw(), count)) }
+        unsafe { Type::from_raw(LLVMArrayType2(self.as_raw(), count)) }
     }
 
     pub fn array_type<const N: u64>(&self) -> &Type<array<T, N>> {
@@ -58,7 +58,7 @@ impl<T: ArrayTypeTag> Type<T> {
 impl Context {
     /// Create an opaque pointer type in a context.
     pub fn pointer_type_any(&self, address_space: u32) -> &Type<ptr_any> {
-        unsafe { Type::from_ref(LLVMPointerTypeInContext(self.as_raw(), address_space)) }
+        unsafe { Type::from_raw(LLVMPointerTypeInContext(self.as_raw(), address_space)) }
     }
 
     /// Create an opaque pointer type in a context.
@@ -75,12 +75,12 @@ impl<T: PtrTypeTag> Type<T> {
 
 impl<T: TypeTag> Type<T> {
     pub fn vector_type_any_count(&self, element_count: u32) -> &Type<vector_any_len<T>> {
-        unsafe { Type::from_ref(LLVMVectorType(self.as_raw(), element_count)) }
+        unsafe { Type::from_raw(LLVMVectorType(self.as_raw(), element_count)) }
     }
 
     /// Create a vector type that contains a defined type and has a scalable number of elements.
     pub fn scalable_vector_type_any_count(&self, element_count: u32) -> &Type<vector_any_len<T>> {
-        unsafe { Type::from_ref(LLVMScalableVectorType(self.as_raw(), element_count)) }
+        unsafe { Type::from_raw(LLVMScalableVectorType(self.as_raw(), element_count)) }
     }
 }
 impl<T: VectorTypeTag> Type<T> {

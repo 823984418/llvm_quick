@@ -20,7 +20,7 @@ impl<T: TypeTag> Type<T> {
     pub fn fun_any<'s>(&'s self, args: &[&'s Type<any>], var: bool) -> &'s Type<fun_any> {
         unsafe {
             let ty = LLVMFunctionType(self.as_raw(), args.as_ptr() as _, args.len() as _, var as _);
-            Type::from_ref(ty)
+            Type::from_raw(ty)
         }
     }
 
@@ -51,7 +51,7 @@ impl<T: FunTypeTag> Type<T> {
 
     /// Obtain the Type this function Type returns.
     pub fn get_return_any(&self) -> &Type<any> {
-        unsafe { Type::from_ref(LLVMGetReturnType(self.as_raw())) }
+        unsafe { Type::from_raw(LLVMGetReturnType(self.as_raw())) }
     }
 
     /// Obtain the number of parameters this function accepts.

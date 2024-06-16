@@ -40,7 +40,7 @@ unsafe impl Opaque for RemarkDebugLoc {
 
 impl RemarkDebugLoc {
     pub fn get_source_file_path(&self) -> &RemarkString {
-        unsafe { RemarkString::from_ref(LLVMRemarkDebugLocGetSourceFilePath(self.as_raw())) }
+        unsafe { RemarkString::from_raw(LLVMRemarkDebugLocGetSourceFilePath(self.as_raw())) }
     }
 
     pub fn get_source_line(&self) -> u32 {
@@ -63,15 +63,15 @@ unsafe impl Opaque for RemarkArg {
 
 impl RemarkArg {
     pub fn get_key(&self) -> &RemarkString {
-        unsafe { RemarkString::from_ref(LLVMRemarkArgGetKey(self.as_raw())) }
+        unsafe { RemarkString::from_raw(LLVMRemarkArgGetKey(self.as_raw())) }
     }
 
     pub fn get_value(&self) -> &RemarkString {
-        unsafe { RemarkString::from_ref(LLVMRemarkArgGetValue(self.as_raw())) }
+        unsafe { RemarkString::from_raw(LLVMRemarkArgGetValue(self.as_raw())) }
     }
 
     pub fn get_debug_loc(&self) -> &RemarkDebugLoc {
-        unsafe { RemarkDebugLoc::from_ref(LLVMRemarkArgGetDebugLoc(self.as_raw())) }
+        unsafe { RemarkDebugLoc::from_raw(LLVMRemarkArgGetDebugLoc(self.as_raw())) }
     }
 }
 
@@ -96,19 +96,19 @@ impl RemarkEntry {
     }
 
     pub fn get_pass_name(&self) -> &RemarkString {
-        unsafe { RemarkString::from_ref(LLVMRemarkEntryGetPassName(self.as_raw())) }
+        unsafe { RemarkString::from_raw(LLVMRemarkEntryGetPassName(self.as_raw())) }
     }
 
     pub fn get_remark_name(&self) -> &RemarkString {
-        unsafe { RemarkString::from_ref(LLVMRemarkEntryGetRemarkName(self.as_raw())) }
+        unsafe { RemarkString::from_raw(LLVMRemarkEntryGetRemarkName(self.as_raw())) }
     }
 
     pub fn get_file_name(&self) -> &RemarkString {
-        unsafe { RemarkString::from_ref(LLVMRemarkEntryGetFunctionName(self.as_raw())) }
+        unsafe { RemarkString::from_raw(LLVMRemarkEntryGetFunctionName(self.as_raw())) }
     }
 
     pub fn get_debug_loc(&self) -> &RemarkDebugLoc {
-        unsafe { RemarkDebugLoc::from_ref(LLVMRemarkEntryGetDebugLoc(self.as_raw())) }
+        unsafe { RemarkDebugLoc::from_raw(LLVMRemarkEntryGetDebugLoc(self.as_raw())) }
     }
 
     pub fn get_hotness(&self) -> u64 {
@@ -120,11 +120,11 @@ impl RemarkEntry {
     }
 
     pub fn get_first_arg(&self) -> &RemarkArg {
-        unsafe { RemarkArg::from_ref(LLVMRemarkEntryGetFirstArg(self.as_raw())) }
+        unsafe { RemarkArg::from_raw(LLVMRemarkEntryGetFirstArg(self.as_raw())) }
     }
 
     pub fn get_next_arg(&self, it: &RemarkArg) -> &RemarkArg {
-        unsafe { RemarkArg::from_ref(LLVMRemarkEntryGetNextArg(it.as_raw(), self.as_raw())) }
+        unsafe { RemarkArg::from_raw(LLVMRemarkEntryGetNextArg(it.as_raw(), self.as_raw())) }
     }
 }
 
@@ -158,7 +158,7 @@ impl<'s> RemarkParser<'s> {
     }
 
     pub fn get_next(&self) -> &'s RemarkEntry {
-        unsafe { RemarkEntry::from_ref(LLVMRemarkParserGetNext(self.as_raw())) }
+        unsafe { RemarkEntry::from_raw(LLVMRemarkParserGetNext(self.as_raw())) }
     }
 
     pub fn has_error(&self) -> bool {

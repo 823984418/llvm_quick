@@ -155,7 +155,7 @@ impl Default for MCJITCompilerOptions {
                 code_model: o.CodeModel,
                 no_frame_pointer_elim: o.NoFramePointerElim != 0,
                 enable_fast_instruction_select: o.EnableFastISel != 0,
-                mc_jit_memory_manager: Owning::try_from_raw(o.MCJMM),
+                mc_jit_memory_manager: Owning::from_ptr(o.MCJMM),
             }
         }
     }
@@ -170,12 +170,13 @@ impl<'s> ExecutionEngine<'s> {
         unsafe {
             let mut ptr = null_mut();
             let mut err = null_mut();
+            let this = option.mc_jit_memory_manager;
             let mut o = LLVMMCJITCompilerOptions {
                 OptLevel: option.opt_level,
                 CodeModel: option.code_model,
                 NoFramePointerElim: option.no_frame_pointer_elim as _,
                 EnableFastISel: option.enable_fast_instruction_select as _,
-                MCJMM: Owning::option_into_raw(option.mc_jit_memory_manager),
+                MCJMM: this.map(Owning::into_raw).unwrap_or(null_mut()),
             };
             if LLVMCreateMCJITCompilerForModule(
                 &mut ptr,
@@ -270,7 +271,7 @@ impl<'s> ExecutionEngine<'s> {
             if LLVMFindFunction(self.as_raw(), name.as_ptr(), &mut ptr) != 0 {
                 return None;
             }
-            Some(Value::from_ref(ptr))
+            Some(Value::from_raw(ptr))
         }
     }
 
@@ -281,11 +282,11 @@ impl<'s> ExecutionEngine<'s> {
     }
 
     pub fn get_target_data(&self) -> &TargetData {
-        unsafe { TargetData::from_ref(LLVMGetExecutionEngineTargetData(self.as_raw())) }
+        unsafe { TargetData::from_raw(LLVMGetExecutionEngineTargetData(self.as_raw())) }
     }
 
     pub fn get_target_machine(&self) -> &TargetMachine {
-        unsafe { TargetMachine::from_ref(LLVMGetExecutionEngineTargetMachine(self.as_raw())) }
+        unsafe { TargetMachine::from_raw(LLVMGetExecutionEngineTargetMachine(self.as_raw())) }
     }
 
     pub fn add_global_mapping<T: TypeTag>(&self, global: &'s Value<T>, addr: *mut ()) {
@@ -431,18 +432,18 @@ impl OpaqueDrop for LLVMOpaqueMCJITMemoryManager {
 
 impl JITEventListener {
     pub fn create_gdb_registration_listener() -> &'static Self {
-        unsafe { Self::from_ref(LLVMCreateGDBRegistrationListener()) }
+        unsafe { Self::from_raw(LLVMCreateGDBRegistrationListener()) }
     }
 
     pub fn create_intel_jit_event_listener() -> &'static Self {
-        unsafe { Self::from_ref(LLVMCreateIntelJITEventListener()) }
+        unsafe { Self::from_raw(LLVMCreateIntelJITEventListener()) }
     }
 
     pub fn create_oprofile_jit_event_listener() -> &'static Self {
-        unsafe { Self::from_ref(LLVMCreateOProfileJITEventListener()) }
+        unsafe { Self::from_raw(LLVMCreateOProfileJITEventListener()) }
     }
 
     pub fn create_perf_jit_event_listener() -> &'static Self {
-        unsafe { Self::from_ref(LLVMCreatePerfJITEventListener()) }
+        unsafe { Self::from_raw(LLVMCreatePerfJITEventListener()) }
     }
 }

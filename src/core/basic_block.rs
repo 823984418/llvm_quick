@@ -14,7 +14,7 @@ impl Debug for BasicBlock {
 
 impl BasicBlock {
     pub fn as_value(&self) -> &Value<label> {
-        unsafe { Value::from_ref(LLVMBasicBlockAsValue(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMBasicBlockAsValue(self.as_raw())) }
     }
 }
 
@@ -26,7 +26,7 @@ impl<T: TypeTag> Value<T> {
 
 impl Value<label> {
     pub fn as_basic_block(&self) -> &BasicBlock {
-        unsafe { BasicBlock::from_ref(LLVMValueAsBasicBlock(self.as_raw())) }
+        unsafe { BasicBlock::from_raw(LLVMValueAsBasicBlock(self.as_raw())) }
     }
 }
 
@@ -36,11 +36,11 @@ impl BasicBlock {
     }
 
     pub fn get_parent(&self) -> &Value<label> {
-        unsafe { Value::from_ref(LLVMGetBasicBlockParent(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMGetBasicBlockParent(self.as_raw())) }
     }
 
     pub fn get_terminator(&self) -> &Value<any> {
-        unsafe { Value::from_ref(LLVMGetBasicBlockTerminator(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMGetBasicBlockTerminator(self.as_raw())) }
     }
 }
 
@@ -61,27 +61,27 @@ impl<T: FunTypeTag> Value<T> {
     }
 
     pub fn get_first_basic_block(&self) -> &BasicBlock {
-        unsafe { BasicBlock::from_ref(LLVMGetFirstBasicBlock(self.as_raw())) }
+        unsafe { BasicBlock::from_raw(LLVMGetFirstBasicBlock(self.as_raw())) }
     }
 
     pub fn get_last_basic_block(&self) -> &BasicBlock {
-        unsafe { BasicBlock::from_ref(LLVMGetLastBasicBlock(self.as_raw())) }
+        unsafe { BasicBlock::from_raw(LLVMGetLastBasicBlock(self.as_raw())) }
     }
 }
 
 impl BasicBlock {
     pub fn get_next(&self) -> &Self {
-        unsafe { Self::from_ref(LLVMGetNextBasicBlock(self.as_raw())) }
+        unsafe { Self::from_raw(LLVMGetNextBasicBlock(self.as_raw())) }
     }
 
     pub fn get_previous(&self) -> &Self {
-        unsafe { Self::from_ref(LLVMGetPreviousBasicBlock(self.as_raw())) }
+        unsafe { Self::from_raw(LLVMGetPreviousBasicBlock(self.as_raw())) }
     }
 }
 
 impl<T: FunTypeTag> Value<T> {
     pub fn get_entry_basic_block(&self) -> &BasicBlock {
-        unsafe { BasicBlock::from_ref(LLVMGetEntryBasicBlock(self.as_raw())) }
+        unsafe { BasicBlock::from_raw(LLVMGetEntryBasicBlock(self.as_raw())) }
     }
 }
 
@@ -99,7 +99,7 @@ impl<T: FunTypeTag> Value<T> {
 
 impl Context {
     pub fn create_basic_block(&self, name: &CStr) -> &BasicBlock {
-        unsafe { BasicBlock::from_ref(LLVMCreateBasicBlockInContext(self.as_raw(), name.as_ptr())) }
+        unsafe { BasicBlock::from_raw(LLVMCreateBasicBlockInContext(self.as_raw(), name.as_ptr())) }
     }
 
     pub fn append_basic_block<'s, T: FunTypeTag>(
@@ -109,13 +109,13 @@ impl Context {
     ) -> &'s BasicBlock {
         unsafe {
             let ptr = LLVMAppendBasicBlockInContext(self.as_raw(), f.as_raw(), name.as_ptr());
-            BasicBlock::from_ref(ptr)
+            BasicBlock::from_raw(ptr)
         }
     }
 
     pub fn insert_basic_block(&self, bb: &BasicBlock, name: &CStr) -> &BasicBlock {
         unsafe {
-            BasicBlock::from_ref(LLVMInsertBasicBlockInContext(
+            BasicBlock::from_raw(LLVMInsertBasicBlockInContext(
                 self.as_raw(),
                 bb.as_raw(),
                 name.as_ptr(),
@@ -142,10 +142,10 @@ impl BasicBlock {
     }
 
     pub fn get_first_instruction(&self) -> &Value<any> {
-        unsafe { Value::from_ref(LLVMGetFirstInstruction(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMGetFirstInstruction(self.as_raw())) }
     }
 
     pub fn get_last_instruction(&self) -> &Value<any> {
-        unsafe { Value::from_ref(LLVMGetLastInstruction(self.as_raw())) }
+        unsafe { Value::from_raw(LLVMGetLastInstruction(self.as_raw())) }
     }
 }

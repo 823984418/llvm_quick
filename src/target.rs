@@ -27,7 +27,7 @@ unsafe impl Opaque for TargetLibraryInfo {
 
 impl<'s> Module<'s> {
     pub fn get_data_layout(&self) -> &TargetData {
-        unsafe { TargetData::from_ref(LLVMGetModuleDataLayout(self.as_raw())) }
+        unsafe { TargetData::from_raw(LLVMGetModuleDataLayout(self.as_raw())) }
     }
 
     pub fn set_data_layout(&self, v: &TargetData) {
@@ -62,15 +62,15 @@ impl TargetData {
     }
 
     pub fn int_ptr_type<'s>(&self) -> &'s Type<int_any> {
-        unsafe { Type::from_ref(LLVMIntPtrType(self.as_raw())) }
+        unsafe { Type::from_raw(LLVMIntPtrType(self.as_raw())) }
     }
 
     pub fn int_ptr_type_for_address_space<'s>(&self, address_space: u32) -> &'s Type<int_any> {
-        unsafe { Type::from_ref(LLVMIntPtrTypeForAS(self.as_raw(), address_space)) }
+        unsafe { Type::from_raw(LLVMIntPtrTypeForAS(self.as_raw(), address_space)) }
     }
 
     pub fn int_ptr_type_in_context<'s>(&self, context: &'s Context) -> &'s Type<int_any> {
-        unsafe { Type::from_ref(LLVMIntPtrTypeInContext(context.as_raw(), self.as_raw())) }
+        unsafe { Type::from_raw(LLVMIntPtrTypeInContext(context.as_raw(), self.as_raw())) }
     }
 
     pub fn int_ptr_type_for_address_space_in_context<'s>(
@@ -80,7 +80,7 @@ impl TargetData {
     ) -> &'s Type<int_any> {
         unsafe {
             let ptr = LLVMIntPtrTypeForASInContext(context.as_raw(), self.as_raw(), space);
-            Type::from_ref(ptr)
+            Type::from_raw(ptr)
         }
     }
 

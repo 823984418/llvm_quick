@@ -6,11 +6,11 @@ use crate::{Use, Value};
 
 impl<T: TypeTag> Value<T> {
     pub fn get_operand(&self, index: u32) -> Option<&Value<any>> {
-        unsafe { Value::try_from_ref(LLVMGetOperand(self.as_raw(), index)) }
+        unsafe { Value::from_ptr(LLVMGetOperand(self.as_raw(), index)) }
     }
 
     pub fn get_operand_use(&self, index: u32) -> Option<&Use> {
-        unsafe { Use::try_from_ref(LLVMGetOperandUse(self.as_raw(), index)) }
+        unsafe { Use::from_ptr(LLVMGetOperandUse(self.as_raw(), index)) }
     }
 
     pub fn set_operand<O: TypeTag>(&self, index: u32, val: &Value<O>) {

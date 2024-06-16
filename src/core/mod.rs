@@ -75,7 +75,7 @@ impl Deref for Message {
 }
 
 impl Message {
-    pub unsafe fn try_from_raw(ptr: *mut c_char) -> Option<Self> {
+    pub unsafe fn from_ptr(ptr: *mut c_char) -> Option<Self> {
         if ptr.is_null() {
             None
         } else {
