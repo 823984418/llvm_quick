@@ -49,6 +49,18 @@ impl<T: TypeTag> Instruction<T> {
     }
 }
 
+impl<T: TypeTag> Debug for Constant<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Debug::fmt(self.deref(), f)
+    }
+}
+
+impl<T: TypeTag> Constant<T> {
+    pub fn to_any(&self) -> &Constant<any> {
+        self.cast()
+    }
+}
+
 impl<T: TypeTag> Value<T> {
     pub fn get_kind(&self) -> LLVMValueKind {
         unsafe { LLVMGetValueKind(self.as_raw()) }
