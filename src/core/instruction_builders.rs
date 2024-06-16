@@ -1010,7 +1010,43 @@ impl<'s> Builder<'s> {
     // TODO
 }
 
+impl<T: TypeTag> Instruction<T> {
+    pub fn get_num_mask_elements(&self) -> u32 {
+        unsafe { LLVMGetNumMaskElements(self.as_raw()) }
+    }
+}
+
 /// Return a constant that specifies that the result of a ShuffleVectorInst is undefined.
 pub fn get_undef_mask_elem() -> i32 {
     unsafe { LLVMGetUndefMaskElem() }
+}
+
+impl<T: TypeTag> Instruction<T> {
+    pub fn get_mask_value(&self, elt: u32) -> i32 {
+        unsafe { LLVMGetMaskValue(self.as_raw(), elt) }
+    }
+
+    pub fn is_atomic_single_thread(&self) -> bool {
+        unsafe { LLVMIsAtomicSingleThread(self.as_raw()) != 0 }
+    }
+
+    pub fn set_atomic_single_thread(&self, single_thread: bool) {
+        unsafe { LLVMSetAtomicSingleThread(self.as_raw(), single_thread as _) }
+    }
+
+    pub fn get_cmp_xchg_success_ordering(&self) -> LLVMAtomicOrdering {
+        unsafe { LLVMGetCmpXchgSuccessOrdering(self.as_raw()) }
+    }
+
+    pub fn set_cmp_xchg_success_ordering(&self, ordering: LLVMAtomicOrdering) {
+        unsafe { LLVMSetCmpXchgSuccessOrdering(self.as_raw(), ordering) }
+    }
+
+    pub fn get_cmp_xchg_failure_ordering(&self) -> LLVMAtomicOrdering {
+        unsafe { LLVMGetCmpXchgFailureOrdering(self.as_raw()) }
+    }
+
+    pub fn set_cmp_xchg_failure_ordering(&self, ordering: LLVMAtomicOrdering) {
+        unsafe { LLVMSetCmpXchgFailureOrdering(self.as_raw(), ordering) }
+    }
 }
