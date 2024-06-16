@@ -181,6 +181,88 @@ impl<T: TypeTag> Instruction<T> {
     pub fn get_unwind_dest(&self) -> &BasicBlock {
         unsafe { BasicBlock::from_raw(LLVMGetUnwindDest(self.as_raw())) }
     }
+
+    pub fn set_normal_dest(&self, b: &BasicBlock) {
+        unsafe { LLVMSetNormalDest(self.as_raw(), b.as_raw()) }
+    }
+
+    pub fn set_unwind_dest(&self, b: &BasicBlock) {
+        unsafe { LLVMSetUnwindDest(self.as_raw(), b.as_raw()) }
+    }
 }
 
-// TODO
+impl<T: TypeTag> Instruction<T> {
+    pub fn get_num_successors(&self) -> u32 {
+        unsafe { LLVMGetNumSuccessors(self.as_raw()) }
+    }
+
+    pub fn get_successor(&self, i: u32) -> &BasicBlock {
+        unsafe { BasicBlock::from_raw(LLVMGetSuccessor(self.as_raw(), i)) }
+    }
+
+    pub fn set_successor(&self, i: u32, block: &BasicBlock) {
+        unsafe { LLVMSetSuccessor(self.as_raw(), i, block.as_raw()) }
+    }
+
+    pub fn is_conditional(&self) -> bool {
+        unsafe { LLVMIsConditional(self.as_raw()) != 0 }
+    }
+
+    pub fn get_conditional(&self) -> &Value<any> {
+        unsafe { Value::from_raw(LLVMGetCondition(self.as_raw())) }
+    }
+
+    pub fn set_conditional(&self, cond: &Value<any>) {
+        unsafe { LLVMSetCondition(self.as_raw(), cond.as_raw()) }
+    }
+
+    pub fn get_switch_default_dest(&self) -> &BasicBlock {
+        unsafe { BasicBlock::from_raw(LLVMGetSwitchDefaultDest(self.as_raw())) }
+    }
+}
+
+impl<T: TypeTag> Instruction<T> {
+    pub fn get_allocated_type(&self) -> &Type<any> {
+        unsafe { Type::from_raw(LLVMGetAllocatedType(self.as_raw())) }
+    }
+}
+
+impl<T: TypeTag> Instruction<T> {
+    pub fn is_in_bounds(&self) -> bool {
+        unsafe { LLVMIsInBounds(self.as_raw()) != 0 }
+    }
+
+    pub fn set_is_in_bounds(&self, in_bounds: bool) {
+        unsafe { LLVMSetIsInBounds(self.as_raw(), in_bounds as _) }
+    }
+
+    pub fn get_gep_source_element_type(&self) -> &Type<any> {
+        unsafe { Type::from_raw(LLVMGetGEPSourceElementType(self.as_raw())) }
+    }
+}
+
+impl<T: TypeTag> Instruction<T> {
+    pub fn add_incoming(&self, v: &[&Value<any>], b: &[&BasicBlock]) {
+        assert_eq!(v.len(), b.len());
+        unsafe {
+            LLVMAddIncoming(
+                self.as_raw(),
+                v.as_ptr() as _,
+                b.as_ptr() as _,
+                v.len() as _,
+            )
+        }
+    }
+
+    pub fn count_incoming(&self) -> u32 {
+        unsafe { LLVMCountIncoming(self.as_raw()) }
+    }
+
+    pub fn get_incoming_value(&self, index: u32) -> &Value<any> {
+        unsafe { Value::from_raw(LLVMGetIncomingValue(self.as_raw(), index)) }
+    }
+
+    pub fn get_incoming_block(&self, index: u32) -> &BasicBlock {
+        unsafe { BasicBlock::from_raw(LLVMGetIncomingBlock(self.as_raw(), index)) }
+    }
+}
