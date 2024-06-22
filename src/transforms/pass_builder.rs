@@ -16,7 +16,7 @@ unsafe impl Opaque for PassBuilderOptions {
     type Inner = LLVMOpaquePassBuilderOptions;
 }
 
-impl<'s> Module<'s> {
+impl<'c> Module<'c> {
     pub fn run_pass(
         &self,
         passes: &CStr,

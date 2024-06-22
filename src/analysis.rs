@@ -6,7 +6,7 @@ use crate::core::Message;
 use crate::type_tag::*;
 use crate::{Module, Opaque, Value};
 
-impl<'s> Module<'s> {
+impl<'c> Module<'c> {
     pub fn verify(&self, action: LLVMVerifierFailureAction) -> Result<(), Message> {
         unsafe {
             let mut err = null_mut();

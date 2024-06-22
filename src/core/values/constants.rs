@@ -190,9 +190,9 @@ impl<T: TypeTag> Constant<T> {
     }
 }
 
-pub fn const_vector<'s, T: TypeTag>(
-    scalar_constant_vals: &[&'s Value<T>],
-) -> &'s Constant<vector_any_len<T>> {
+pub fn const_vector<'c, T: TypeTag>(
+    scalar_constant_vals: &[&'c Value<T>],
+) -> &'c Constant<vector_any_len<T>> {
     unsafe {
         Constant::from_raw(LLVMConstVector(
             scalar_constant_vals.as_ptr() as _,
@@ -275,19 +275,19 @@ impl<T: IntMathTypeTag> Constant<T> {
     }
 }
 
-pub fn const_i_cmp<'s, T: IntMathTypeTag>(
+pub fn const_i_cmp<'c, T: IntMathTypeTag>(
     predicate: LLVMIntPredicate,
-    lhs: &'s Value<T>,
+    lhs: &'c Value<T>,
     rhs: &Value<T>,
-) -> &'s Constant<T> {
+) -> &'c Constant<T> {
     unsafe { Constant::from_raw(LLVMConstICmp(predicate, lhs.as_raw(), rhs.as_raw())) }
 }
 
-pub fn const_f_cmp<'s, T: FloatMathTypeTag>(
+pub fn const_f_cmp<'c, T: FloatMathTypeTag>(
     predicate: LLVMRealPredicate,
-    lhs: &'s Value<T>,
+    lhs: &'c Value<T>,
     rhs: &Value<T>,
-) -> &'s Constant<T> {
+) -> &'c Constant<T> {
     unsafe { Constant::from_raw(LLVMConstFCmp(predicate, lhs.as_raw(), rhs.as_raw())) }
 }
 
@@ -495,25 +495,25 @@ impl<T: TypeTag> GlobalValue<T> {
     }
 }
 
-impl<'s> Drop for ValueMetadataEntries<'s> {
+impl<'m> Drop for ValueMetadataEntries<'m> {
     fn drop(&mut self) {
         unsafe { LLVMDisposeValueMetadataEntries(self.as_raw()) }
     }
 }
 
-impl<'s> ValueMetadataEntries<'s> {
+impl<'m> ValueMetadataEntries<'m> {
     pub fn get_kind(&self, index: u32) -> u32 {
         assert!((index as usize) < self.len);
         unsafe { LLVMValueMetadataEntriesGetKind(self.as_raw(), index) }
     }
 
-    pub fn get_metadata(&self, index: u32) -> &'s Metadata {
+    pub fn get_metadata(&self, index: u32) -> &'m Metadata {
         assert!((index as usize) < self.len);
         unsafe { Metadata::from_raw(LLVMValueMetadataEntriesGetMetadata(self.as_raw(), index)) }
     }
 }
 
-impl<'s> Module<'s> {
+impl<'c> Module<'c> {
     pub fn add_global<T: TypeTag>(&self, ty: &Type<T>, name: &CStr) -> &GlobalValue<T> {
         unsafe { GlobalValue::from_raw(LLVMAddGlobal(self.as_raw(), ty.as_raw(), name.as_ptr())) }
     }
@@ -606,7 +606,7 @@ impl<T: TypeTag> GlobalValue<T> {
     }
 }
 
-impl<'s> Module<'s> {
+impl<'c> Module<'c> {
     pub fn get_named_global_alias(&self, name: &[u8]) -> &GlobalAlias<any> {
         unsafe {
             GlobalAlias::from_raw(LLVMGetNamedGlobalAlias(
@@ -644,7 +644,7 @@ impl<T: TypeTag> GlobalAlias<T> {
     }
 }
 
-impl<'s> Module<'s> {
+impl<'c> Module<'c> {
     pub fn add_alias<T: TypeTag>(
         &self,
         value_type: &Type<T>,

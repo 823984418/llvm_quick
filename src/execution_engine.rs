@@ -24,12 +24,12 @@ unsafe impl Opaque for GenericValue {
 }
 
 #[repr(transparent)]
-pub struct ExecutionEngine<'s> {
+pub struct ExecutionEngine<'c> {
     _opaque: PhantomOpaque,
-    _marker: PhantomData<&'s Context>,
+    _marker: PhantomData<&'c Context>,
 }
 
-unsafe impl<'s> Opaque for ExecutionEngine<'s> {
+unsafe impl<'c> Opaque for ExecutionEngine<'c> {
     type Inner = LLVMOpaqueExecutionEngine;
 }
 
@@ -88,9 +88,9 @@ impl OpaqueDrop for LLVMOpaqueGenericValue {
     }
 }
 
-impl<'s> ExecutionEngine<'s> {
+impl<'c> ExecutionEngine<'c> {
     pub fn create_execution_engine_for_module(
-        module: Owning<Module<'s>>,
+        module: Owning<Module<'c>>,
     ) -> Result<Owning<Self>, Message> {
         unsafe {
             let mut ptr = null_mut();
@@ -103,7 +103,7 @@ impl<'s> ExecutionEngine<'s> {
     }
 
     pub fn create_interpreter_for_module(
-        module: Owning<Module<'s>>,
+        module: Owning<Module<'c>>,
     ) -> Result<Owning<Self>, Message> {
         unsafe {
             let mut ptr = null_mut();
@@ -116,7 +116,7 @@ impl<'s> ExecutionEngine<'s> {
     }
 
     pub fn create_jit_compiler_for_module(
-        module: Owning<Module<'s>>,
+        module: Owning<Module<'c>>,
         opt_level: u32,
     ) -> Result<Owning<Self>, Message> {
         unsafe {
@@ -161,10 +161,10 @@ impl Default for MCJITCompilerOptions {
     }
 }
 
-impl<'s> ExecutionEngine<'s> {
+impl<'c> ExecutionEngine<'c> {
     /// Create an MCJIT execution engine for a module, with the given options.
     pub fn create_mc_jit_compiler_for_module(
-        module: Owning<Module<'s>>,
+        module: Owning<Module<'c>>,
         option: MCJITCompilerOptions,
     ) -> Result<Owning<Self>, Message> {
         unsafe {
@@ -199,7 +199,7 @@ impl OpaqueDrop for LLVMOpaqueExecutionEngine {
     }
 }
 
-impl<'s> ExecutionEngine<'s> {
+impl<'c> ExecutionEngine<'c> {
     pub fn run_static_constructors(&self) {
         unsafe { LLVMRunStaticConstructors(self.as_raw()) };
     }
@@ -210,7 +210,7 @@ impl<'s> ExecutionEngine<'s> {
 
     pub fn run_function_as_main(
         &self,
-        f: &'s Value<fun<(int32, ptr), int32>>,
+        f: &'c Value<fun<(int32, ptr), int32>>,
         args: &[&CStr],
         envs: &[&CStr],
     ) -> i32 {
@@ -233,7 +233,7 @@ impl<'s> ExecutionEngine<'s> {
 
     pub fn run_function<T: FunTypeTag>(
         &self,
-        f: &'s Value<T>,
+        f: &'c Value<T>,
         args: &[&GenericValue],
     ) -> Owning<GenericValue> {
         unsafe {
@@ -246,15 +246,15 @@ impl<'s> ExecutionEngine<'s> {
         }
     }
 
-    pub fn free_machine_code_for_function<T: FunTypeTag>(&self, f: &'s Value<T>) {
+    pub fn free_machine_code_for_function<T: FunTypeTag>(&self, f: &'c Value<T>) {
         unsafe { LLVMFreeMachineCodeForFunction(self.as_raw(), f.as_raw()) };
     }
 
-    pub fn add_module(&self, m: Owning<Module<'s>>) {
+    pub fn add_module(&self, m: Owning<Module<'c>>) {
         unsafe { LLVMAddModule(self.as_raw(), m.into_raw()) };
     }
 
-    pub fn remove_module(&self, m: *const Module<'s>) -> Result<Owning<Module>, Message> {
+    pub fn remove_module(&self, m: *const Module<'c>) -> Result<Owning<Module>, Message> {
         unsafe {
             let mut ptr = null_mut();
             let mut err = null_mut();
@@ -265,7 +265,7 @@ impl<'s> ExecutionEngine<'s> {
         }
     }
 
-    pub fn find_function(&self, name: &CStr) -> Option<&'s Value<fun_any>> {
+    pub fn find_function(&self, name: &CStr) -> Option<&'c Value<fun_any>> {
         unsafe {
             let mut ptr = null_mut();
             if LLVMFindFunction(self.as_raw(), name.as_ptr(), &mut ptr) != 0 {
@@ -289,11 +289,11 @@ impl<'s> ExecutionEngine<'s> {
         unsafe { TargetMachine::from_raw(LLVMGetExecutionEngineTargetMachine(self.as_raw())) }
     }
 
-    pub fn add_global_mapping<T: TypeTag>(&self, global: &'s Value<T>, addr: *mut ()) {
+    pub fn add_global_mapping<T: TypeTag>(&self, global: &'c Value<T>, addr: *mut ()) {
         unsafe { LLVMAddGlobalMapping(self.as_raw(), global.as_raw(), addr as _) }
     }
 
-    pub fn get_pointer_to_global<T: TypeTag>(&self, global: &'s Value<T>) -> *mut () {
+    pub fn get_pointer_to_global<T: TypeTag>(&self, global: &'c Value<T>) -> *mut () {
         unsafe { LLVMGetPointerToGlobal(self.as_raw(), global.as_raw()) as _ }
     }
 

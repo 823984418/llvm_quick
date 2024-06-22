@@ -5,7 +5,7 @@ use llvm_sys::bit_writer::*;
 use crate::owning::Owning;
 use crate::{MemoryBuffer, Module, Opaque};
 
-impl<'s> Module<'s> {
+impl<'c> Module<'c> {
     pub fn write_bitcode_to_file(&self, path: &CStr) -> Result<(), ()> {
         unsafe {
             if LLVMWriteBitcodeToFile(self.as_raw(), path.as_ptr()) != 0 {

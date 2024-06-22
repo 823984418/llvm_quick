@@ -11,7 +11,7 @@ impl PassManager {
     }
 }
 
-impl<'s> Module<'s> {
+impl<'c> Module<'c> {
     pub fn create_function_pass_manager(&self) -> Owning<PassManager> {
         unsafe { Owning::from_raw(LLVMCreateFunctionPassManagerForModule(self.as_raw())) }
     }

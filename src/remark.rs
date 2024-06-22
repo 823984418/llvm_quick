@@ -129,17 +129,17 @@ impl RemarkEntry {
 }
 
 #[repr(transparent)]
-pub struct RemarkParser<'s> {
+pub struct RemarkParser<'b> {
     _opaque: PhantomOpaque,
-    _marker: PhantomData<&'s [u8]>,
+    _marker: PhantomData<&'b [u8]>,
 }
 
-unsafe impl<'s> Opaque for RemarkParser<'s> {
+unsafe impl<'b> Opaque for RemarkParser<'b> {
     type Inner = LLVMRemarkOpaqueParser;
 }
 
-impl<'s> RemarkParser<'s> {
-    pub fn create_yaml(buf: &'s [u8]) -> Owning<Self> {
+impl<'b> RemarkParser<'b> {
+    pub fn create_yaml(buf: &'b [u8]) -> Owning<Self> {
         unsafe {
             Owning::from_raw(LLVMRemarkParserCreateYAML(
                 buf.as_ptr() as _,
@@ -148,7 +148,7 @@ impl<'s> RemarkParser<'s> {
         }
     }
 
-    pub fn create_bitstream(buf: &'s [u8]) -> Owning<Self> {
+    pub fn create_bitstream(buf: &'b [u8]) -> Owning<Self> {
         unsafe {
             Owning::from_raw(LLVMRemarkParserCreateBitstream(
                 buf.as_ptr() as _,
@@ -157,7 +157,7 @@ impl<'s> RemarkParser<'s> {
         }
     }
 
-    pub fn get_next(&self) -> &'s RemarkEntry {
+    pub fn get_next(&self) -> &'b RemarkEntry {
         unsafe { RemarkEntry::from_raw(LLVMRemarkParserGetNext(self.as_raw())) }
     }
 
@@ -165,7 +165,7 @@ impl<'s> RemarkParser<'s> {
         unsafe { LLVMRemarkParserHasError(self.as_raw()) != 0 }
     }
 
-    pub fn get_error_message(&self) -> Option<&'s CStr> {
+    pub fn get_error_message(&self) -> Option<&'b CStr> {
         unsafe {
             let ptr = LLVMRemarkParserGetErrorMessage(self.as_raw());
             if ptr.is_null() {

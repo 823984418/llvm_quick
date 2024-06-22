@@ -9,47 +9,47 @@ use crate::owning::{OpaqueDrop, Owning};
 use crate::{Context, MemoryBuffer, Opaque, PhantomOpaque};
 
 #[repr(transparent)]
-pub struct SectionIterator<'a, 's> {
+pub struct SectionIterator<'b, 'm> {
     _opaque: PhantomOpaque,
-    _marker: PhantomData<&'a Binary<'s>>,
+    _marker: PhantomData<&'b Binary<'m>>,
 }
 
-unsafe impl<'a, 's> Opaque for SectionIterator<'a, 's> {
+unsafe impl<'b, 'm> Opaque for SectionIterator<'b, 'm> {
     type Inner = LLVMOpaqueSectionIterator;
 }
 
 #[repr(transparent)]
-pub struct SymbolIterator<'a, 's> {
+pub struct SymbolIterator<'b, 'm> {
     _opaque: PhantomOpaque,
-    _marker: PhantomData<&'a Binary<'s>>,
+    _marker: PhantomData<&'b Binary<'m>>,
 }
 
-unsafe impl<'a, 's> Opaque for SymbolIterator<'a, 's> {
+unsafe impl<'b, 'm> Opaque for SymbolIterator<'b, 'm> {
     type Inner = LLVMOpaqueSymbolIterator;
 }
 
 #[repr(transparent)]
-pub struct RelocationIterator<'a, 's> {
+pub struct RelocationIterator<'b, 'm> {
     _opaque: PhantomOpaque,
-    _marker: PhantomData<&'a Binary<'s>>,
+    _marker: PhantomData<&'b Binary<'m>>,
 }
 
-unsafe impl<'a, 's> Opaque for RelocationIterator<'a, 's> {
+unsafe impl<'b, 'm> Opaque for RelocationIterator<'b, 'm> {
     type Inner = LLVMOpaqueRelocationIterator;
 }
 
 #[repr(transparent)]
-pub struct Binary<'s> {
+pub struct Binary<'m> {
     _opaque: PhantomOpaque,
-    _marker: PhantomData<&'s MemoryBuffer>,
+    _marker: PhantomData<&'m MemoryBuffer>,
 }
 
-unsafe impl<'s> Opaque for Binary<'s> {
+unsafe impl<'m> Opaque for Binary<'m> {
     type Inner = LLVMOpaqueBinary;
 }
 
-impl<'s> Binary<'s> {
-    pub fn create(mem_buf: &'s MemoryBuffer, context: &Context) -> Result<Owning<Self>, Message> {
+impl<'m> Binary<'m> {
+    pub fn create(mem_buf: &'m MemoryBuffer, context: &Context) -> Result<Owning<Self>, Message> {
         unsafe {
             let mut error = null_mut();
             let ptr = LLVMCreateBinary(mem_buf.as_raw(), context.as_raw(), &mut error);
@@ -68,7 +68,7 @@ impl OpaqueDrop for LLVMOpaqueBinary {
     }
 }
 
-impl<'s> Binary<'s> {
+impl<'m> Binary<'m> {
     pub fn copy_memory_buffer(&self) -> Owning<MemoryBuffer> {
         unsafe { Owning::from_raw(LLVMBinaryCopyMemoryBuffer(self.as_raw())) }
     }
@@ -80,7 +80,7 @@ impl<'s> Binary<'s> {
     pub fn mach_o_universal_binary_copy_object_for_arch(
         &self,
         arch: &[u8],
-    ) -> Result<Owning<Binary<'s>>, Message> {
+    ) -> Result<Owning<Binary<'m>>, Message> {
         unsafe {
             let mut error = null_mut();
             let ptr = LLVMMachOUniversalBinaryCopyObjectForArch(
@@ -97,7 +97,7 @@ impl<'s> Binary<'s> {
         }
     }
 
-    pub fn copy_section_iterator(&self) -> Owning<SectionIterator<'_, 's>> {
+    pub fn copy_section_iterator(&self) -> Owning<SectionIterator<'_, 'm>> {
         unsafe { Owning::from_raw(LLVMObjectFileCopySectionIterator(self.as_raw())) }
     }
 
@@ -120,7 +120,7 @@ impl OpaqueDrop for LLVMOpaqueSectionIterator {
     }
 }
 
-impl<'a, 's> SectionIterator<'a, 's> {
+impl<'b, 'm> SectionIterator<'b, 'm> {
     pub fn move_to_next_section(&self) {
         unsafe { LLVMMoveToNextSection(self.as_raw()) }
     }
@@ -136,13 +136,13 @@ impl OpaqueDrop for LLVMOpaqueSymbolIterator {
     }
 }
 
-impl<'a, 's> SymbolIterator<'a, 's> {
+impl<'b, 'm> SymbolIterator<'b, 'm> {
     pub fn move_to_next_symbol(&self) {
         unsafe { LLVMMoveToNextSymbol(self.as_raw()) }
     }
 }
 
-impl<'a, 's> SectionIterator<'a, 's> {
+impl<'b, 'm> SectionIterator<'b, 'm> {
     pub fn get_section_name(&self) -> &CStr {
         unsafe { CStr::from_ptr(LLVMGetSectionName(self.as_raw())) }
     }
@@ -174,19 +174,19 @@ impl OpaqueDrop for LLVMOpaqueRelocationIterator {
     }
 }
 
-impl<'a, 's> SectionIterator<'a, 's> {
+impl<'b, 'm> SectionIterator<'b, 'm> {
     pub fn is_relocation_iterator_at_end(&self, ri: &RelocationIterator) -> bool {
         unsafe { LLVMIsRelocationIteratorAtEnd(self.as_raw(), ri.as_raw()) != 0 }
     }
 }
 
-impl<'a, 's> RelocationIterator<'a, 's> {
+impl<'b, 'm> RelocationIterator<'b, 'm> {
     pub fn move_to_next_relocation(&self) {
         unsafe { LLVMMoveToNextRelocation(self.as_raw()) }
     }
 }
 
-impl<'a, 's> SymbolIterator<'a, 's> {
+impl<'b, 'm> SymbolIterator<'b, 'm> {
     pub fn get_symbol_name(&self) -> &CStr {
         unsafe { CStr::from_ptr(LLVMGetSymbolName(self.as_raw())) }
     }
@@ -200,12 +200,12 @@ impl<'a, 's> SymbolIterator<'a, 's> {
     }
 }
 
-impl<'a, 's> RelocationIterator<'a, 's> {
+impl<'b, 'm> RelocationIterator<'b, 'm> {
     pub fn get_relocation_offset(&self) -> u64 {
         unsafe { LLVMGetRelocationOffset(self.as_raw()) }
     }
 
-    pub fn get_relocation_symbol(&self) -> &SymbolIterator<'a, 's> {
+    pub fn get_relocation_symbol(&self) -> &SymbolIterator<'b, 'm> {
         unsafe { SymbolIterator::from_raw(LLVMGetRelocationSymbol(self.as_raw())) }
     }
 

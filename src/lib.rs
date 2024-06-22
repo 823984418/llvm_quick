@@ -53,12 +53,12 @@ unsafe impl Opaque for Context {
 }
 
 #[repr(transparent)]
-pub struct Module<'s> {
+pub struct Module<'c> {
     _opaque: PhantomOpaque,
-    _marker: PhantomData<&'s Context>,
+    _marker: PhantomData<&'c Context>,
 }
 
-unsafe impl<'s> Opaque for Module<'s> {
+unsafe impl<'c> Opaque for Module<'c> {
     type Inner = LLVMModule;
 }
 
@@ -247,21 +247,22 @@ unsafe impl Opaque for ValueMetadataEntry {
 }
 
 #[repr(transparent)]
-pub struct Builder<'s> {
+pub struct Builder<'c> {
     _opaque: PhantomOpaque,
-    _marker: PhantomData<&'s Context>,
+    _marker: PhantomData<&'c Context>,
 }
 
-unsafe impl<'s> Opaque for Builder<'s> {
+unsafe impl<'c> Opaque for Builder<'c> {
     type Inner = LLVMBuilder;
 }
 
 #[repr(transparent)]
-pub struct DIBuilder {
+pub struct DIBuilder<'m, 'c> {
     _opaque: PhantomOpaque,
+    _marker: PhantomData<&'m Module<'c>>,
 }
 
-unsafe impl Opaque for DIBuilder {
+unsafe impl<'m, 'c> Opaque for DIBuilder<'m, 'c> {
     type Inner = LLVMOpaqueDIBuilder;
 }
 
@@ -293,12 +294,12 @@ unsafe impl Opaque for Use {
 }
 
 #[repr(transparent)]
-pub struct OperandBundle<'s> {
+pub struct OperandBundle<'c> {
     _opaque: PhantomOpaque,
-    _marker: PhantomData<&'s Context>,
+    _marker: PhantomData<&'c Context>,
 }
 
-unsafe impl<'s> Opaque for OperandBundle<'s> {
+unsafe impl<'c> Opaque for OperandBundle<'c> {
     type Inner = LLVMOpaqueOperandBundle;
 }
 
@@ -431,13 +432,13 @@ impl Deref for StringAttribute {
     }
 }
 
-pub struct ValueMetadataEntries<'s> {
+pub struct ValueMetadataEntries<'m> {
     ptr: NonNull<LLVMValueMetadataEntry>,
     len: usize,
-    marker: PhantomData<&'s Metadata>,
+    marker: PhantomData<&'m Metadata>,
 }
 
-impl<'s> ValueMetadataEntries<'s> {
+impl<'m> ValueMetadataEntries<'m> {
     pub unsafe fn from_raw(ptr: *mut LLVMValueMetadataEntry, len: usize) -> Self {
         unsafe {
             Self {
@@ -453,13 +454,13 @@ impl<'s> ValueMetadataEntries<'s> {
     }
 }
 
-pub struct ModuleFlagsMetadata<'s> {
+pub struct ModuleFlagsMetadata<'m> {
     ptr: NonNull<LLVMModuleFlagEntry>,
     len: usize,
-    marker: PhantomData<&'s Metadata>,
+    marker: PhantomData<&'m Metadata>,
 }
 
-impl<'s> ModuleFlagsMetadata<'s> {
+impl<'m> ModuleFlagsMetadata<'m> {
     pub unsafe fn from_raw(ptr: *mut LLVMModuleFlagEntry, len: usize) -> Self {
         unsafe {
             Self {

@@ -22,10 +22,10 @@ impl<T: SequentialTypeTag> Type<T> {
 }
 
 impl<T: TypeTag> Type<T> {
-    pub fn get_subtypes<'a, 's>(
-        &'s self,
-        slice: &'a mut [Option<&'s Type<any>>],
-    ) -> &'a mut [&'s Type<any>] {
+    pub fn get_subtypes<'s, 'c>(
+        &'c self,
+        slice: &'s mut [Option<&'c Type<any>>],
+    ) -> &'s mut [&'c Type<any>] {
         assert_eq!(slice.len(), self.get_num_contained_types() as usize);
         unsafe {
             LLVMGetSubtypes(self.as_raw(), slice.as_mut_ptr() as _);

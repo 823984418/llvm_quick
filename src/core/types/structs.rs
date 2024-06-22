@@ -43,10 +43,10 @@ impl Type<struct_any> {
         unsafe { LLVMCountStructElementTypes(self.as_raw()) }
     }
 
-    pub fn get_struct_element_types<'a, 's>(
-        &'s self,
-        slice: &'a mut [Option<&'s Type<any>>],
-    ) -> &'a mut [&'s Type<any>] {
+    pub fn get_struct_element_types<'s, 'c>(
+        &'c self,
+        slice: &'s mut [Option<&'c Type<any>>],
+    ) -> &'s mut [&'c Type<any>] {
         unsafe {
             LLVMGetStructElementTypes(self.as_raw(), slice.as_mut_ptr() as _);
             std::mem::transmute(slice)

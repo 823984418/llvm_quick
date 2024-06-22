@@ -461,36 +461,36 @@ pub trait Tuple {
 }
 
 pub trait TagTuple: Tuple {
-    type Types<'s>: TypeTuple<'s, Tags = Self>
+    type Types<'c>: TypeTuple<'c, Tags = Self>
     where
-        Self: 's;
-    type Values<'s>: ValueTuple<'s, Tags = Self>
+        Self: 'c;
+    type Values<'c>: ValueTuple<'c, Tags = Self>
     where
-        Self: 's;
-    type Arguments<'s>: ArgumentTuple<'s, Tags = Self>
+        Self: 'c;
+    type Arguments<'c>: ArgumentTuple<'c, Tags = Self>
     where
-        Self: 's;
+        Self: 'c;
 }
 
-pub trait TypeTuple<'s>: Tuple + Sized + 's {
-    type Tags: TagTuple<Types<'s> = Self>;
-    fn try_from_array_any(array: &[&'s Type<any>]) -> Option<Self>;
-    unsafe fn from_array_any_unchecked(array: &[&'s Type<any>]) -> Self;
-    fn to_array_any(&self) -> Self::Array<&'s Type<any>>;
+pub trait TypeTuple<'c>: Tuple + Sized + 'c {
+    type Tags: TagTuple<Types<'c> = Self>;
+    fn try_from_array_any(array: &[&'c Type<any>]) -> Option<Self>;
+    unsafe fn from_array_any_unchecked(array: &[&'c Type<any>]) -> Self;
+    fn to_array_any(&self) -> Self::Array<&'c Type<any>>;
 }
 
-pub trait ValueTuple<'s>: Tuple + Sized + 's {
-    type Tags: TagTuple<Values<'s> = Self>;
-    fn try_from_array_any(array: &[&'s Value<any>]) -> Option<Self>;
-    unsafe fn from_array_any_unchecked(array: &[&'s Value<any>]) -> Self;
-    fn to_array_any(&self) -> Self::Array<&'s Value<any>>;
+pub trait ValueTuple<'c>: Tuple + Sized + 'c {
+    type Tags: TagTuple<Values<'c> = Self>;
+    fn try_from_array_any(array: &[&'c Value<any>]) -> Option<Self>;
+    unsafe fn from_array_any_unchecked(array: &[&'c Value<any>]) -> Self;
+    fn to_array_any(&self) -> Self::Array<&'c Value<any>>;
 }
 
-pub trait ArgumentTuple<'s>: Tuple + Sized + 's {
-    type Tags: TagTuple<Arguments<'s> = Self>;
-    fn try_from_array_any(array: &[&'s Argument<any>]) -> Option<Self>;
-    unsafe fn from_array_any_unchecked(array: &[&'s Argument<any>]) -> Self;
-    fn to_array_any(&self) -> Self::Array<&'s Argument<any>>;
+pub trait ArgumentTuple<'c>: Tuple + Sized + 'c {
+    type Tags: TagTuple<Arguments<'c> = Self>;
+    fn try_from_array_any(array: &[&'c Argument<any>]) -> Option<Self>;
+    unsafe fn from_array_any_unchecked(array: &[&'c Argument<any>]) -> Self;
+    fn to_array_any(&self) -> Self::Array<&'c Argument<any>>;
 }
 
 macro_rules! impl_tuple {
@@ -502,66 +502,66 @@ macro_rules! impl_tuple {
     };
     (impl TagTuple for ($($arg:ident),*)) => {
         impl<$($arg: TypeTag),*> TagTuple for ($($arg,)*) {
-            type Types<'s> = ($(&'s Type<$arg>,)*)
+            type Types<'c> = ($(&'c Type<$arg>,)*)
             where
-                Self:'s;
-            type Values<'s> = ($(&'s Value<$arg>,)*)
+                Self:'c;
+            type Values<'c> = ($(&'c Value<$arg>,)*)
             where
-                Self:'s;
-            type Arguments<'s> = ($(&'s Argument<$arg>,)*)
+                Self:'c;
+            type Arguments<'c> = ($(&'c Argument<$arg>,)*)
             where
-                Self:'s;
+                Self:'c;
         }
     };
     (impl TypeTuple for ($($arg:ident),*)) => {
-        impl<'s, $($arg: TypeTag + 's),*> TypeTuple<'s> for ($(&'s Type<$arg>,)*) {
+        impl<'c, $($arg: TypeTag + 'c),*> TypeTuple<'c> for ($(&'c Type<$arg>,)*) {
             type Tags = ($($arg,)*);
-            fn try_from_array_any(array: &[&'s Type<any>]) -> Option<Self> {
+            fn try_from_array_any(array: &[&'c Type<any>]) -> Option<Self> {
                 let &[$($arg,)*] = array else { panic!() };
                 Some(($(Type::try_cast($arg)?,)*))
             }
             #[allow(unused_unsafe)]
-            unsafe fn from_array_any_unchecked(array: &[&'s Type<any>]) -> Self {
+            unsafe fn from_array_any_unchecked(array: &[&'c Type<any>]) -> Self {
                 let &[$($arg,)*] = array else { panic!() };
                 unsafe { ($(Type::cast_unchecked($arg),)*) }
             }
-            fn to_array_any(&self) -> Self::Array<&'s Type<any>> {
+            fn to_array_any(&self) -> Self::Array<&'c Type<any>> {
                 let ($($arg,)*) = self;
                 [$(Type::to_any($arg),)*]
             }
         }
     };
     (impl ValueTuple for ($($arg:ident),*)) => {
-        impl<'s, $($arg: TypeTag + 's),*> ValueTuple<'s> for ($(&'s Value<$arg>,)*) {
+        impl<'c, $($arg: TypeTag + 'c),*> ValueTuple<'c> for ($(&'c Value<$arg>,)*) {
             type Tags = ($($arg,)*);
-            fn try_from_array_any(array: &[&'s Value<any>]) -> Option<Self> {
+            fn try_from_array_any(array: &[&'c Value<any>]) -> Option<Self> {
                 let &[$($arg,)*] = array else { panic!() };
                 Some(($(Value::try_cast($arg)?,)*))
             }
             #[allow(unused_unsafe)]
-            unsafe fn from_array_any_unchecked(array: &[&'s Value<any>]) -> Self {
+            unsafe fn from_array_any_unchecked(array: &[&'c Value<any>]) -> Self {
                 let &[$($arg,)*] = array else { panic!() };
                 unsafe { ($(Value::cast_unchecked($arg),)*) }
             }
-            fn to_array_any(&self) -> Self::Array<&'s Value<any>> {
+            fn to_array_any(&self) -> Self::Array<&'c Value<any>> {
                 let ($($arg,)*) = self;
                 [$(Value::to_any($arg),)*]
             }
         }
     };
     (impl ArgumentTuple for ($($arg:ident),*)) => {
-        impl<'s, $($arg: TypeTag + 's),*> ArgumentTuple<'s> for ($(&'s Argument<$arg>,)*) {
+        impl<'c, $($arg: TypeTag + 'c),*> ArgumentTuple<'c> for ($(&'c Argument<$arg>,)*) {
             type Tags = ($($arg,)*);
-            fn try_from_array_any(array: &[&'s Argument<any>]) -> Option<Self> {
+            fn try_from_array_any(array: &[&'c Argument<any>]) -> Option<Self> {
                 let &[$($arg,)*] = array else { panic!() };
                 Some(($(Argument::try_cast($arg)?,)*))
             }
             #[allow(unused_unsafe)]
-            unsafe fn from_array_any_unchecked(array: &[&'s Argument<any>]) -> Self {
+            unsafe fn from_array_any_unchecked(array: &[&'c Argument<any>]) -> Self {
                 let &[$($arg,)*] = array else { panic!() };
                 unsafe { ($(Argument::cast_unchecked($arg),)*) }
             }
-            fn to_array_any(&self) -> Self::Array<&'s Argument<any>> {
+            fn to_array_any(&self) -> Self::Array<&'c Argument<any>> {
                 let ($($arg,)*) = self;
                 [$(Argument::to_any($arg),)*]
             }

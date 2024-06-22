@@ -61,7 +61,7 @@ impl<T: FunTypeTag> Value<T> {
     }
 }
 
-impl<'s> Module<'s> {
+impl<'c> Module<'c> {
     pub fn get_intrinsic_declaration(
         &self,
         id: IntrinsicId,
@@ -101,7 +101,7 @@ impl IntrinsicId {
     }
 }
 
-impl<'s> Module<'s> {
+impl<'c> Module<'c> {
     pub fn intrinsic_copy_overloaded_name(
         &self,
         id: IntrinsicId,
@@ -163,11 +163,11 @@ impl<T: FunTypeTag> Value<T> {
         unsafe { LLVMGetAttributeCountAtIndex(self.as_raw(), idx) }
     }
 
-    pub fn get_attribute_at_index<'a, 's>(
-        &'s self,
+    pub fn get_attribute_at_index<'s, 'c>(
+        &'c self,
         idx: LLVMAttributeIndex,
-        slice: &'a mut [Option<&'s Attribute>],
-    ) -> &'a mut [&'s Attribute] {
+        slice: &'s mut [Option<&'c Attribute>],
+    ) -> &'s mut [&'c Attribute] {
         assert_eq!(slice.len(), self.get_attribute_count_at_index(idx) as usize);
         unsafe {
             LLVMGetAttributesAtIndex(self.as_raw(), idx, slice.as_mut_ptr() as _);
@@ -212,10 +212,10 @@ impl<T: FunTypeTag> Value<T> {
     }
 
     /// Obtain the types of a function's parameters.
-    pub fn get_param_into_slice<'a, 's>(
-        &'s self,
-        slice: &'a mut [Option<&'s Argument<any>>],
-    ) -> &'a mut [&'s Argument<any>] {
+    pub fn get_param_into_slice<'s, 'c>(
+        &'c self,
+        slice: &'s mut [Option<&'c Argument<any>>],
+    ) -> &'s mut [&'c Argument<any>] {
         assert_eq!(slice.len(), self.get_param_count() as usize);
         unsafe {
             LLVMGetParams(self.as_raw(), slice.as_mut_ptr() as _);

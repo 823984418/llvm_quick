@@ -10,7 +10,7 @@ use crate::owning::{OpaqueClone, OpaqueDrop, Owning};
 use crate::type_tag::*;
 use crate::*;
 
-impl<'s> Debug for Module<'s> {
+impl<'c> Debug for Module<'c> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_str(self.print_to_string().to_str().unwrap())
     }
@@ -38,7 +38,7 @@ impl OpaqueDrop for LLVMModule {
     }
 }
 
-impl<'s> Module<'s> {
+impl<'c> Module<'c> {
     pub fn get_identifier(&self) -> &[u8] {
         unsafe {
             let mut len = 0;
@@ -88,13 +88,13 @@ impl<'s> Module<'s> {
     }
 }
 
-impl<'s> Drop for ModuleFlagsMetadata<'s> {
+impl<'m> Drop for ModuleFlagsMetadata<'m> {
     fn drop(&mut self) {
         unsafe { LLVMDisposeModuleFlagsMetadata(self.as_raw()) }
     }
 }
 
-impl<'s> ModuleFlagsMetadata<'s> {
+impl<'m> ModuleFlagsMetadata<'m> {
     pub fn get_flag_behavior(&self, index: u32) -> LLVMModuleFlagBehavior {
         assert!((index as usize) < self.len);
         unsafe { LLVMModuleFlagEntriesGetFlagBehavior(self.as_raw() as _, index) }
@@ -115,7 +115,7 @@ impl<'s> ModuleFlagsMetadata<'s> {
     }
 }
 
-impl<'s> Module<'s> {
+impl<'c> Module<'c> {
     pub fn get_flag(&self, key: &[u8]) -> &Metadata {
         unsafe {
             Metadata::from_raw(LLVMGetModuleFlag(
@@ -234,9 +234,9 @@ impl<T: TypeTag> Value<T> {
     }
 }
 
-impl<'s> Module<'s> {
+impl<'c> Module<'c> {
     /// Obtain the context to which this module is associated.
-    pub fn context(&self) -> &'s Context {
+    pub fn context(&self) -> &'c Context {
         unsafe { Context::from_raw(LLVMGetModuleContext(self.as_raw())) }
     }
 
@@ -259,7 +259,7 @@ impl NamedMDNode {
     }
 }
 
-impl<'s> Module<'s> {
+impl<'c> Module<'c> {
     pub fn get_named_metadata(&self, name: &[u8]) -> &NamedMDNode {
         unsafe {
             NamedMDNode::from_raw(LLVMGetNamedMetadata(
@@ -291,16 +291,16 @@ impl NamedMDNode {
     }
 }
 
-impl<'s> Module<'s> {
+impl<'c> Module<'c> {
     pub fn get_named_metadata_num_operands(&self, name: &CStr) -> u32 {
         unsafe { LLVMGetNamedMetadataNumOperands(self.as_raw(), name.as_ptr()) }
     }
 
-    pub fn get_named_metadata_operands<'a>(
+    pub fn get_named_metadata_operands<'s>(
         &self,
         name: &CStr,
-        slice: &'a mut [Option<&'s Value<metadata>>],
-    ) -> &'a mut [&'s Value<metadata>] {
+        slice: &'s mut [Option<&'c Value<metadata>>],
+    ) -> &'s mut [&'c Value<metadata>] {
         assert_eq!(
             slice.len(),
             self.get_named_metadata_num_operands(name) as usize
@@ -342,22 +342,22 @@ impl<T: TypeTag> Value<T> {
     }
 }
 
-impl<'s> Module<'s> {
+impl<'c> Module<'c> {
     /// Add a function to a module under a specified name.
-    pub fn add_function<T: FunTypeTag>(&self, name: &CStr, ty: &'s Type<T>) -> &'s Value<T> {
+    pub fn add_function<T: FunTypeTag>(&self, name: &CStr, ty: &'c Type<T>) -> &'c Value<T> {
         unsafe { Value::from_raw(LLVMAddFunction(self.as_raw(), name.as_ptr(), ty.as_raw())) }
     }
 
     /// Obtain a Function value from a Module by its name.
-    pub fn get_named_function<T: FunTypeTag>(&self, name: &CStr) -> &'s Value<T> {
+    pub fn get_named_function<T: FunTypeTag>(&self, name: &CStr) -> &'c Value<T> {
         unsafe { Value::<any>::from_raw(LLVMGetNamedFunction(self.as_raw(), name.as_ptr())).cast() }
     }
 
-    pub fn get_first_function(&self) -> &'s Value<fun_any> {
+    pub fn get_first_function(&self) -> &'c Value<fun_any> {
         unsafe { Value::from_raw(LLVMGetFirstFunction(self.as_raw())) }
     }
 
-    pub fn get_last_function(&self) -> &'s Value<fun_any> {
+    pub fn get_last_function(&self) -> &'c Value<fun_any> {
         unsafe { Value::from_raw(LLVMGetLastFunction(self.as_raw())) }
     }
 }

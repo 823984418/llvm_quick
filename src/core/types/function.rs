@@ -17,7 +17,7 @@ impl<T: TypeTag> Type<T> {
     ///
     /// The function is defined as a tuple of a return Type, a list of parameter types,
     /// and whether the function is variadic.
-    pub fn fun_any<'s>(&'s self, args: &[&'s Type<any>], var: bool) -> &'s Type<fun_any> {
+    pub fn fun_any<'c>(&'c self, args: &[&Type<any>], var: bool) -> &'c Type<fun_any> {
         unsafe {
             let ty = LLVMFunctionType(self.as_raw(), args.as_ptr() as _, args.len() as _, var as _);
             Type::from_raw(ty)
@@ -25,19 +25,19 @@ impl<T: TypeTag> Type<T> {
     }
 
     /// Obtain a function type consisting of a specified signature.
-    pub fn fun<'s, ArgTypeTuple: TypeTuple<'s>>(
-        &'s self,
+    pub fn fun<'c, ArgTypeTuple: TypeTuple<'c>>(
+        &'c self,
         args: ArgTypeTuple,
-    ) -> &'s Type<fun<ArgTypeTuple::Tags, T>> {
+    ) -> &'c Type<fun<ArgTypeTuple::Tags, T>> {
         let fun = self.fun_any(args.to_array_any().as_ref(), false);
         unsafe { fun.cast_unchecked() }
     }
 
     /// Obtain a function type consisting of a specified signature.
-    pub fn fun_var<'s, ArgTypeTuple: TypeTuple<'s>>(
-        &'s self,
+    pub fn fun_var<'c, ArgTypeTuple: TypeTuple<'c>>(
+        &'c self,
         args: ArgTypeTuple,
-    ) -> &'s Type<fun<ArgTypeTuple::Tags, T, true>> {
+    ) -> &'c Type<fun<ArgTypeTuple::Tags, T, true>> {
         let fun = self.fun_any(args.to_array_any().as_ref(), true);
         unsafe { fun.cast_unchecked() }
     }
@@ -60,10 +60,10 @@ impl<T: FunTypeTag> Type<T> {
     }
 
     /// Obtain the types of a function's parameters.
-    pub fn get_param_into_slice<'a, 's>(
-        &'s self,
-        slice: &'a mut [Option<&'s Type<any>>],
-    ) -> &'a mut [&'s Type<any>] {
+    pub fn get_param_into_slice<'s, 'c>(
+        &'c self,
+        slice: &'s mut [Option<&'c Type<any>>],
+    ) -> &'s mut [&'c Type<any>] {
         assert_eq!(slice.len(), self.get_param_count() as usize);
         unsafe {
             LLVMGetParamTypes(self.as_raw(), slice.as_mut_ptr() as _);

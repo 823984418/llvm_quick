@@ -4,7 +4,7 @@ use llvm_sys::LLVMModuleProvider;
 use crate::owning::{OpaqueDrop, Owning};
 use crate::{Module, ModuleProvider, Opaque};
 
-impl<'s> Module<'s> {
+impl<'c> Module<'c> {
     pub fn create_module_provider_for_existing_module(&self) -> Owning<ModuleProvider> {
         unsafe { Owning::from_raw(LLVMCreateModuleProviderForExistingModule(self.as_raw())) }
     }

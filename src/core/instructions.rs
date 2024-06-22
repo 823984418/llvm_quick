@@ -102,11 +102,11 @@ impl<T: TypeTag> Instruction<T> {
         unsafe { LLVMGetCallSiteAttributeCount(self.as_raw(), idx) }
     }
 
-    pub fn get_call_site_attributes<'a, 's>(
-        &'s self,
+    pub fn get_call_site_attributes<'s, 'c>(
+        &'c self,
         idx: LLVMAttributeIndex,
-        slice: &'a mut [Option<&'s Attribute>],
-    ) -> &'a mut [&'s Attribute] {
+        slice: &'s mut [Option<&'c Attribute>],
+    ) -> &'s mut [&'c Attribute] {
         unsafe {
             LLVMGetCallSiteAttributes(self.as_raw(), idx, slice.as_mut_ptr() as _);
             std::mem::transmute(slice)

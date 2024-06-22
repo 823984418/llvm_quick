@@ -14,18 +14,18 @@ pub unsafe trait Opaque: Sized {
     type Inner;
 
     /// Try to create ref from nonnull raw pointer and check cond.
-    unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
+    unsafe fn try_from_raw<'r>(ptr: *mut Self::Inner) -> Option<&'r Self> {
         unsafe { Some(Self::from_raw(ptr)) }
     }
 
     /// Try to create ref from nonnull raw pointer but don't check cond.
-    unsafe fn from_raw<'a>(ptr: *mut Self::Inner) -> &'a Self {
+    unsafe fn from_raw<'r>(ptr: *mut Self::Inner) -> &'r Self {
         debug_assert!(!ptr.is_null());
         unsafe { &*(ptr as *const Self) }
     }
 
     /// Try to create ref from nullable raw pointer.
-    unsafe fn from_ptr<'s>(ptr: *mut Self::Inner) -> Option<&'s Self> {
+    unsafe fn from_ptr<'r>(ptr: *mut Self::Inner) -> Option<&'r Self> {
         if ptr.is_null() {
             None
         } else {

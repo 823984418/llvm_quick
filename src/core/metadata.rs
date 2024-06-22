@@ -7,8 +7,8 @@ use crate::owning::{OpaqueDrop, Owning};
 use crate::type_tag::*;
 use crate::{Context, Metadata, Module, Opaque, OperandBundle, Value};
 
-impl<'s> OperandBundle<'s> {
-    pub fn create<T: TypeTag>(tag: &[u8], args: &[&'s Value<T>]) -> Owning<Self> {
+impl<'c> OperandBundle<'c> {
+    pub fn create<T: TypeTag>(tag: &[u8], args: &[&'c Value<T>]) -> Owning<Self> {
         unsafe {
             Owning::from_raw(LLVMCreateOperandBundle(
                 tag.as_ptr() as _,
@@ -26,7 +26,7 @@ impl OpaqueDrop for LLVMOpaqueOperandBundle {
     }
 }
 
-impl<'s> OperandBundle<'s> {
+impl<'c> OperandBundle<'c> {
     pub fn get_tag(&self) -> &[u8] {
         unsafe {
             let mut len = 0;
@@ -39,13 +39,13 @@ impl<'s> OperandBundle<'s> {
         unsafe { LLVMGetNumOperandBundleArgs(self.as_raw()) }
     }
 
-    pub fn get_arg_at_index(&self, index: u32) -> &'s Value<any> {
+    pub fn get_arg_at_index(&self, index: u32) -> &'c Value<any> {
         unsafe { Value::from_raw(LLVMGetOperandBundleArgAtIndex(self.as_raw(), index)) }
     }
 }
 
-impl<'s> Module<'s> {
-    pub fn get_named_global_i_func(&self, name: &[u8]) -> &'s Value<any> {
+impl<'c> Module<'c> {
+    pub fn get_named_global_i_func(&self, name: &[u8]) -> &'c Value<any> {
         unsafe {
             Value::from_raw(LLVMGetNamedGlobalIFunc(
                 self.as_raw(),
@@ -55,11 +55,11 @@ impl<'s> Module<'s> {
         }
     }
 
-    pub fn get_first_global_i_func(&self) -> &'s Value<any> {
+    pub fn get_first_global_i_func(&self) -> &'c Value<any> {
         unsafe { Value::from_raw(LLVMGetFirstGlobalIFunc(self.as_raw())) }
     }
 
-    pub fn get_last_global_i_func(&self) -> &'s Value<any> {
+    pub fn get_last_global_i_func(&self) -> &'c Value<any> {
         unsafe { Value::from_raw(LLVMGetLastGlobalIFunc(self.as_raw())) }
     }
 }
@@ -118,7 +118,7 @@ impl Context {
 }
 
 impl Metadata {
-    pub fn as_value<'s>(&self, context: &'s Context) -> &'s Value<metadata> {
+    pub fn as_value<'c>(&self, context: &'c Context) -> &'c Value<metadata> {
         unsafe { Value::from_raw(LLVMMetadataAsValue(context.as_raw(), self.as_raw())) }
     }
 }
@@ -146,10 +146,10 @@ impl Value<metadata> {
         unsafe { LLVMGetMDNodeNumOperands(self.as_raw()) }
     }
 
-    pub fn get_md_node_operands<'a, 's>(
+    pub fn get_md_node_operands<'s, 'c>(
         &self,
-        dest: &'a mut [Option<&'s Value<metadata>>],
-    ) -> &'a mut [&'s Value<metadata>] {
+        dest: &'s mut [Option<&'c Value<metadata>>],
+    ) -> &'s mut [&'c Value<metadata>] {
         unsafe {
             LLVMGetMDNodeOperands(self.as_raw(), dest.as_mut_ptr() as _);
             &mut *(dest as *mut [Option<&Value<metadata>>] as *mut [&Value<metadata>])

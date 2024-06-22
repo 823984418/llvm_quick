@@ -49,10 +49,10 @@ impl<T: FunTypeTag> Value<T> {
         unsafe { LLVMCountBasicBlocks(self.as_raw()) }
     }
 
-    pub fn get_basic_blocks<'a, 's>(
-        &'s self,
-        basic_blocks: &'a mut [Option<&'s BasicBlock>],
-    ) -> &'a mut [&'s BasicBlock] {
+    pub fn get_basic_blocks<'a, 'c>(
+        &'c self,
+        basic_blocks: &'a mut [Option<&'c BasicBlock>],
+    ) -> &'a mut [&'c BasicBlock] {
         assert_eq!(basic_blocks.len(), self.count_basic_block() as usize);
         unsafe {
             LLVMGetBasicBlocks(self.as_raw(), basic_blocks.as_mut_ptr() as _);
@@ -85,7 +85,7 @@ impl<T: FunTypeTag> Value<T> {
     }
 }
 
-impl<'s> Builder<'s> {
+impl<'c> Builder<'c> {
     pub fn insert_existing_basic_block_after_insert_block(&self, bb: &BasicBlock) {
         unsafe { LLVMInsertExistingBasicBlockAfterInsertBlock(self.as_raw(), bb.as_raw()) }
     }
@@ -102,11 +102,7 @@ impl Context {
         unsafe { BasicBlock::from_raw(LLVMCreateBasicBlockInContext(self.as_raw(), name.as_ptr())) }
     }
 
-    pub fn append_basic_block<'s, T: FunTypeTag>(
-        &'s self,
-        f: &'s Value<T>,
-        name: &'s CStr,
-    ) -> &'s BasicBlock {
+    pub fn append_basic_block<T: FunTypeTag>(&self, f: &Value<T>, name: &CStr) -> &BasicBlock {
         unsafe {
             let ptr = LLVMAppendBasicBlockInContext(self.as_raw(), f.as_raw(), name.as_ptr());
             BasicBlock::from_raw(ptr)

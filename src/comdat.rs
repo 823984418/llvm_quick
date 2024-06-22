@@ -5,7 +5,7 @@ use llvm_sys::comdat::*;
 use crate::type_tag::*;
 use crate::{Comdat, Module, Opaque, Value};
 
-impl<'s> Module<'s> {
+impl<'c> Module<'c> {
     pub fn get_or_insert_comdat(&self, name: &CStr) -> &Comdat {
         unsafe { Comdat::from_raw(LLVMGetOrInsertComdat(self.as_raw(), name.as_ptr())) }
     }
