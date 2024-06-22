@@ -3,6 +3,7 @@ use std::ops::Deref;
 use std::ptr::NonNull;
 
 pub use llvm_sys;
+use llvm_sys::debuginfo::LLVMMetadataKind;
 use llvm_sys::prelude::{LLVMModuleFlagEntry, LLVMValueMetadataEntry};
 use llvm_sys::*;
 
@@ -226,6 +227,218 @@ pub struct Metadata {
 
 unsafe impl Opaque for Metadata {
     type Inner = LLVMOpaqueMetadata;
+}
+
+pub trait MetadataKind: Opaque<Inner = LLVMOpaqueMetadata> {
+    fn match_kind(kind: &LLVMMetadataKind) -> bool;
+
+    unsafe fn from_check_kind<'r>(ptr: *mut LLVMOpaqueMetadata) -> Option<&'r Self> {
+        unsafe {
+            let metadata = Metadata::try_from_raw(ptr)?;
+            if Self::match_kind(&metadata.get_kind()) {
+                Some(metadata.cast_unchecked())
+            } else {
+                None
+            }
+        }
+    }
+}
+
+#[repr(transparent)]
+pub struct DINode {
+    parent: Metadata,
+}
+
+impl MetadataKind for DINode {
+    fn match_kind(kind: &LLVMMetadataKind) -> bool {
+        DIScope::match_kind(kind)
+            || DIVariable::match_kind(kind)
+            || matches!(
+                kind,
+                LLVMMetadataKind::LLVMDIMacroMetadataKind
+                    | LLVMMetadataKind::LLVMDIEnumeratorMetadataKind
+                    | LLVMMetadataKind::LLVMDIGenericSubrangeMetadataKind
+                    | LLVMMetadataKind::LLVMDILabelMetadataKind
+                    | LLVMMetadataKind::LLVMDIObjCPropertyMetadataKind
+                    | LLVMMetadataKind::LLVMDISubrangeMetadataKind
+                    | LLVMMetadataKind::LLVMDITemplateTypeParameterMetadataKind
+                    | LLVMMetadataKind::LLVMDITemplateValueParameterMetadataKind
+                    | LLVMMetadataKind::LLVMGenericDINodeMetadataKind
+            )
+    }
+}
+
+unsafe impl Opaque for DINode {
+    type Inner = LLVMOpaqueMetadata;
+
+    unsafe fn try_from_raw<'r>(ptr: *mut Self::Inner) -> Option<&'r Self> {
+        unsafe { Self::from_check_kind(ptr) }
+    }
+}
+
+impl Deref for DINode {
+    type Target = Metadata;
+
+    fn deref(&self) -> &Self::Target {
+        &self.parent
+    }
+}
+
+#[repr(transparent)]
+pub struct DIVariable {
+    parent: DINode,
+}
+
+impl MetadataKind for DIVariable {
+    fn match_kind(kind: &LLVMMetadataKind) -> bool {
+        matches!(
+            kind,
+            LLVMMetadataKind::LLVMDIGlobalVariableMetadataKind
+                | LLVMMetadataKind::LLVMDILocalVariableMetadataKind
+        )
+    }
+}
+
+unsafe impl Opaque for DIVariable {
+    type Inner = LLVMOpaqueMetadata;
+
+    unsafe fn try_from_raw<'r>(ptr: *mut Self::Inner) -> Option<&'r Self> {
+        unsafe { Self::from_check_kind(ptr) }
+    }
+}
+
+impl Deref for DIVariable {
+    type Target = DINode;
+
+    fn deref(&self) -> &Self::Target {
+        &self.parent
+    }
+}
+
+#[repr(transparent)]
+pub struct DIScope {
+    parent: DINode,
+}
+
+impl MetadataKind for DIScope {
+    fn match_kind(kind: &LLVMMetadataKind) -> bool {
+        DIType::match_kind(kind)
+            || DISubprogram::match_kind(kind)
+            || matches!(
+                kind,
+                LLVMMetadataKind::LLVMDICommonBlockMetadataKind
+                    | LLVMMetadataKind::LLVMDICompileUnitMetadataKind
+                    | LLVMMetadataKind::LLVMDIFileMetadataKind
+                    | LLVMMetadataKind::LLVMDILexicalBlockMetadataKind
+                    | LLVMMetadataKind::LLVMDILexicalBlockFileMetadataKind
+                    | LLVMMetadataKind::LLVMDIModuleMetadataKind
+                    | LLVMMetadataKind::LLVMDINamespaceMetadataKind
+            )
+    }
+}
+
+unsafe impl Opaque for DIScope {
+    type Inner = LLVMOpaqueMetadata;
+
+    unsafe fn try_from_raw<'r>(ptr: *mut Self::Inner) -> Option<&'r Self> {
+        unsafe { Self::from_check_kind(ptr) }
+    }
+}
+
+impl Deref for DIScope {
+    type Target = DINode;
+
+    fn deref(&self) -> &Self::Target {
+        &self.parent
+    }
+}
+
+#[repr(transparent)]
+pub struct DISubprogram {
+    parent: DIScope,
+}
+
+impl MetadataKind for DISubprogram {
+    fn match_kind(kind: &LLVMMetadataKind) -> bool {
+        matches!(kind, LLVMMetadataKind::LLVMDISubprogramMetadataKind)
+    }
+}
+
+unsafe impl Opaque for DISubprogram {
+    type Inner = LLVMOpaqueMetadata;
+
+    unsafe fn try_from_raw<'r>(ptr: *mut Self::Inner) -> Option<&'r Self> {
+        unsafe { Self::from_check_kind(ptr) }
+    }
+}
+
+impl Deref for DISubprogram {
+    type Target = DIScope;
+
+    fn deref(&self) -> &Self::Target {
+        &self.parent
+    }
+}
+
+#[repr(transparent)]
+pub struct DIType {
+    parent: DIScope,
+}
+
+impl MetadataKind for DIType {
+    fn match_kind(kind: &LLVMMetadataKind) -> bool {
+        matches!(
+            kind,
+            LLVMMetadataKind::LLVMDIBasicTypeMetadataKind
+                | LLVMMetadataKind::LLVMDICompositeTypeMetadataKind
+                | LLVMMetadataKind::LLVMDIDerivedTypeMetadataKind
+                | LLVMMetadataKind::LLVMDIStringTypeMetadataKind
+                | LLVMMetadataKind::LLVMDISubroutineTypeMetadataKind
+        )
+    }
+}
+
+unsafe impl Opaque for DIType {
+    type Inner = LLVMOpaqueMetadata;
+
+    unsafe fn try_from_raw<'r>(ptr: *mut Self::Inner) -> Option<&'r Self> {
+        unsafe { Self::from_check_kind(ptr) }
+    }
+}
+
+impl Deref for DIType {
+    type Target = DIScope;
+
+    fn deref(&self) -> &Self::Target {
+        &self.parent
+    }
+}
+
+#[repr(transparent)]
+pub struct DILocation {
+    parent: Metadata,
+}
+
+impl MetadataKind for DILocation {
+    fn match_kind(kind: &LLVMMetadataKind) -> bool {
+        matches!(kind, LLVMMetadataKind::LLVMDILocationMetadataKind)
+    }
+}
+
+unsafe impl Opaque for DILocation {
+    type Inner = LLVMOpaqueMetadata;
+
+    unsafe fn try_from_raw<'r>(ptr: *mut Self::Inner) -> Option<&'r Self> {
+        unsafe { Self::from_check_kind(ptr) }
+    }
+}
+
+impl Deref for DILocation {
+    type Target = Metadata;
+
+    fn deref(&self) -> &Self::Target {
+        &self.parent
+    }
 }
 
 #[repr(transparent)]
