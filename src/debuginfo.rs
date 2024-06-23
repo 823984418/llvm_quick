@@ -1,5 +1,5 @@
 use llvm_sys::debuginfo::*;
-use llvm_sys::LLVMOpaqueDIBuilder;
+use llvm_sys::{LLVMOpaqueDIBuilder, LLVMOpaqueMetadata};
 
 use crate::owning::{OpaqueDrop, Owning};
 use crate::type_tag::TypeTag;
@@ -111,6 +111,14 @@ impl DIType {
 
     pub fn get_size_in_bits(&self) -> u64 {
         unsafe { LLVMDITypeGetSizeInBits(self.as_raw()) }
+    }
+}
+
+// TODO
+
+impl OpaqueDrop for LLVMOpaqueMetadata {
+    unsafe fn drop_raw(ptr: *mut Self) {
+        unsafe { LLVMDisposeTemporaryMDNode(ptr) }
     }
 }
 
