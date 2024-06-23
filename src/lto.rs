@@ -154,7 +154,7 @@ impl LTOModule {
         path: &CStr,
         file_size: usize,
         map_size: usize,
-        offset: i32,
+        offset: isize,
     ) -> Owning<LTOModule> {
         unsafe {
             Owning::from_raw(lto_module_create_from_fd_at_offset(
@@ -162,7 +162,7 @@ impl LTOModule {
                 path.as_ptr(),
                 file_size,
                 map_size,
-                offset,
+                offset as _,
             ))
         }
     }
