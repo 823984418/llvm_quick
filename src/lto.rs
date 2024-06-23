@@ -431,27 +431,33 @@ impl ThinLTOCodeGenerator {
         }
     }
 
+    #[inline(always)]
     pub fn get_num_object_files(&self) -> u32 {
         unsafe { thinlto_module_get_num_object_files(self.as_raw()) }
     }
 
+    #[inline(always)]
     pub fn get_object_file(&self, index: u32) -> &CStr {
         assert!(index < self.get_num_object_files());
         unsafe { CStr::from_ptr(thinlto_module_get_object_file(self.as_raw(), index)) }
     }
 
+    #[inline(always)]
     pub fn set_pic_model(&self, model: lto_codegen_model) -> Result<(), CString> {
         unsafe { check_error(thinlto_codegen_set_pic_model(self.as_raw(), model) != 0) }
     }
 
+    #[inline(always)]
     pub fn set_cache_dir(&self, cache_dir: &CStr) {
         unsafe { thinlto_codegen_set_cache_dir(self.as_raw(), cache_dir.as_ptr()) }
     }
 
+    #[inline(always)]
     pub fn set_cache_pruning_interval(&self, interval: i32) {
         unsafe { thinlto_codegen_set_cache_pruning_interval(self.as_raw(), interval) }
     }
 
+    #[inline(always)]
     pub fn set_final_cache_size_relative_to_available_space(&self, percentage: u32) {
         unsafe {
             thinlto_codegen_set_final_cache_size_relative_to_available_space(
@@ -461,6 +467,7 @@ impl ThinLTOCodeGenerator {
         }
     }
 
+    #[inline(always)]
     pub fn set_cache_entry_expiration(&self, expiration: u32) {
         unsafe {
             thinlto_codegen_set_final_cache_size_relative_to_available_space(
@@ -470,20 +477,24 @@ impl ThinLTOCodeGenerator {
         }
     }
 
+    #[inline(always)]
     pub fn set_cache_size_bytes(&self, max_size_bytes: u32) {
         unsafe { thinlto_codegen_set_cache_size_bytes(self.as_raw(), max_size_bytes) }
     }
 
+    #[inline(always)]
     pub fn set_cache_size_megabytes(&self, max_size_megabytes: u32) {
         unsafe { thinlto_codegen_set_cache_size_megabytes(self.as_raw(), max_size_megabytes) }
     }
 
+    #[inline(always)]
     pub fn set_cache_size_files(&self, max_size_files: u32) {
         unsafe { thinlto_codegen_set_cache_size_files(self.as_raw(), max_size_files) }
     }
 }
 
 impl LTOInput {
+    #[inline(always)]
     pub fn create(buffer: &[u8], path: &CStr) -> Owning<LTOInput> {
         unsafe {
             Owning::from_raw(lto_input_create(
@@ -496,16 +507,19 @@ impl LTOInput {
 }
 
 impl OpaqueDrop for LLVMOpaqueLTOInput {
+    #[inline(always)]
     unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { lto_input_dispose(ptr) }
     }
 }
 
 impl LTOInput {
+    #[inline(always)]
     pub fn get_num_dependent_libraries(&self) -> u32 {
         unsafe { lto_input_get_num_dependent_libraries(self.as_raw()) }
     }
 
+    #[inline(always)]
     pub fn get_dependent_library(&self, index: u32) -> &[u8] {
         assert!(index < self.get_num_dependent_libraries());
         unsafe {
@@ -516,6 +530,7 @@ impl LTOInput {
     }
 }
 
+#[inline(always)]
 pub fn runtime_lib_symbols_list() -> Vec<&'static CStr> {
     unsafe {
         let mut size = 0;
@@ -529,27 +544,33 @@ pub fn runtime_lib_symbols_list() -> Vec<&'static CStr> {
 }
 
 impl ThinLTOCodeGenerator {
+    #[inline(always)]
     pub fn set_savetemps_dir(&self, save_temps_dir: &CStr) {
         unsafe { thinlto_codegen_set_savetemps_dir(self.as_raw(), save_temps_dir.as_ptr()) }
     }
 
+    #[inline(always)]
     pub fn set_generated_objects_dir(&self, save_temps_dir: &CStr) {
         unsafe { thinlto_set_generated_objects_dir(self.as_raw(), save_temps_dir.as_ptr()) }
     }
 
+    #[inline(always)]
     pub fn set_cpu(&self, cpu: &CStr) {
         unsafe { thinlto_codegen_set_cpu(self.as_raw(), cpu.as_ptr()) }
     }
 
+    #[inline(always)]
     pub fn disable_codegen(&self, disable: bool) {
         unsafe { thinlto_codegen_disable_codegen(self.as_raw(), disable as _) }
     }
 
+    #[inline(always)]
     pub fn set_codegen_only(&self, codegen_only: bool) {
         unsafe { thinlto_codegen_set_codegen_only(self.as_raw(), codegen_only as _) }
     }
 }
 
+#[inline(always)]
 pub fn debug_options(options: &[&CStr]) {
     let options = options
         .iter()
@@ -560,12 +581,14 @@ pub fn debug_options(options: &[&CStr]) {
 }
 
 impl LTOModule {
+    #[inline(always)]
     pub fn is_thinlto(&self) -> bool {
         unsafe { lto_module_is_thinlto(self.as_raw()) != 0 }
     }
 }
 
 impl ThinLTOCodeGenerator {
+    #[inline(always)]
     pub fn add_must_preserve_symbol(&self, name: &[u8]) {
         unsafe {
             thinlto_codegen_add_must_preserve_symbol(
@@ -576,6 +599,7 @@ impl ThinLTOCodeGenerator {
         }
     }
 
+    #[inline(always)]
     pub fn add_cross_referenced_symbol(&self, name: &[u8]) {
         unsafe {
             thinlto_codegen_add_cross_referenced_symbol(
