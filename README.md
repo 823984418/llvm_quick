@@ -1,2 +1,3 @@
 # llvm_quick
-Rust's safely wrapper for llvm.
+Rust's wrapper for llvm.
+
