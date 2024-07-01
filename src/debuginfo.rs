@@ -1,11 +1,9 @@
 use llvm_sys::debuginfo::*;
-use llvm_sys::{LLVMOpaqueDIBuilder, LLVMOpaqueMetadata};
+use llvm_sys::LLVMOpaqueDIBuilder;
 
 use crate::owning::{OpaqueDrop, Owning};
 use crate::type_tag::{FunTypeTag, TypeTag};
-use crate::{
-    DIBuilder, DILocation, DISubprogram, DIType, Instruction, Metadata, Module, Opaque, Value,
-};
+use crate::*;
 
 #[inline(always)]
 pub fn debug_metadata_version() -> u32 {
@@ -62,9 +60,9 @@ impl<'m, 'c> DIBuilder<'m, 'c> {
         debug_info_for_profiling: bool,
         sys_root: &[u8],
         sdk: &[u8],
-    ) -> &Metadata {
+    ) -> &'c DICompileUnit {
         unsafe {
-            Metadata::from_raw(LLVMDIBuilderCreateCompileUnit(
+            DICompileUnit::from_raw(LLVMDIBuilderCreateCompileUnit(
                 self.as_raw(),
                 lang,
                 file_ref.as_raw(),
@@ -88,9 +86,9 @@ impl<'m, 'c> DIBuilder<'m, 'c> {
         }
     }
 
-    pub fn create_file(&self, filename: &[u8], directory: &[u8]) -> &Metadata {
+    pub fn create_file(&self, filename: &[u8], directory: &[u8]) -> &'c DIFile {
         unsafe {
-            Metadata::from_raw(LLVMDIBuilderCreateFile(
+            DIFile::from_raw(LLVMDIBuilderCreateFile(
                 self.as_raw(),
                 filename.as_ptr() as _,
                 filename.len(),
@@ -107,9 +105,9 @@ impl<'m, 'c> DIBuilder<'m, 'c> {
         config_macros: &[u8],
         include_path: &[u8],
         api_notes_file: &[u8],
-    ) -> &Metadata {
+    ) -> &'c DIModule {
         unsafe {
-            Metadata::from_raw(LLVMDIBuilderCreateModule(
+            DIModule::from_raw(LLVMDIBuilderCreateModule(
                 self.as_raw(),
                 parent_scope.as_raw(),
                 name.as_ptr() as _,
@@ -129,9 +127,9 @@ impl<'m, 'c> DIBuilder<'m, 'c> {
         parent_scope: &Metadata,
         name: &[u8],
         export_symbols: bool,
-    ) -> &Metadata {
+    ) -> &'c DINamespace {
         unsafe {
-            Metadata::from_raw(LLVMDIBuilderCreateNameSpace(
+            DINamespace::from_raw(LLVMDIBuilderCreateNameSpace(
                 self.as_raw(),
                 parent_scope.as_raw(),
                 name.as_ptr() as _,
@@ -154,7 +152,7 @@ impl<'m, 'c> DIBuilder<'m, 'c> {
         scope_line: u32,
         flags: LLVMDIFlags,
         is_optimized: bool,
-    ) -> &Metadata {
+    ) -> &'c Metadata {
         unsafe {
             Metadata::from_raw(LLVMDIBuilderCreateFunction(
                 self.as_raw(),
@@ -181,9 +179,9 @@ impl<'m, 'c> DIBuilder<'m, 'c> {
         file: &Metadata,
         line: u32,
         column: u32,
-    ) -> &Metadata {
+    ) -> &'c DILexicalBlock {
         unsafe {
-            Metadata::from_raw(LLVMDIBuilderCreateLexicalBlock(
+            DILexicalBlock::from_raw(LLVMDIBuilderCreateLexicalBlock(
                 self.as_raw(),
                 scope.as_raw(),
                 file.as_raw(),
@@ -193,8 +191,448 @@ impl<'m, 'c> DIBuilder<'m, 'c> {
         }
     }
 
-    // TODO
+    pub fn create_lexical_block_file(
+        &self,
+        scope: &DIScope,
+        file: &Metadata,
+        discriminator: u32,
+    ) -> &'c DILexicalBlockFile {
+        unsafe {
+            DILexicalBlockFile::from_raw(LLVMDIBuilderCreateLexicalBlockFile(
+                self.as_raw(),
+                scope.as_raw(),
+                file.as_raw(),
+                discriminator,
+            ))
+        }
+    }
+
+    pub fn create_imported_module_from_namespace(
+        &self,
+        scope: &DIScope,
+        ns: &Metadata,
+        file: &Metadata,
+        line: u32,
+    ) -> &'c Metadata {
+        unsafe {
+            Metadata::from_raw(LLVMDIBuilderCreateImportedModuleFromNamespace(
+                self.as_raw(),
+                scope.as_raw(),
+                ns.as_raw(),
+                file.as_raw(),
+                line,
+            ))
+        }
+    }
+
+    pub fn create_imported_module_from_alias(
+        &self,
+        scope: &DIScope,
+        imported_entity: &Metadata,
+        file: &Metadata,
+        line: u32,
+        elements: &[&Metadata],
+    ) -> &'c Metadata {
+        unsafe {
+            Metadata::from_raw(LLVMDIBuilderCreateImportedModuleFromAlias(
+                self.as_raw(),
+                scope.as_raw(),
+                imported_entity.as_raw(),
+                file.as_raw(),
+                line,
+                elements.as_ptr() as _,
+                elements.len() as _,
+            ))
+        }
+    }
+
+    pub fn create_imported_module_from_module(
+        &self,
+        scope: &DIScope,
+        m: &Metadata,
+        file: &Metadata,
+        line: u32,
+        elements: &[&Metadata],
+    ) -> &'c Metadata {
+        unsafe {
+            Metadata::from_raw(LLVMDIBuilderCreateImportedModuleFromModule(
+                self.as_raw(),
+                scope.as_raw(),
+                m.as_raw(),
+                file.as_raw(),
+                line,
+                elements.as_ptr() as _,
+                elements.len() as _,
+            ))
+        }
+    }
+
+    pub fn create_imported_declaration(
+        &self,
+        scope: &DIScope,
+        decl: &Metadata,
+        file: &Metadata,
+        line: u32,
+        name: &[u8],
+        elements: &[&Metadata],
+    ) -> &'c Metadata {
+        unsafe {
+            Metadata::from_raw(LLVMDIBuilderCreateImportedDeclaration(
+                self.as_raw(),
+                scope.as_raw(),
+                decl.as_raw(),
+                file.as_raw(),
+                line,
+                name.as_ptr() as _,
+                name.len(),
+                elements.as_ptr() as _,
+                elements.len() as _,
+            ))
+        }
+    }
 }
+
+impl Context {
+    pub fn create_debug_location(
+        &self,
+        line: u32,
+        column: u32,
+        scope: &DIScope,
+        inline_at: &Metadata,
+    ) -> &DILocation {
+        unsafe {
+            DILocation::from_raw(LLVMDIBuilderCreateDebugLocation(
+                self.as_raw(),
+                line,
+                column,
+                scope.as_raw(),
+                inline_at.as_raw(),
+            ))
+        }
+    }
+}
+
+impl DILocation {
+    pub fn get_line(&self) -> u32 {
+        unsafe { LLVMDILocationGetLine(self.as_raw()) }
+    }
+
+    pub fn get_column(&self) -> u32 {
+        unsafe { LLVMDILocationGetColumn(self.as_raw()) }
+    }
+
+    pub fn get_scope(&self) -> &DIScope {
+        unsafe { DIScope::from_raw(LLVMDILocationGetScope(self.as_raw())) }
+    }
+
+    pub fn get_inlined_ad(&self) -> &Metadata {
+        unsafe { Metadata::from_raw(LLVMDILocationGetInlinedAt(self.as_raw())) }
+    }
+}
+
+impl DIScope {
+    pub fn get_file(&self) -> &Metadata {
+        unsafe { Metadata::from_raw(LLVMDIScopeGetFile(self.as_raw())) }
+    }
+}
+
+impl DIFile {
+    pub fn get_directory(&self) -> &[u8] {
+        unsafe {
+            let mut len = 0;
+            let ptr = LLVMDIFileGetDirectory(self.as_raw(), &mut len);
+            std::slice::from_raw_parts(ptr as _, len as _)
+        }
+    }
+
+    pub fn get_filename(&self) -> &[u8] {
+        unsafe {
+            let mut len = 0;
+            let ptr = LLVMDIFileGetFilename(self.as_raw(), &mut len);
+            std::slice::from_raw_parts(ptr as _, len as _)
+        }
+    }
+
+    pub fn get_source(&self) -> &[u8] {
+        unsafe {
+            let mut len = 0;
+            let ptr = LLVMDIFileGetSource(self.as_raw(), &mut len);
+            std::slice::from_raw_parts(ptr as _, len as _)
+        }
+    }
+}
+
+impl<'m, 'c> DIBuilder<'m, 'c> {
+    pub fn get_or_create_type_array(&self, data: &[&Metadata]) -> &'c Metadata {
+        unsafe {
+            Metadata::from_raw(LLVMDIBuilderGetOrCreateTypeArray(
+                self.as_raw(),
+                data.as_ptr() as _,
+                data.len(),
+            ))
+        }
+    }
+
+    pub fn create_subroutine_type(
+        &self,
+        file: &Metadata,
+        parameter_types: &[&Metadata],
+        flags: LLVMDIFlags,
+    ) -> &'c DISubroutineType {
+        unsafe {
+            DISubroutineType::from_raw(LLVMDIBuilderCreateSubroutineType(
+                self.as_raw(),
+                file.as_raw(),
+                parameter_types.as_ptr() as _,
+                parameter_types.len() as _,
+                flags,
+            ))
+        }
+    }
+
+    pub fn create_macro(
+        &self,
+        parent_macro_file: &Metadata,
+        line: u32,
+        record_type: LLVMDWARFMacinfoRecordType,
+        name: &[u8],
+        value: &[u8],
+    ) -> &'c DIMacro {
+        unsafe {
+            DIMacro::from_raw(LLVMDIBuilderCreateMacro(
+                self.as_raw(),
+                parent_macro_file.as_raw(),
+                line,
+                record_type,
+                name.as_ptr() as _,
+                name.len(),
+                value.as_ptr() as _,
+                value.len(),
+            ))
+        }
+    }
+
+    pub fn create_temp_macro_file(
+        &self,
+        parent_macro_file: &DIMacroFile,
+        line: u32,
+        file: &Metadata,
+    ) -> &'c DIMacroFile {
+        unsafe {
+            DIMacroFile::from_raw(LLVMDIBuilderCreateTempMacroFile(
+                self.as_raw(),
+                parent_macro_file.as_raw(),
+                line,
+                file.as_raw(),
+            ))
+        }
+    }
+
+    pub fn create_enumerator(
+        &self,
+        name: &[u8],
+        value: i64,
+        is_unsigned: bool,
+    ) -> &'c DIEnumerator {
+        unsafe {
+            DIEnumerator::from_raw(LLVMDIBuilderCreateEnumerator(
+                self.as_raw(),
+                name.as_ptr() as _,
+                name.len(),
+                value,
+                is_unsigned as _,
+            ))
+        }
+    }
+
+    pub fn create_enumeration_type(
+        &self,
+        scope: &DIScope,
+        name: &[u8],
+        file: &DIFile,
+        line_number: u32,
+        size_in_bits: u64,
+        align_in_bits: u32,
+        elements: &[&Metadata],
+        class_ty: &Metadata,
+    ) -> &'c DIType {
+        unsafe {
+            DIType::from_raw(LLVMDIBuilderCreateEnumerationType(
+                self.as_raw(),
+                scope.as_raw(),
+                name.as_ptr() as _,
+                name.len(),
+                file.as_raw(),
+                line_number,
+                size_in_bits,
+                align_in_bits,
+                elements.as_ptr() as _,
+                elements.len() as _,
+                class_ty.as_raw(),
+            ))
+        }
+    }
+
+    pub fn create_union_type(
+        &self,
+        scope: &DIScope,
+        name: &[u8],
+        file: &DIFile,
+        line_number: u32,
+        size_in_bits: u64,
+        align_in_bits: u32,
+        flags: LLVMDIFlags,
+        elements: &[&Metadata],
+        run_time_lang: u32,
+        unique_id: &[u32],
+    ) -> &'c DIType {
+        unsafe {
+            DIType::from_raw(LLVMDIBuilderCreateUnionType(
+                self.as_raw(),
+                scope.as_raw(),
+                name.as_ptr() as _,
+                name.len(),
+                file.as_raw(),
+                line_number,
+                size_in_bits,
+                align_in_bits,
+                flags,
+                elements.as_ptr() as _,
+                elements.len() as _,
+                run_time_lang,
+                unique_id.as_ptr() as _,
+                unique_id.len(),
+            ))
+        }
+    }
+
+    pub fn create_array_type(
+        &self,
+        size: u64,
+        align_in_bits: u32,
+        ty: &DIType,
+        subscripts: &[&Metadata],
+    ) -> &'c DIType {
+        unsafe {
+            DIType::from_raw(LLVMDIBuilderCreateArrayType(
+                self.as_raw(),
+                size,
+                align_in_bits,
+                ty.as_raw(),
+                subscripts.as_ptr() as _,
+                subscripts.len() as _,
+            ))
+        }
+    }
+
+    pub fn create_vector_type(
+        &self,
+        size: u64,
+        align_in_bits: u32,
+        ty: &DIType,
+        subscripts: &[&Metadata],
+    ) -> &'c DIType {
+        unsafe {
+            DIType::from_raw(LLVMDIBuilderCreateVectorType(
+                self.as_raw(),
+                size,
+                align_in_bits,
+                ty.as_raw(),
+                subscripts.as_ptr() as _,
+                subscripts.len() as _,
+            ))
+        }
+    }
+
+    pub fn create_unspecified_type(&self, name: &[u8]) -> &'c DIType {
+        unsafe {
+            DIType::from_raw(LLVMDIBuilderCreateUnspecifiedType(
+                self.as_raw(),
+                name.as_ptr() as _,
+                name.len(),
+            ))
+        }
+    }
+
+    pub fn create_basic_type(
+        &self,
+        name: &[u8],
+        size_in_bits: u64,
+        encoding: LLVMDWARFTypeEncoding,
+        flags: LLVMDIFlags,
+    ) -> &'c DIType {
+        unsafe {
+            DIType::from_raw(LLVMDIBuilderCreateBasicType(
+                self.as_raw(),
+                name.as_ptr() as _,
+                name.len(),
+                size_in_bits,
+                encoding,
+                flags,
+            ))
+        }
+    }
+
+    pub fn create_pointer_type(
+        &self,
+        pointee_ty: &DIType,
+        size_in_bits: u64,
+        align_in_bits: u32,
+        address_space: u32,
+        name: &[u8],
+    ) -> &'c DIType {
+        unsafe {
+            DIType::from_raw(LLVMDIBuilderCreatePointerType(
+                self.as_raw(),
+                pointee_ty.as_raw(),
+                size_in_bits,
+                align_in_bits,
+                address_space,
+                name.as_ptr() as _,
+                name.len(),
+            ))
+        }
+    }
+
+    pub fn create_struct_type(
+        &self,
+        scope: &DIScope,
+        name: &[u8],
+        file: &Metadata,
+        line_number: u32,
+        size_in_bits: u64,
+        align_in_bits: u32,
+        flags: LLVMDIFlags,
+        derived_from: &DIType,
+        elements: &[&Metadata],
+        run_time_lang: u32,
+        v_table_holder: &Metadata,
+        unique_id: &[u8],
+    ) -> &'c DIType {
+        unsafe {
+            DIType::from_raw(LLVMDIBuilderCreateStructType(
+                self.as_raw(),
+                scope.as_raw(),
+                name.as_ptr() as _,
+                name.len(),
+                file.as_raw(),
+                line_number,
+                size_in_bits,
+                align_in_bits,
+                flags,
+                derived_from.as_raw(),
+                elements.as_ptr() as _,
+                elements.len() as _,
+                run_time_lang,
+                v_table_holder.as_raw(),
+                unique_id.as_ptr() as _,
+                unique_id.len(),
+            ))
+        }
+    }
+}
+
+// TODO
 
 impl DIType {
     pub fn get_name(&self) -> &[u8] {
@@ -208,13 +646,41 @@ impl DIType {
     pub fn get_size_in_bits(&self) -> u64 {
         unsafe { LLVMDITypeGetSizeInBits(self.as_raw()) }
     }
+
+    pub fn get_offset_in_bits(&self) -> u64 {
+        unsafe { LLVMDITypeGetOffsetInBits(self.as_raw()) }
+    }
+
+    pub fn get_align_in_bits(&self) -> u32 {
+        unsafe { LLVMDITypeGetAlignInBits(self.as_raw()) }
+    }
+
+    pub fn get_line(&self) -> u32 {
+        unsafe { LLVMDITypeGetLine(self.as_raw()) }
+    }
+
+    pub fn get_flags(&self) -> LLVMDIFlags {
+        unsafe { LLVMDITypeGetFlags(self.as_raw()) }
+    }
 }
 
 // TODO
 
-impl OpaqueDrop for LLVMOpaqueMetadata {
-    unsafe fn drop_raw(ptr: *mut Self) {
-        unsafe { LLVMDisposeTemporaryMDNode(ptr) }
+impl Context {
+    pub fn temporary_md_node(&self, data: &[&Metadata]) -> &Metadata {
+        unsafe {
+            Metadata::from_raw(LLVMTemporaryMDNode(
+                self.as_raw(),
+                data.as_ptr() as _,
+                data.len(),
+            ))
+        }
+    }
+}
+
+impl MDNode {
+    pub unsafe fn dispose_temporary_md_node(&self) {
+        unsafe { LLVMDisposeTemporaryMDNode(self.as_raw()) }
     }
 }
 

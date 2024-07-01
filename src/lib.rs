@@ -244,202 +244,97 @@ pub trait MetadataKind: Opaque<Inner = LLVMOpaqueMetadata> {
     }
 }
 
-#[repr(transparent)]
-pub struct DINode {
-    parent: Metadata,
+macro_rules! opaque_metadata {
+    (private $name:ident: $parent:ty) => {
+        #[repr(transparent)]
+        pub struct $name {
+            parent: $parent,
+        }
+
+        unsafe impl Opaque for $name {
+            type Inner = LLVMOpaqueMetadata;
+
+            unsafe fn try_from_raw<'r>(ptr: *mut Self::Inner) -> Option<&'r Self> {
+                unsafe { Self::from_check_kind(ptr) }
+            }
+        }
+
+        impl Deref for $name {
+            type Target = $parent;
+
+            fn deref(&self) -> &Self::Target {
+                &self.parent
+            }
+        }
+    };
+
+    ($name:ident: $parent:ty = [$($sub:ty),*]) => {
+        opaque_metadata!(private $name: $parent);
+
+        impl MetadataKind for $name {
+            fn match_kind(kind: &LLVMMetadataKind) -> bool {
+                true $(|| <$sub as MetadataKind>::match_kind(kind))*
+            }
+        }
+    };
+
+    ($name:ident: $parent:ty = $kind:ident) => {
+        opaque_metadata!(private $name: $parent);
+
+        impl MetadataKind for $name {
+            fn match_kind(kind: &LLVMMetadataKind) -> bool {
+                matches!(kind, LLVMMetadataKind::$kind)
+            }
+        }
+    };
 }
 
-impl MetadataKind for DINode {
-    fn match_kind(kind: &LLVMMetadataKind) -> bool {
-        DIScope::match_kind(kind)
-            || DIVariable::match_kind(kind)
-            || matches!(
-                kind,
-                LLVMMetadataKind::LLVMDIMacroMetadataKind
-                    | LLVMMetadataKind::LLVMDIEnumeratorMetadataKind
-                    | LLVMMetadataKind::LLVMDIGenericSubrangeMetadataKind
-                    | LLVMMetadataKind::LLVMDILabelMetadataKind
-                    | LLVMMetadataKind::LLVMDIObjCPropertyMetadataKind
-                    | LLVMMetadataKind::LLVMDISubrangeMetadataKind
-                    | LLVMMetadataKind::LLVMDITemplateTypeParameterMetadataKind
-                    | LLVMMetadataKind::LLVMDITemplateValueParameterMetadataKind
-                    | LLVMMetadataKind::LLVMGenericDINodeMetadataKind
-            )
-    }
-}
-
-unsafe impl Opaque for DINode {
-    type Inner = LLVMOpaqueMetadata;
-
-    unsafe fn try_from_raw<'r>(ptr: *mut Self::Inner) -> Option<&'r Self> {
-        unsafe { Self::from_check_kind(ptr) }
-    }
-}
-
-impl Deref for DINode {
-    type Target = Metadata;
-
-    fn deref(&self) -> &Self::Target {
-        &self.parent
-    }
-}
-
-#[repr(transparent)]
-pub struct DIVariable {
-    parent: DINode,
-}
-
-impl MetadataKind for DIVariable {
-    fn match_kind(kind: &LLVMMetadataKind) -> bool {
-        matches!(
-            kind,
-            LLVMMetadataKind::LLVMDIGlobalVariableMetadataKind
-                | LLVMMetadataKind::LLVMDILocalVariableMetadataKind
-        )
-    }
-}
-
-unsafe impl Opaque for DIVariable {
-    type Inner = LLVMOpaqueMetadata;
-
-    unsafe fn try_from_raw<'r>(ptr: *mut Self::Inner) -> Option<&'r Self> {
-        unsafe { Self::from_check_kind(ptr) }
-    }
-}
-
-impl Deref for DIVariable {
-    type Target = DINode;
-
-    fn deref(&self) -> &Self::Target {
-        &self.parent
-    }
-}
-
-#[repr(transparent)]
-pub struct DIScope {
-    parent: DINode,
-}
-
-impl MetadataKind for DIScope {
-    fn match_kind(kind: &LLVMMetadataKind) -> bool {
-        DIType::match_kind(kind)
-            || DISubprogram::match_kind(kind)
-            || matches!(
-                kind,
-                LLVMMetadataKind::LLVMDICommonBlockMetadataKind
-                    | LLVMMetadataKind::LLVMDICompileUnitMetadataKind
-                    | LLVMMetadataKind::LLVMDIFileMetadataKind
-                    | LLVMMetadataKind::LLVMDILexicalBlockMetadataKind
-                    | LLVMMetadataKind::LLVMDILexicalBlockFileMetadataKind
-                    | LLVMMetadataKind::LLVMDIModuleMetadataKind
-                    | LLVMMetadataKind::LLVMDINamespaceMetadataKind
-            )
-    }
-}
-
-unsafe impl Opaque for DIScope {
-    type Inner = LLVMOpaqueMetadata;
-
-    unsafe fn try_from_raw<'r>(ptr: *mut Self::Inner) -> Option<&'r Self> {
-        unsafe { Self::from_check_kind(ptr) }
-    }
-}
-
-impl Deref for DIScope {
-    type Target = DINode;
-
-    fn deref(&self) -> &Self::Target {
-        &self.parent
-    }
-}
-
-#[repr(transparent)]
-pub struct DISubprogram {
-    parent: DIScope,
-}
-
-impl MetadataKind for DISubprogram {
-    fn match_kind(kind: &LLVMMetadataKind) -> bool {
-        matches!(kind, LLVMMetadataKind::LLVMDISubprogramMetadataKind)
-    }
-}
-
-unsafe impl Opaque for DISubprogram {
-    type Inner = LLVMOpaqueMetadata;
-
-    unsafe fn try_from_raw<'r>(ptr: *mut Self::Inner) -> Option<&'r Self> {
-        unsafe { Self::from_check_kind(ptr) }
-    }
-}
-
-impl Deref for DISubprogram {
-    type Target = DIScope;
-
-    fn deref(&self) -> &Self::Target {
-        &self.parent
-    }
-}
-
-#[repr(transparent)]
-pub struct DIType {
-    parent: DIScope,
-}
-
-impl MetadataKind for DIType {
-    fn match_kind(kind: &LLVMMetadataKind) -> bool {
-        matches!(
-            kind,
-            LLVMMetadataKind::LLVMDIBasicTypeMetadataKind
-                | LLVMMetadataKind::LLVMDICompositeTypeMetadataKind
-                | LLVMMetadataKind::LLVMDIDerivedTypeMetadataKind
-                | LLVMMetadataKind::LLVMDIStringTypeMetadataKind
-                | LLVMMetadataKind::LLVMDISubroutineTypeMetadataKind
-        )
-    }
-}
-
-unsafe impl Opaque for DIType {
-    type Inner = LLVMOpaqueMetadata;
-
-    unsafe fn try_from_raw<'r>(ptr: *mut Self::Inner) -> Option<&'r Self> {
-        unsafe { Self::from_check_kind(ptr) }
-    }
-}
-
-impl Deref for DIType {
-    type Target = DIScope;
-
-    fn deref(&self) -> &Self::Target {
-        &self.parent
-    }
-}
-
-#[repr(transparent)]
-pub struct DILocation {
-    parent: Metadata,
-}
-
-impl MetadataKind for DILocation {
-    fn match_kind(kind: &LLVMMetadataKind) -> bool {
-        matches!(kind, LLVMMetadataKind::LLVMDILocationMetadataKind)
-    }
-}
-
-unsafe impl Opaque for DILocation {
-    type Inner = LLVMOpaqueMetadata;
-
-    unsafe fn try_from_raw<'r>(ptr: *mut Self::Inner) -> Option<&'r Self> {
-        unsafe { Self::from_check_kind(ptr) }
-    }
-}
-
-impl Deref for DILocation {
-    type Target = Metadata;
-
-    fn deref(&self) -> &Self::Target {
-        &self.parent
-    }
-}
+opaque_metadata!(DIArgList: Metadata = LLVMDIArgListMetadataKind);
+opaque_metadata!(DistinctMDOperandPlaceholder: Metadata = LLVMDistinctMDOperandPlaceholderMetadataKind);
+opaque_metadata!(MDNode: Metadata = [DIAssignID, DIExpression, DIGlobalVariableExpression, DILocation, DIMacroNode, DINode, MDTuple]);
+opaque_metadata!(DIAssignID: MDNode = LLVMDIAssignIDMetadataKind);
+opaque_metadata!(DIExpression: MDNode = LLVMDIExpressionMetadataKind);
+opaque_metadata!(DIGlobalVariableExpression: MDNode = LLVMDIGlobalVariableExpressionMetadataKind);
+opaque_metadata!(DILocation: MDNode = LLVMDILocationMetadataKind);
+opaque_metadata!(DIMacroNode: MDNode = [DIMacro, DIMacroFile]);
+opaque_metadata!(DIMacro: DIMacroNode = LLVMDIMacroMetadataKind);
+opaque_metadata!(DIMacroFile: DIMacroNode = LLVMDIMacroFileMetadataKind);
+opaque_metadata!(DINode: MDNode = [DIEnumerator, DIGenericSubrange, DIImportedEntity, DILabel, DIObjCProperty, DIScope, DISubrange, DITemplateParameter, DIVariable, GenericDINode]);
+opaque_metadata!(DIEnumerator: DINode = LLVMDIEnumeratorMetadataKind);
+opaque_metadata!(DIGenericSubrange: DINode = LLVMDIGenericSubrangeMetadataKind);
+opaque_metadata!(DIImportedEntity: DINode = LLVMDIImportedEntityMetadataKind);
+opaque_metadata!(DILabel: DINode = LLVMDILabelMetadataKind);
+opaque_metadata!(DIObjCProperty: DINode = LLVMDIObjCPropertyMetadataKind);
+opaque_metadata!(DIScope: DINode = [DICommonBlock, DICompileUnit, DIFile, DILocalScope, DIModule, DINamespace, DIType]);
+opaque_metadata!(DICommonBlock: DIScope = LLVMDICommonBlockMetadataKind);
+opaque_metadata!(DICompileUnit: DIScope = LLVMDICompileUnitMetadataKind);
+opaque_metadata!(DIFile: DIScope = LLVMDIFileMetadataKind);
+opaque_metadata!(DILocalScope: DIScope = [DILexicalBlockBase, DISubrange]);
+opaque_metadata!(DILexicalBlockBase: DILocalScope = [DILexicalBlock, DILexicalBlockFile]);
+opaque_metadata!(DILexicalBlock: DILexicalBlockBase = LLVMDILexicalBlockMetadataKind);
+opaque_metadata!(DILexicalBlockFile: DILexicalBlockBase = LLVMDILexicalBlockFileMetadataKind);
+opaque_metadata!(DISubprogram: DILocalScope = LLVMDISubprogramMetadataKind);
+opaque_metadata!(DIModule: DIScope = LLVMDIModuleMetadataKind);
+opaque_metadata!(DINamespace: DIScope = LLVMDINamespaceMetadataKind);
+opaque_metadata!(DIType: DIScope = [DICompositeType, DIDerivedType, DIStringType, DISubroutineType]);
+opaque_metadata!(DIBasicType: DIType = LLVMDIBasicTypeMetadataKind);
+opaque_metadata!(DICompositeType: DIType = LLVMDICompositeTypeMetadataKind);
+opaque_metadata!(DIDerivedType: DIType = LLVMDIDerivedTypeMetadataKind);
+opaque_metadata!(DIStringType: DIType = LLVMDIStringTypeMetadataKind);
+opaque_metadata!(DISubroutineType: DIType = LLVMDISubroutineTypeMetadataKind);
+opaque_metadata!(DISubrange: DINode = LLVMDISubrangeMetadataKind);
+opaque_metadata!(DITemplateParameter: DINode = [DITemplateTypeParameter, DITemplateValueParameter]);
+opaque_metadata!(DITemplateTypeParameter: DITemplateParameter = LLVMDITemplateTypeParameterMetadataKind);
+opaque_metadata!(DITemplateValueParameter: DITemplateParameter = LLVMDITemplateValueParameterMetadataKind);
+opaque_metadata!(DIVariable: DINode = [DIGlobalVariable, DILocalVariable]);
+opaque_metadata!(DIGlobalVariable: DIVariable = LLVMDIGlobalVariableMetadataKind);
+opaque_metadata!(DILocalVariable: DIVariable = LLVMDILocalVariableMetadataKind);
+opaque_metadata!(GenericDINode: DINode = LLVMGenericDINodeMetadataKind);
+opaque_metadata!(MDTuple: MDNode = LLVMMDTupleMetadataKind);
+opaque_metadata!(MDString: MDNode = LLVMMDStringMetadataKind);
+opaque_metadata!(ValueAsMetadata: Metadata = [ConstantAsMetadata, LocalAsMetadata]);
+opaque_metadata!(ConstantAsMetadata: ValueAsMetadata = LLVMConstantAsMetadataMetadataKind);
+opaque_metadata!(LocalAsMetadata: ValueAsMetadata = LLVMLocalAsMetadataMetadataKind);
 
 #[repr(transparent)]
 pub struct NamedMDNode {
