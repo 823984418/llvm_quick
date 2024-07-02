@@ -630,6 +630,167 @@ impl<'m, 'c> DIBuilder<'m, 'c> {
             ))
         }
     }
+
+    pub fn create_member_type(
+        &self,
+        scope: &DIScope,
+        name: &[u8],
+        file: &DIFile,
+        line_no: u32,
+        size_in_bits: u64,
+        align_in_bits: u32,
+        offset_in_bits: u64,
+        flags: LLVMDIFlags,
+        ty: &DIType,
+    ) -> &DIType {
+        unsafe {
+            DIType::from_raw(LLVMDIBuilderCreateMemberType(
+                self.as_raw(),
+                scope.as_raw(),
+                name.as_ptr() as _,
+                name.len(),
+                file.as_raw(),
+                line_no,
+                size_in_bits,
+                align_in_bits,
+                offset_in_bits,
+                flags,
+                ty.as_raw(),
+            ))
+        }
+    }
+
+    pub fn create_static_member_type<T: TypeTag>(
+        &self,
+        scope: &DIScope,
+        name: &[u8],
+        file: &DIFile,
+        line_number: u32,
+        ty: &DIType,
+        flags: LLVMDIFlags,
+        constant_val: &&Value<T>,
+        align_in_bits: u32,
+    ) -> &DIType {
+        unsafe {
+            DIType::from_raw(LLVMDIBuilderCreateStaticMemberType(
+                self.as_raw(),
+                scope.as_raw(),
+                name.as_ptr() as _,
+                name.len(),
+                file.as_raw(),
+                line_number,
+                ty.as_raw(),
+                flags,
+                constant_val.as_raw(),
+                align_in_bits,
+            ))
+        }
+    }
+
+    pub fn create_member_pointer_type(
+        &self,
+        pointee_type: &DIType,
+        class_type: &DIType,
+        size_in_bits: u64,
+        align_in_bits: u32,
+        flags: LLVMDIFlags,
+    ) -> &DIType {
+        unsafe {
+            DIType::from_raw(LLVMDIBuilderCreateMemberPointerType(
+                self.as_raw(),
+                pointee_type.as_raw(),
+                class_type.as_raw(),
+                size_in_bits,
+                align_in_bits,
+                flags,
+            ))
+        }
+    }
+
+    pub fn create_obj_c_i_var(
+        &self,
+        name: &[u8],
+        file: &DIFile,
+        line_no: u32,
+        size_in_bits: u64,
+        align_in_bits: u32,
+        offset_in_bits: u64,
+        flags: LLVMDIFlags,
+        ty: &DIType,
+        property_node: &DIObjCProperty,
+    ) -> &DIVariable {
+        unsafe {
+            DIVariable::from_raw(LLVMDIBuilderCreateObjCIVar(
+                self.as_raw(),
+                name.as_ptr() as _,
+                name.len(),
+                file.as_raw(),
+                line_no,
+                size_in_bits,
+                align_in_bits,
+                offset_in_bits,
+                flags,
+                ty.as_raw(),
+                property_node.as_raw(),
+            ))
+        }
+    }
+
+    pub fn create_object_pointer_type(&self, ty: &DIType) -> &DIType {
+        unsafe {
+            DIType::from_raw(LLVMDIBuilderCreateObjectPointerType(
+                self.as_raw(),
+                ty.as_raw(),
+            ))
+        }
+    }
+
+    pub fn create_qualified_type(&self, tag: u32, ty: &DIType) -> &DIType {
+        unsafe {
+            DIType::from_raw(LLVMDIBuilderCreateQualifiedType(
+                self.as_raw(),
+                tag,
+                ty.as_raw(),
+            ))
+        }
+    }
+
+    pub fn create_reference_type(&self, tag: u32, ty: &DIType) -> &DIType {
+        unsafe {
+            DIType::from_raw(LLVMDIBuilderCreateReferenceType(
+                self.as_raw(),
+                tag,
+                ty.as_raw(),
+            ))
+        }
+    }
+
+    pub fn create_null_ptr_type(&self) -> &DIType {
+        unsafe { DIType::from_raw(LLVMDIBuilderCreateNullPtrType(self.as_raw())) }
+    }
+
+    pub fn create_typedef(
+        &self,
+        ty: &DIType,
+        name: &[u8],
+        file: DIFile,
+        line_no: u32,
+        scope: &DIScope,
+        align_in_bits: u32,
+    ) -> &Metadata {
+        unsafe {
+            Metadata::from_raw(LLVMDIBuilderCreateTypedef(
+                self.as_raw(),
+                ty.as_raw(),
+                name.as_ptr() as _,
+                name.len(),
+                file.as_raw(),
+                line_no,
+                scope.as_raw(),
+                align_in_bits,
+            ))
+        }
+    }
 }
 
 // TODO
