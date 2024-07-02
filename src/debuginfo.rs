@@ -642,7 +642,7 @@ impl<'m, 'c> DIBuilder<'m, 'c> {
         offset_in_bits: u64,
         flags: LLVMDIFlags,
         ty: &DIType,
-    ) -> &DIType {
+    ) -> &'c DIType {
         unsafe {
             DIType::from_raw(LLVMDIBuilderCreateMemberType(
                 self.as_raw(),
@@ -670,7 +670,7 @@ impl<'m, 'c> DIBuilder<'m, 'c> {
         flags: LLVMDIFlags,
         constant_val: &&Value<T>,
         align_in_bits: u32,
-    ) -> &DIType {
+    ) -> &'c DIType {
         unsafe {
             DIType::from_raw(LLVMDIBuilderCreateStaticMemberType(
                 self.as_raw(),
@@ -694,7 +694,7 @@ impl<'m, 'c> DIBuilder<'m, 'c> {
         size_in_bits: u64,
         align_in_bits: u32,
         flags: LLVMDIFlags,
-    ) -> &DIType {
+    ) -> &'c DIType {
         unsafe {
             DIType::from_raw(LLVMDIBuilderCreateMemberPointerType(
                 self.as_raw(),
@@ -718,7 +718,7 @@ impl<'m, 'c> DIBuilder<'m, 'c> {
         flags: LLVMDIFlags,
         ty: &DIType,
         property_node: &DIObjCProperty,
-    ) -> &DIVariable {
+    ) -> &'c DIVariable {
         unsafe {
             DIVariable::from_raw(LLVMDIBuilderCreateObjCIVar(
                 self.as_raw(),
@@ -736,7 +736,7 @@ impl<'m, 'c> DIBuilder<'m, 'c> {
         }
     }
 
-    pub fn create_object_pointer_type(&self, ty: &DIType) -> &DIType {
+    pub fn create_object_pointer_type(&self, ty: &DIType) -> &'c DIType {
         unsafe {
             DIType::from_raw(LLVMDIBuilderCreateObjectPointerType(
                 self.as_raw(),
@@ -745,7 +745,7 @@ impl<'m, 'c> DIBuilder<'m, 'c> {
         }
     }
 
-    pub fn create_qualified_type(&self, tag: u32, ty: &DIType) -> &DIType {
+    pub fn create_qualified_type(&self, tag: u32, ty: &DIType) -> &'c DIType {
         unsafe {
             DIType::from_raw(LLVMDIBuilderCreateQualifiedType(
                 self.as_raw(),
@@ -755,7 +755,7 @@ impl<'m, 'c> DIBuilder<'m, 'c> {
         }
     }
 
-    pub fn create_reference_type(&self, tag: u32, ty: &DIType) -> &DIType {
+    pub fn create_reference_type(&self, tag: u32, ty: &DIType) -> &'c DIType {
         unsafe {
             DIType::from_raw(LLVMDIBuilderCreateReferenceType(
                 self.as_raw(),
@@ -765,7 +765,7 @@ impl<'m, 'c> DIBuilder<'m, 'c> {
         }
     }
 
-    pub fn create_null_ptr_type(&self) -> &DIType {
+    pub fn create_null_ptr_type(&self) -> &'c DIType {
         unsafe { DIType::from_raw(LLVMDIBuilderCreateNullPtrType(self.as_raw())) }
     }
 
@@ -777,7 +777,7 @@ impl<'m, 'c> DIBuilder<'m, 'c> {
         line_no: u32,
         scope: &DIScope,
         align_in_bits: u32,
-    ) -> &Metadata {
+    ) -> &'c Metadata {
         unsafe {
             Metadata::from_raw(LLVMDIBuilderCreateTypedef(
                 self.as_raw(),
