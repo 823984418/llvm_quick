@@ -1,3 +1,5 @@
+use std::ffi::CStr;
+
 use llvm_sys::orc2::*;
 
 use crate::owning::{OpaqueClone, OpaqueDrop};
@@ -31,19 +33,6 @@ pub struct OrcSymbolStringPoolEntry {
 
 unsafe impl Opaque for OrcSymbolStringPoolEntry {
     type Inner = LLVMOrcOpaqueSymbolStringPoolEntry;
-}
-
-impl OpaqueDrop for LLVMOrcOpaqueSymbolStringPoolEntry {
-    unsafe fn drop_raw(ptr: *mut Self) {
-        unsafe { LLVMOrcReleaseSymbolStringPoolEntry(ptr) }
-    }
-}
-
-impl OpaqueClone for LLVMOrcOpaqueSymbolStringPoolEntry {
-    unsafe fn clone_raw(ptr: *mut Self) -> *mut Self {
-        unsafe { LLVMOrcRetainSymbolStringPoolEntry(ptr) }
-        ptr
-    }
 }
 
 #[repr(transparent)]
@@ -118,12 +107,6 @@ unsafe impl Opaque for OrcThreadSafeModule {
     type Inner = LLVMOrcOpaqueThreadSafeModule;
 }
 
-impl OpaqueDrop for LLVMOrcOpaqueThreadSafeModule {
-    unsafe fn drop_raw(ptr: *mut Self) {
-        unsafe { LLVMOrcDisposeThreadSafeModule(ptr) }
-    }
-}
-
 #[repr(transparent)]
 pub struct OrcJitTargetMachineBuilder {
     _opaque: PhantomOpaque,
@@ -131,12 +114,6 @@ pub struct OrcJitTargetMachineBuilder {
 
 unsafe impl Opaque for OrcJitTargetMachineBuilder {
     type Inner = LLVMOrcOpaqueJITTargetMachineBuilder;
-}
-
-impl OpaqueDrop for LLVMOrcOpaqueJITTargetMachineBuilder {
-    unsafe fn drop_raw(ptr: *mut Self) {
-        unsafe { LLVMOrcDisposeJITTargetMachineBuilder(ptr) }
-    }
 }
 
 #[repr(transparent)]
@@ -190,12 +167,6 @@ unsafe impl Opaque for OrcIndirectStubsManager {
     type Inner = LLVMOrcOpaqueIndirectStubsManager;
 }
 
-impl OpaqueDrop for LLVMOrcOpaqueIndirectStubsManager {
-    unsafe fn drop_raw(ptr: *mut Self) {
-        unsafe { LLVMOrcDisposeIndirectStubsManager(ptr) }
-    }
-}
-
 #[repr(transparent)]
 pub struct OrcLazyCallThroughManager {
     _opaque: PhantomOpaque,
@@ -203,12 +174,6 @@ pub struct OrcLazyCallThroughManager {
 
 unsafe impl Opaque for OrcLazyCallThroughManager {
     type Inner = LLVMOrcOpaqueLazyCallThroughManager;
-}
-
-impl OpaqueDrop for LLVMOrcOpaqueLazyCallThroughManager {
-    unsafe fn drop_raw(ptr: *mut Self) {
-        unsafe { LLVMOrcDisposeLazyCallThroughManager(ptr) }
-    }
 }
 
 #[repr(transparent)]
@@ -219,6 +184,110 @@ pub struct OrcDumpObjects {
 unsafe impl Opaque for OrcDumpObjects {
     type Inner = LLVMOrcOpaqueDumpObjects;
 }
+
+impl OrcExecutionSession {
+    pub fn set_error_reporter_raw(&self, report_error: LLVMOrcErrorReporterFunction, ctx: *mut ()) {
+        unsafe { LLVMOrcExecutionSessionSetErrorReporter(self.as_raw(), report_error, ctx as _) }
+    }
+
+    pub fn get_symbol_string_pool(&self) -> &OrcSymbolStringPool {
+        unsafe {
+            OrcSymbolStringPool::from_raw(LLVMOrcExecutionSessionGetSymbolStringPool(self.as_raw()))
+        }
+    }
+}
+
+impl OrcSymbolStringPool {
+    pub unsafe fn clear_dead_entries(&self) {
+        unsafe { LLVMOrcSymbolStringPoolClearDeadEntries(self.as_raw()) }
+    }
+}
+
+impl OrcExecutionSession {
+    pub fn intern(&self, name: &CStr) -> &OrcSymbolStringPoolEntry {
+        unsafe {
+            OrcSymbolStringPoolEntry::from_raw(LLVMOrcExecutionSessionIntern(
+                self.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+}
+
+impl OrcExecutionSession {
+    pub fn lookup_raw(
+        &self,
+        k: LLVMOrcLookupKind,
+        search_order: &LLVMOrcCJITDylibSearchOrderElement,
+        symbols: &LLVMOrcCLookupSetElement,
+        handle_result: LLVMOrcExecutionSessionLookupHandleResultFunction,
+        ctx: *mut (),
+    ) {
+        unsafe {
+            LLVMOrcExecutionSessionLookup(
+                self.as_raw(),
+                k,
+                search_order as *const _ as *mut _,
+                size_of::<LLVMOrcCJITDylibSearchOrderElement>(),
+                symbols as *const _ as *mut _,
+                size_of::<LLVMOrcCLookupSetElement>(),
+                handle_result,
+                ctx as _,
+            )
+        }
+    }
+}
+
+// TODO
+
+impl OpaqueDrop for LLVMOrcOpaqueSymbolStringPoolEntry {
+    unsafe fn drop_raw(ptr: *mut Self) {
+        unsafe { LLVMOrcReleaseSymbolStringPoolEntry(ptr) }
+    }
+}
+
+// TODO
+
+impl OpaqueClone for LLVMOrcOpaqueSymbolStringPoolEntry {
+    unsafe fn clone_raw(ptr: *mut Self) -> *mut Self {
+        unsafe { LLVMOrcRetainSymbolStringPoolEntry(ptr) }
+        ptr
+    }
+}
+
+// TODO
+
+impl OpaqueDrop for LLVMOrcOpaqueThreadSafeModule {
+    unsafe fn drop_raw(ptr: *mut Self) {
+        unsafe { LLVMOrcDisposeThreadSafeModule(ptr) }
+    }
+}
+
+// TODO
+
+impl OpaqueDrop for LLVMOrcOpaqueJITTargetMachineBuilder {
+    unsafe fn drop_raw(ptr: *mut Self) {
+        unsafe { LLVMOrcDisposeJITTargetMachineBuilder(ptr) }
+    }
+}
+
+// TODO
+
+impl OpaqueDrop for LLVMOrcOpaqueIndirectStubsManager {
+    unsafe fn drop_raw(ptr: *mut Self) {
+        unsafe { LLVMOrcDisposeIndirectStubsManager(ptr) }
+    }
+}
+
+// TODO
+
+impl OpaqueDrop for LLVMOrcOpaqueLazyCallThroughManager {
+    unsafe fn drop_raw(ptr: *mut Self) {
+        unsafe { LLVMOrcDisposeLazyCallThroughManager(ptr) }
+    }
+}
+
+// TODO
 
 impl OpaqueDrop for LLVMOrcOpaqueDumpObjects {
     unsafe fn drop_raw(ptr: *mut Self) {
