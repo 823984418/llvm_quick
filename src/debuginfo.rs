@@ -791,9 +791,166 @@ impl<'m, 'c> DIBuilder<'m, 'c> {
             ))
         }
     }
-}
 
-// TODO
+    pub fn create_inheritance(
+        &self,
+        ty: &DIType,
+        base_ty: &DIType,
+        base_offset: u64,
+        v_b_ptr_offset: u32,
+        flags: LLVMDIFlags,
+    ) -> &'c Metadata {
+        unsafe {
+            Metadata::from_raw(LLVMDIBuilderCreateInheritance(
+                self.as_raw(),
+                ty.as_raw(),
+                base_ty.as_raw(),
+                base_offset,
+                v_b_ptr_offset,
+                flags,
+            ))
+        }
+    }
+
+    pub fn create_forward_decl(
+        &self,
+        tag: u32,
+        name: &[u8],
+        scope: &DIScope,
+        file: &DIFile,
+        line: u32,
+        runtime_lang: u32,
+        size_in_bits: u64,
+        align_in_bits: u32,
+        unique_identifier: &[u8],
+    ) -> &'c Metadata {
+        unsafe {
+            Metadata::from_raw(LLVMDIBuilderCreateForwardDecl(
+                self.as_raw(),
+                tag,
+                name.as_ptr() as _,
+                name.len(),
+                scope.as_raw(),
+                file.as_raw(),
+                line,
+                runtime_lang,
+                size_in_bits,
+                align_in_bits,
+                unique_identifier.as_ptr() as _,
+                unique_identifier.len(),
+            ))
+        }
+    }
+
+    pub fn create_replaceable_composite_type(
+        &self,
+        tag: u32,
+        name: &[u8],
+        scope: &DIScope,
+        file: &DIFile,
+        line: u32,
+        runtime_lang: u32,
+        size_in_bits: u64,
+        align_in_bits: u32,
+        flags: LLVMDIFlags,
+        unique_identifier: &[u8],
+    ) -> &'c DIType {
+        unsafe {
+            DIType::from_raw(LLVMDIBuilderCreateReplaceableCompositeType(
+                self.as_raw(),
+                tag,
+                name.as_ptr() as _,
+                name.len(),
+                scope.as_raw(),
+                file.as_raw(),
+                line,
+                runtime_lang,
+                size_in_bits,
+                align_in_bits,
+                flags,
+                unique_identifier.as_ptr() as _,
+                unique_identifier.len(),
+            ))
+        }
+    }
+
+    pub fn crete_bit_field_member_type(
+        &self,
+        scope: &DIScope,
+        name: &[u8],
+        file: &DIFile,
+        line_number: u32,
+        size_in_bits: u64,
+        offset_in_bits: u64,
+        storage_offset_in_bits: u64,
+        flags: LLVMDIFlags,
+        ty: &DIType,
+    ) -> &'c DIType {
+        unsafe {
+            DIType::from_raw(LLVMDIBuilderCreateBitFieldMemberType(
+                self.as_raw(),
+                scope.as_raw(),
+                name.as_ptr() as _,
+                name.len(),
+                file.as_raw(),
+                line_number,
+                size_in_bits,
+                offset_in_bits,
+                storage_offset_in_bits,
+                flags,
+                ty.as_raw(),
+            ))
+        }
+    }
+
+    pub fn create_class_type(
+        &self,
+        scope: &DIScope,
+        name: &[u8],
+        file: &DIFile,
+        line_number: u32,
+        size_in_bits: u64,
+        align_in_bits: u32,
+        offset_in_bits: u64,
+        flags: LLVMDIFlags,
+        derived_from: &DIType,
+        elements: &[&Metadata],
+        v_table_holder: &Metadata,
+        template_params_node: &Metadata,
+        unique_identifier: &[u8],
+    ) -> &'c DIType {
+        unsafe {
+            DIType::from_raw(LLVMDIBuilderCreateClassType(
+                self.as_raw(),
+                scope.as_raw(),
+                name.as_ptr() as _,
+                name.len(),
+                file.as_raw(),
+                line_number,
+                size_in_bits,
+                align_in_bits,
+                offset_in_bits,
+                flags,
+                derived_from.as_raw(),
+                elements.as_ptr() as _,
+                elements.len() as _,
+                v_table_holder.as_raw(),
+                template_params_node.as_raw(),
+                unique_identifier.as_ptr() as _,
+                unique_identifier.len(),
+            ))
+        }
+    }
+
+    pub fn create_artificial_type(&self, ty: &DIType) -> &'c DIType {
+        unsafe {
+            DIType::from_raw(LLVMDIBuilderCreateArtificialType(
+                self.as_raw(),
+                ty.as_raw(),
+            ))
+        }
+    }
+}
 
 impl DIType {
     pub fn get_name(&self) -> &[u8] {
@@ -825,7 +982,110 @@ impl DIType {
     }
 }
 
-// TODO
+impl<'m, 'c> DIBuilder<'m, 'c> {
+    pub fn get_or_create_subrange(&self, lower_bound: i64, count: i64) -> &'c DISubrange {
+        unsafe {
+            DISubrange::from_raw(LLVMDIBuilderGetOrCreateSubrange(
+                self.as_raw(),
+                lower_bound,
+                count,
+            ))
+        }
+    }
+
+    pub fn get_or_create_array(&self, data: &[&Metadata]) -> &'c Metadata {
+        unsafe {
+            Metadata::from_raw(LLVMDIBuilderGetOrCreateArray(
+                self.as_raw(),
+                data.as_ptr() as _,
+                data.len(),
+            ))
+        }
+    }
+
+    pub fn create_expression(&self, addr: &[u64]) -> &'c DIExpression {
+        unsafe {
+            DIExpression::from_raw(LLVMDIBuilderCreateExpression(
+                self.as_raw(),
+                addr.as_ptr() as _,
+                addr.len(),
+            ))
+        }
+    }
+
+    pub fn create_constant_value_expression(&self, value: u64) -> &'c Metadata {
+        unsafe {
+            Metadata::from_raw(LLVMDIBuilderCreateConstantValueExpression(
+                self.as_raw(),
+                value,
+            ))
+        }
+    }
+
+    pub fn create_global_variable_expression(
+        &self,
+        scope: &DIScope,
+        name: &[u8],
+        linkage: &[u8],
+        file: &DIFile,
+        line_no: u32,
+        ty: &DIType,
+        local_to_unit: bool,
+        expr: &Metadata,
+        decl: &Metadata,
+        align_in_bits: u32,
+    ) -> &'c DIGlobalVariableExpression {
+        unsafe {
+            DIGlobalVariableExpression::from_raw(LLVMDIBuilderCreateGlobalVariableExpression(
+                self.as_raw(),
+                scope.as_raw(),
+                name.as_ptr() as _,
+                name.len(),
+                linkage.as_ptr() as _,
+                linkage.len(),
+                file.as_raw(),
+                line_no,
+                ty.as_raw(),
+                local_to_unit as _,
+                expr.as_raw(),
+                decl.as_raw(),
+                align_in_bits,
+            ))
+        }
+    }
+}
+
+impl DINode {
+    pub fn get_tag(&self) -> u16 {
+        unsafe { LLVMGetDINodeTag(self.as_raw()) }
+    }
+}
+
+impl DIGlobalVariableExpression {
+    pub fn get_variable(&self) -> &DIVariable {
+        unsafe { DIVariable::from_raw(LLVMDIGlobalVariableExpressionGetVariable(self.as_raw())) }
+    }
+
+    pub fn get_expression(&self) -> &DIExpression {
+        unsafe {
+            DIExpression::from_raw(LLVMDIGlobalVariableExpressionGetExpression(self.as_raw()))
+        }
+    }
+}
+
+impl DIVariable {
+    pub fn get_file(&self) -> &DIFile {
+        unsafe { DIFile::from_raw(LLVMDIVariableGetFile(self.as_raw())) }
+    }
+
+    pub fn get_scope(&self) -> &DIScope {
+        unsafe { DIScope::from_raw(LLVMDIVariableGetScope(self.as_raw())) }
+    }
+
+    pub fn get_line(&self) -> u32 {
+        unsafe { LLVMDIVariableGetLine(self.as_raw()) }
+    }
+}
 
 impl Context {
     pub fn temporary_md_node(&self, data: &[&Metadata]) -> &Metadata {
@@ -845,7 +1105,177 @@ impl MDNode {
     }
 }
 
-// TODO
+impl Metadata {
+    pub unsafe fn replace_all_uses_with(&self, replacement: &Metadata) {
+        unsafe { LLVMMetadataReplaceAllUsesWith(self.as_raw(), replacement.as_raw()) }
+    }
+}
+
+impl<'m, 'c> DIBuilder<'m, 'c> {
+    pub fn create_temp_global_variable_fwd_decl(
+        &self,
+        scope: &DIScope,
+        name: &[u8],
+        linkage: &[u8],
+        file: &DIFile,
+        line_no: u32,
+        ty: &DIType,
+        local_to_unit: bool,
+        decl: &Metadata,
+        align_in_bits: u32,
+    ) -> &'c Metadata {
+        unsafe {
+            Metadata::from_raw(LLVMDIBuilderCreateTempGlobalVariableFwdDecl(
+                self.as_raw(),
+                scope.as_raw(),
+                name.as_ptr() as _,
+                name.len(),
+                linkage.as_ptr() as _,
+                linkage.len(),
+                file.as_raw(),
+                line_no,
+                ty.as_raw(),
+                local_to_unit as _,
+                decl.as_raw(),
+                align_in_bits,
+            ))
+        }
+    }
+
+    pub fn insert_declare_before<T: TypeTag>(
+        &self,
+        storage: &Value<T>,
+        var_info: &Metadata,
+        expr: &Metadata,
+        debug_loc: &DILocation,
+        instr: &Instruction<T>,
+    ) -> &'c Value<any> {
+        unsafe {
+            Value::from_raw(LLVMDIBuilderInsertDeclareBefore(
+                self.as_raw(),
+                storage.as_raw(),
+                var_info.as_raw(),
+                expr.as_raw(),
+                debug_loc.as_raw(),
+                instr.as_raw(),
+            ))
+        }
+    }
+
+    pub fn insert_declare_at_end<T: TypeTag>(
+        &self,
+        storage: &Value<T>,
+        var_info: &Metadata,
+        expr: &Metadata,
+        debug_loc: &DILocation,
+        block: &BasicBlock,
+    ) -> &'c Value<any> {
+        unsafe {
+            Value::from_raw(LLVMDIBuilderInsertDeclareAtEnd(
+                self.as_raw(),
+                storage.as_raw(),
+                var_info.as_raw(),
+                expr.as_raw(),
+                debug_loc.as_raw(),
+                block.as_raw(),
+            ))
+        }
+    }
+
+    pub fn insert_dbg_value_before<T: TypeTag>(
+        &self,
+        val: &Value<T>,
+        val_info: &Metadata,
+        expr: &Metadata,
+        debug_loc: &DILocation,
+        instr: &Instruction<T>,
+    ) -> &'c Value<any> {
+        unsafe {
+            Value::from_raw(LLVMDIBuilderInsertDbgValueBefore(
+                self.as_raw(),
+                val.as_raw(),
+                val_info.as_raw(),
+                expr.as_raw(),
+                debug_loc.as_raw(),
+                instr.as_raw(),
+            ))
+        }
+    }
+
+    pub fn insert_dbg_value_at_end<T: TypeTag>(
+        &self,
+        val: &Value<T>,
+        val_info: &Metadata,
+        expr: &Metadata,
+        debug_loc: &DILocation,
+        block: &BasicBlock,
+    ) -> &'c Value<any> {
+        unsafe {
+            Value::from_raw(LLVMDIBuilderInsertDbgValueAtEnd(
+                self.as_raw(),
+                val.as_raw(),
+                val_info.as_raw(),
+                expr.as_raw(),
+                debug_loc.as_raw(),
+                block.as_raw(),
+            ))
+        }
+    }
+
+    pub fn create_auto_variable(
+        &self,
+        scope: &DIScope,
+        name: &[u8],
+        file: &DIFile,
+        line_no: u32,
+        ty: &DIType,
+        always_preserve: bool,
+        flags: LLVMDIFlags,
+        align_in_bits: u32,
+    ) -> &'c Metadata {
+        unsafe {
+            Metadata::from_raw(LLVMDIBuilderCreateAutoVariable(
+                self.as_raw(),
+                scope.as_raw(),
+                name.as_ptr() as _,
+                name.len(),
+                file.as_raw(),
+                line_no,
+                ty.as_raw(),
+                always_preserve as _,
+                flags,
+                align_in_bits,
+            ))
+        }
+    }
+
+    pub fn create_parameter_variable(
+        &self,
+        scope: &DIScope,
+        name: &[u8],
+        arg_no: u32,
+        file: &DIFile,
+        line_no: u32,
+        ty: &DIType,
+        always_preserve: bool,
+        flags: LLVMDIFlags,
+    ) -> &'c Metadata {
+        unsafe {
+            Metadata::from_raw(LLVMDIBuilderCreateParameterVariable(
+                self.as_raw(),
+                scope.as_raw(),
+                name.as_ptr() as _,
+                name.len(),
+                arg_no,
+                file.as_raw(),
+                line_no,
+                ty.as_raw(),
+                always_preserve as _,
+                flags,
+            ))
+        }
+    }
+}
 
 impl<T: FunTypeTag> Value<T> {
     pub fn get_subprogram(&self) -> &DISubprogram {
