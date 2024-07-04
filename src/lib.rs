@@ -345,14 +345,14 @@ unsafe impl Opaque for NamedMDNode {
     type Inner = LLVMOpaqueNamedMDNode;
 }
 
-#[repr(transparent)]
-pub struct ValueMetadataEntry {
-    _opaque: PhantomOpaque,
-}
-
-unsafe impl Opaque for ValueMetadataEntry {
-    type Inner = LLVMOpaqueValueMetadataEntry;
-}
+// #[repr(transparent)]
+// pub struct ValueMetadataEntry {
+//     _opaque: PhantomOpaque,
+// }
+//
+// unsafe impl Opaque for ValueMetadataEntry {
+//     type Inner = LLVMOpaqueValueMetadataEntry;
+// }
 
 #[repr(transparent)]
 pub struct Builder<'c> {
@@ -429,14 +429,14 @@ unsafe impl Opaque for Comdat {
     type Inner = LLVMComdat;
 }
 
-#[repr(transparent)]
-pub struct ModuleFlagEntry {
-    _opaque: PhantomOpaque,
-}
-
-unsafe impl Opaque for ModuleFlagEntry {
-    type Inner = LLVMOpaqueModuleFlagEntry;
-}
+// #[repr(transparent)]
+// pub struct ModuleFlagEntry {
+//     _opaque: PhantomOpaque,
+// }
+//
+// unsafe impl Opaque for ModuleFlagEntry {
+//     type Inner = LLVMOpaqueModuleFlagEntry;
+// }
 
 #[repr(transparent)]
 pub struct JITEventListener {

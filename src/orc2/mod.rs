@@ -1,12 +1,16 @@
-use std::ffi::CStr;
+use std::ffi::{c_void, CStr};
+use std::marker::PhantomData;
 use std::ops::Deref;
 use std::ptr::{null_mut, NonNull};
 
+use llvm_sys::error::LLVMOpaqueError;
 use llvm_sys::orc2::*;
+use llvm_sys::LLVMModule;
 
 use crate::error::Error;
 use crate::owning::{OpaqueClone, OpaqueDrop, Owning};
-use crate::{MemoryBuffer, Opaque, PhantomOpaque};
+use crate::target_machine::TargetMachine;
+use crate::{Context, MemoryBuffer, Module, Opaque, PhantomOpaque};
 
 pub mod ee;
 pub mod lljit;
@@ -97,16 +101,20 @@ pub struct OrcThreadSafeContext {
     _opaque: PhantomOpaque,
 }
 
+unsafe impl Send for OrcThreadSafeContext {}
+unsafe impl Sync for OrcThreadSafeContext {}
+
 unsafe impl Opaque for OrcThreadSafeContext {
     type Inner = LLVMOrcOpaqueThreadSafeContext;
 }
 
 #[repr(transparent)]
-pub struct OrcThreadSafeModule {
+pub struct OrcThreadSafeModule<'c> {
     _opaque: PhantomOpaque,
+    _marker: PhantomData<&'c OrcThreadSafeContext>,
 }
 
-unsafe impl Opaque for OrcThreadSafeModule {
+unsafe impl<'c> Opaque for OrcThreadSafeModule<'c> {
     type Inner = LLVMOrcOpaqueThreadSafeModule;
 }
 
@@ -126,12 +134,6 @@ pub struct OrcObjectLayer {
 
 unsafe impl Opaque for OrcObjectLayer {
     type Inner = LLVMOrcOpaqueObjectLayer;
-}
-
-impl OpaqueDrop for LLVMOrcOpaqueObjectLayer {
-    unsafe fn drop_raw(ptr: *mut Self) {
-        unsafe { LLVMOrcDisposeObjectLayer(ptr) }
-    }
 }
 
 #[repr(transparent)]
@@ -536,16 +538,16 @@ impl OrcMaterializationResponsibility {
 }
 
 impl OrcExecutionSession {
-    pub fn create_bare_jit_dylib(&self, name: &CStr) -> Owning<OrcJitDylib> {
+    pub fn create_bare_jit_dylib(&self, name: &CStr) -> &OrcJitDylib {
         unsafe {
-            Owning::from_raw(LLVMOrcExecutionSessionCreateBareJITDylib(
+            OrcJitDylib::from_raw(LLVMOrcExecutionSessionCreateBareJITDylib(
                 self.as_raw(),
                 name.as_ptr(),
             ))
         }
     }
 
-    pub fn create_jit_dylib(&self, name: &CStr) -> Result<Owning<OrcJitDylib>, Owning<Error>> {
+    pub fn create_jit_dylib(&self, name: &CStr) -> Result<&OrcJitDylib, Owning<Error>> {
         unsafe {
             let mut result = null_mut();
             Error::check(LLVMOrcExecutionSessionCreateJITDylib(
@@ -553,7 +555,7 @@ impl OrcExecutionSession {
                 &mut result,
                 name.as_ptr(),
             ))?;
-            Ok(Owning::from_raw(result))
+            Ok(OrcJitDylib::from_raw(result))
         }
     }
 
@@ -591,7 +593,112 @@ impl OrcJitDylib {
     }
 }
 
-// TODO
+impl OrcDefinitionGenerator {
+    pub fn create_custom_c_api_definition_generator_raw(
+        f: LLVMOrcCAPIDefinitionGeneratorTryToGenerateFunction,
+        ctx: *mut (),
+        dispose: LLVMOrcDisposeCAPIDefinitionGeneratorFunction,
+    ) -> Owning<OrcDefinitionGenerator> {
+        unsafe {
+            Owning::from_raw(LLVMOrcCreateCustomCAPIDefinitionGenerator(
+                f, ctx as _, dispose,
+            ))
+        }
+    }
+}
+
+impl OrcLookupState {
+    pub fn continue_lookup(&self, error: Option<Owning<Error>>) {
+        unsafe {
+            LLVMOrcLookupStateContinueLookup(
+                self.as_raw(),
+                error.map(Owning::into_raw).unwrap_or(null_mut()),
+            )
+        }
+    }
+}
+
+impl OrcDefinitionGenerator {
+    pub fn create_dynamic_library_search_generator_for_process_raw(
+        global_prefix: u8,
+        filter: LLVMOrcSymbolPredicate,
+        ctx: *mut (),
+    ) -> Result<Owning<OrcDefinitionGenerator>, Owning<Error>> {
+        unsafe {
+            let mut result = null_mut();
+            Error::check(LLVMOrcCreateDynamicLibrarySearchGeneratorForProcess(
+                &mut result,
+                global_prefix as _,
+                filter,
+                ctx as _,
+            ))?;
+            Ok(Owning::from_raw(result))
+        }
+    }
+
+    pub fn create_dynamic_library_search_generator_for_path_raw(
+        file_name: &CStr,
+        global_prefix: u8,
+        filter: LLVMOrcSymbolPredicate,
+        ctx: *mut (),
+    ) -> Result<Owning<OrcDefinitionGenerator>, Owning<Error>> {
+        unsafe {
+            let mut result = null_mut();
+            Error::check(LLVMOrcCreateDynamicLibrarySearchGeneratorForPath(
+                &mut result,
+                file_name.as_ptr(),
+                global_prefix as _,
+                filter,
+                ctx as _,
+            ))?;
+            Ok(Owning::from_raw(result))
+        }
+    }
+
+    #[inline(always)]
+    pub fn create_static_library_search_generator_for_path_raw(
+        obj_layer: &OrcObjectLayer,
+        file_name: &CStr,
+        target_triple: &CStr,
+    ) -> Result<Owning<OrcDefinitionGenerator>, Owning<Error>> {
+        unsafe {
+            let mut result = null_mut();
+            Error::check(LLVMOrcCreateStaticLibrarySearchGeneratorForPath(
+                &mut result,
+                obj_layer.as_raw(),
+                file_name.as_ptr(),
+                target_triple.as_ptr(),
+            ))?;
+            Ok(Owning::from_raw(result))
+        }
+    }
+}
+
+impl OrcThreadSafeContext {
+    pub fn create() -> Owning<OrcThreadSafeContext> {
+        unsafe { Owning::from_raw(LLVMOrcCreateNewThreadSafeContext()) }
+    }
+
+    pub fn get_context(&self) -> &Context {
+        unsafe { Context::from_raw(LLVMOrcThreadSafeContextGetContext(self.as_raw())) }
+    }
+}
+
+impl OpaqueDrop for LLVMOrcOpaqueThreadSafeContext {
+    unsafe fn drop_raw(ptr: *mut Self) {
+        unsafe { LLVMOrcDisposeThreadSafeContext(ptr) }
+    }
+}
+impl OrcThreadSafeContext {
+    pub fn create_module(&self, m: Owning<Module>) -> Owning<OrcThreadSafeModule<'_>> {
+        unsafe {
+            Owning::from_raw(LLVMOrcCreateNewThreadSafeModule(
+                m.into_raw(),
+                self.as_raw(),
+            ))
+        }
+    }
+}
 
 impl OpaqueDrop for LLVMOrcOpaqueThreadSafeModule {
     unsafe fn drop_raw(ptr: *mut Self) {
@@ -599,7 +706,72 @@ impl OpaqueDrop for LLVMOrcOpaqueThreadSafeModule {
     }
 }
 
-// TODO
+impl<'c> OrcThreadSafeModule<'c> {
+    pub fn with_module_do_raw(
+        &self,
+        f: LLVMOrcGenericIRModuleOperationFunction,
+        ctx: *mut (),
+    ) -> Result<(), Owning<Error>> {
+        unsafe {
+            Error::check(LLVMOrcThreadSafeModuleWithModuleDo(
+                self.as_raw(),
+                f,
+                ctx as _,
+            ))
+        }
+    }
+
+    pub fn with_module_do<F: FnOnce(&Module) -> Result<R, Owning<Error>>, R>(
+        &self,
+        f: F,
+    ) -> Result<R, Owning<Error>> {
+        struct Ctx<F: FnOnce(&Module) -> Result<R, Owning<Error>>, R> {
+            f: Option<F>,
+            r: Option<R>,
+        }
+        let mut ctx = Ctx::<F, R> {
+            f: Some(f),
+            r: None,
+        };
+
+        extern "C" fn operation<F: FnOnce(&Module) -> Result<R, Owning<Error>>, R>(
+            ctx: *mut c_void,
+            m: *mut LLVMModule,
+        ) -> *mut LLVMOpaqueError {
+            unsafe {
+                let ctx = &mut *(ctx as *mut Ctx<F, R>);
+                match ctx.f.take().unwrap()(Module::from_raw(m)) {
+                    Ok(r) => {
+                        ctx.r = Some(r);
+                        null_mut()
+                    }
+                    Err(e) => e.into_raw(),
+                }
+            }
+        }
+
+        self.with_module_do_raw(operation::<F, R>, &mut ctx as *mut _ as *mut _)?;
+        Ok(ctx.r.unwrap())
+    }
+}
+
+impl OrcJitTargetMachineBuilder {
+    pub fn detect_host() -> Result<Owning<OrcJitTargetMachineBuilder>, Owning<Error>> {
+        unsafe {
+            let mut result = null_mut();
+            Error::check(LLVMOrcJITTargetMachineBuilderDetectHost(&mut result))?;
+            Ok(Owning::from_raw(result))
+        }
+    }
+
+    pub fn create_from_target_machine(tm: &TargetMachine) -> Owning<OrcJitTargetMachineBuilder> {
+        unsafe {
+            Owning::from_raw(LLVMOrcJITTargetMachineBuilderCreateFromTargetMachine(
+                tm.as_raw(),
+            ))
+        }
+    }
+}
 
 impl OpaqueDrop for LLVMOrcOpaqueJITTargetMachineBuilder {
     unsafe fn drop_raw(ptr: *mut Self) {
@@ -607,7 +779,93 @@ impl OpaqueDrop for LLVMOrcOpaqueJITTargetMachineBuilder {
     }
 }
 
-// TODO
+impl OrcJitTargetMachineBuilder {
+    pub fn get_target_triple(&self) -> &CStr {
+        unsafe { CStr::from_ptr(LLVMOrcJITTargetMachineBuilderGetTargetTriple(self.as_raw())) }
+    }
+
+    pub unsafe fn set_target_triple(&self, target_triple: &CStr) {
+        unsafe {
+            LLVMOrcJITTargetMachineBuilderSetTargetTriple(self.as_raw(), target_triple.as_ptr())
+        }
+    }
+}
+
+impl OrcObjectLayer {
+    pub fn add_object_file(
+        &self,
+        jd: &OrcJitDylib,
+        obj_buffer: &MemoryBuffer,
+    ) -> Result<(), Owning<Error>> {
+        unsafe {
+            Error::check(LLVMOrcObjectLayerAddObjectFile(
+                self.as_raw(),
+                jd.as_raw(),
+                obj_buffer.as_raw(),
+            ))
+        }
+    }
+
+    pub fn add_object_file_with_rt(
+        &self,
+        rt: &OrcResourceTracker,
+        obj_buffer: &MemoryBuffer,
+    ) -> Result<(), Owning<Error>> {
+        unsafe {
+            Error::check(LLVMOrcObjectLayerAddObjectFileWithRT(
+                self.as_raw(),
+                rt.as_raw(),
+                obj_buffer.as_raw(),
+            ))
+        }
+    }
+
+    pub fn emit(&self, r: &OrcMaterializationResponsibility, obj_buffer: &MemoryBuffer) {
+        unsafe { LLVMOrcObjectLayerEmit(self.as_raw(), r.as_raw(), obj_buffer.as_raw()) }
+    }
+}
+
+impl OpaqueDrop for LLVMOrcOpaqueObjectLayer {
+    unsafe fn drop_raw(ptr: *mut Self) {
+        unsafe { LLVMOrcDisposeObjectLayer(ptr) }
+    }
+}
+
+impl OrcIrTransformLayer {
+    pub fn emit(&self, mr: &OrcMaterializationResponsibility, tsm: &OrcThreadSafeModule) {
+        unsafe { LLVMOrcIRTransformLayerEmit(self.as_raw(), mr.as_raw(), tsm.as_raw()) }
+    }
+
+    pub fn set_transform_raw(
+        &self,
+        transform: LLVMOrcIRTransformLayerTransformFunction,
+        ctx: *mut (),
+    ) {
+        unsafe { LLVMOrcIRTransformLayerSetTransform(self.as_raw(), transform, ctx as _) }
+    }
+}
+
+impl OrcObjectTransformLayer {
+    pub fn set_transform_raw(
+        &self,
+        transform: LLVMOrcObjectTransformLayerTransformFunction,
+        ctx: *mut (),
+    ) {
+        unsafe { LLVMOrcObjectTransformLayerSetTransform(self.as_raw(), transform, ctx as _) }
+    }
+}
+
+impl OrcIndirectStubsManager {
+    pub fn create_local_indirect_stubs_manager(
+        target_triple: &CStr,
+    ) -> Owning<OrcIndirectStubsManager> {
+        unsafe {
+            Owning::from_raw(LLVMOrcCreateLocalIndirectStubsManager(
+                target_triple.as_ptr(),
+            ))
+        }
+    }
+}
 
 impl OpaqueDrop for LLVMOrcOpaqueIndirectStubsManager {
     unsafe fn drop_raw(ptr: *mut Self) {
