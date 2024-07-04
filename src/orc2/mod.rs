@@ -87,6 +87,7 @@ unsafe impl Opaque for OrcDefinitionGenerator {
     type Inner = LLVMOrcOpaqueDefinitionGenerator;
 }
 
+#[allow(dead_code)]
 #[repr(transparent)]
 pub struct OrcLookupState {
     _opaque: PhantomOpaque,
@@ -136,6 +137,7 @@ unsafe impl Opaque for OrcObjectLayer {
     type Inner = LLVMOrcOpaqueObjectLayer;
 }
 
+#[allow(dead_code)]
 #[repr(transparent)]
 pub struct OrcObjectLinkingLayer {
     _opaque: PhantomOpaque,
@@ -172,6 +174,7 @@ unsafe impl Opaque for OrcIndirectStubsManager {
     type Inner = LLVMOrcOpaqueIndirectStubsManager;
 }
 
+#[allow(dead_code)]
 #[repr(transparent)]
 pub struct OrcLazyCallThroughManager {
     _opaque: PhantomOpaque,
