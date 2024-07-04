@@ -1,6 +1,6 @@
 use std::ffi::CStr;
 use std::ops::Deref;
-use std::ptr::NonNull;
+use std::ptr::{null_mut, NonNull};
 
 use llvm_sys::orc2::*;
 
@@ -287,11 +287,18 @@ impl OpaqueDrop for LLVMOrcOpaqueMaterializationUnit {
         unsafe { LLVMOrcDisposeMaterializationUnit(ptr) }
     }
 }
+
+#[repr(C)]
+pub struct OrcCSymbolFlagsMapPair<'e> {
+    pub name: &'e OrcSymbolStringPoolEntry,
+    pub flags: LLVMJITSymbolFlags,
+}
+
 impl OrcMaterializationUnit {
     pub fn create_custom_raw(
         name: &CStr,
         ctx: &mut (),
-        syms: &[&LLVMOrcCSymbolFlagsMapPair],
+        syms: &[&OrcCSymbolFlagsMapPair],
         init_sym: OrcSymbolStringPoolEntry,
         materialize: LLVMOrcMaterializationUnitMaterializeFunction,
         discard: LLVMOrcMaterializationUnitDiscardFunction,
@@ -373,19 +380,19 @@ impl OrcMaterializationResponsibility {
     }
 }
 
-pub struct CSymbolFlagsMap<'m> {
-    ptr: NonNull<[&'m LLVMOrcCSymbolFlagsMapPair]>,
+pub struct CSymbolFlagsMap<'e> {
+    ptr: NonNull<[OrcCSymbolFlagsMapPair<'e>]>,
 }
 
-impl<'m> Deref for CSymbolFlagsMap<'m> {
-    type Target = [&'m LLVMOrcCSymbolFlagsMapPair];
+impl<'e> Deref for CSymbolFlagsMap<'e> {
+    type Target = [OrcCSymbolFlagsMapPair<'e>];
 
     fn deref(&self) -> &Self::Target {
         unsafe { self.ptr.as_ref() }
     }
 }
 
-impl<'m> Drop for CSymbolFlagsMap<'m> {
+impl<'e> Drop for CSymbolFlagsMap<'e> {
     fn drop(&mut self) {
         unsafe { LLVMOrcDisposeCSymbolFlagsMap(self.ptr.as_ptr() as _) }
     }
@@ -427,6 +434,160 @@ impl<'m> Deref for Symbols<'m> {
 impl<'m> Drop for Symbols<'m> {
     fn drop(&mut self) {
         unsafe { LLVMOrcDisposeSymbols(self.ptr.as_ptr() as _) }
+    }
+}
+
+impl OrcMaterializationResponsibility {
+    pub fn notify_resolved(
+        &self,
+        symbols: &[&OrcSymbolStringPoolEntry],
+    ) -> Result<(), Owning<Error>> {
+        unsafe {
+            Error::check(LLVMOrcMaterializationResponsibilityNotifyResolved(
+                self.as_raw(),
+                symbols.as_ptr() as _,
+                symbols.len(),
+            ))
+        }
+    }
+
+    pub fn notify_emitted(&self) -> Result<(), Owning<Error>> {
+        unsafe {
+            Error::check(LLVMOrcMaterializationResponsibilityNotifyEmitted(
+                self.as_raw(),
+            ))
+        }
+    }
+
+    pub fn define_materializing(
+        &self,
+        pairs: &[&OrcCSymbolFlagsMapPair],
+    ) -> Result<(), Owning<Error>> {
+        unsafe {
+            Error::check(LLVMOrcMaterializationResponsibilityDefineMaterializing(
+                self.as_raw(),
+                pairs.as_ptr() as _,
+                pairs.len(),
+            ))
+        }
+    }
+
+    pub unsafe fn fail_materialization(&self) {
+        unsafe { LLVMOrcMaterializationResponsibilityFailMaterialization(self.as_raw()) }
+    }
+
+    pub unsafe fn replace(&self, mu: &OrcMaterializationUnit) -> Result<(), Owning<Error>> {
+        unsafe {
+            Error::check(LLVMOrcMaterializationResponsibilityReplace(
+                self.as_raw(),
+                mu.as_raw(),
+            ))
+        }
+    }
+
+    pub fn delegate(
+        &self,
+        symbols: &[&OrcSymbolStringPoolEntry],
+    ) -> Result<&OrcMaterializationResponsibility, Owning<Error>> {
+        unsafe {
+            let mut result = null_mut();
+            Error::check(LLVMOrcMaterializationResponsibilityDelegate(
+                self.as_raw(),
+                symbols.as_ptr() as _,
+                symbols.len(),
+                &mut result,
+            ))?;
+            Ok(OrcMaterializationResponsibility::from_raw(result))
+        }
+    }
+}
+
+#[repr(C)]
+pub struct OrcCDependenceMapPair<'e> {
+    pub jit_dylib: &'e OrcJitDylib,
+    pub names: &'e [&'e OrcSymbolStringPoolEntry],
+}
+
+impl OrcMaterializationResponsibility {
+    pub fn add_dependencies(
+        &self,
+        name: &OrcSymbolStringPoolEntry,
+        dependencies: &[OrcCDependenceMapPair],
+    ) {
+        unsafe {
+            LLVMOrcMaterializationResponsibilityAddDependencies(
+                self.as_raw(),
+                name.as_raw(),
+                dependencies.as_ptr() as _,
+                dependencies.len(),
+            )
+        }
+    }
+
+    pub fn add_dependencies_for_all(&self, dependencies: &[OrcCDependenceMapPair]) {
+        unsafe {
+            LLVMOrcMaterializationResponsibilityAddDependenciesForAll(
+                self.as_raw(),
+                dependencies.as_ptr() as _,
+                dependencies.len(),
+            )
+        }
+    }
+}
+
+impl OrcExecutionSession {
+    pub fn create_bare_jit_dylib(&self, name: &CStr) -> Owning<OrcJitDylib> {
+        unsafe {
+            Owning::from_raw(LLVMOrcExecutionSessionCreateBareJITDylib(
+                self.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+
+    pub fn create_jit_dylib(&self, name: &CStr) -> Result<Owning<OrcJitDylib>, Owning<Error>> {
+        unsafe {
+            let mut result = null_mut();
+            Error::check(LLVMOrcExecutionSessionCreateJITDylib(
+                self.as_raw(),
+                &mut result,
+                name.as_ptr(),
+            ))?;
+            Ok(Owning::from_raw(result))
+        }
+    }
+
+    pub fn get_jit_dylib_by_name(&self, name: &CStr) -> Option<&OrcJitDylib> {
+        unsafe {
+            OrcJitDylib::try_from_raw(LLVMOrcExecutionSessionGetJITDylibByName(
+                self.as_raw(),
+                name.as_ptr(),
+            ))
+        }
+    }
+}
+
+impl OrcJitDylib {
+    pub fn create_resource_tracker(&self) -> &OrcResourceTracker {
+        unsafe { OrcResourceTracker::from_raw(LLVMOrcJITDylibCreateResourceTracker(self.as_raw())) }
+    }
+
+    pub fn get_default_resource_tracker(&self) -> &OrcResourceTracker {
+        unsafe {
+            OrcResourceTracker::from_raw(LLVMOrcJITDylibGetDefaultResourceTracker(self.as_raw()))
+        }
+    }
+
+    pub fn define(&self, mu: &OrcMaterializationUnit) -> Result<(), Owning<Error>> {
+        unsafe { Error::check(LLVMOrcJITDylibDefine(self.as_raw(), mu.as_raw())) }
+    }
+
+    pub unsafe fn clear(&self) -> Result<(), Owning<Error>> {
+        unsafe { Error::check(LLVMOrcJITDylibClear(self.as_raw())) }
+    }
+
+    pub fn add_generator(&self, dg: &OrcDefinitionGenerator) {
+        unsafe { LLVMOrcJITDylibAddGenerator(self.as_raw(), dg.as_raw()) }
     }
 }
 
