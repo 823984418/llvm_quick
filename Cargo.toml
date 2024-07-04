@@ -2,8 +2,11 @@
 name = "llvm_quick"
 version = "181.0.0-alpha.1"
 edition = "2021"
+description = "Rust's wrapper for llvm."
+keywords = ["wrapper", "llvm", "safe"]
+license = "Apache-2.0"
+categories = ["development-tools::ffi"]
+repository = "https://github.com/823984418/llvm_quick"
 
 [dependencies]
-
-[dependencies.llvm-sys]
-version = "^181.0.0"
+llvm-sys = "^181.0.0"
