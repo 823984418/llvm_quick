@@ -2,7 +2,8 @@ use std::ffi::CStr;
 
 use llvm_sys::orc2::*;
 
-use crate::owning::{OpaqueClone, OpaqueDrop};
+use crate::error::Error;
+use crate::owning::{OpaqueClone, OpaqueDrop, Owning};
 use crate::{Opaque, PhantomOpaque};
 
 pub mod ee;
@@ -238,7 +239,12 @@ impl OrcExecutionSession {
     }
 }
 
-// TODO
+impl OpaqueClone for LLVMOrcOpaqueSymbolStringPoolEntry {
+    unsafe fn clone_raw(ptr: *mut Self) -> *mut Self {
+        unsafe { LLVMOrcRetainSymbolStringPoolEntry(ptr) }
+        ptr
+    }
+}
 
 impl OpaqueDrop for LLVMOrcOpaqueSymbolStringPoolEntry {
     unsafe fn drop_raw(ptr: *mut Self) {
@@ -246,12 +252,104 @@ impl OpaqueDrop for LLVMOrcOpaqueSymbolStringPoolEntry {
     }
 }
 
-// TODO
+impl OrcSymbolStringPoolEntry {
+    pub fn get_str(&self) -> &CStr {
+        unsafe { CStr::from_ptr(LLVMOrcSymbolStringPoolEntryStr(self.as_raw())) }
+    }
+}
 
-impl OpaqueClone for LLVMOrcOpaqueSymbolStringPoolEntry {
-    unsafe fn clone_raw(ptr: *mut Self) -> *mut Self {
-        unsafe { LLVMOrcRetainSymbolStringPoolEntry(ptr) }
-        ptr
+impl OpaqueDrop for LLVMOrcOpaqueResourceTracker {
+    unsafe fn drop_raw(ptr: *mut Self) {
+        unsafe { LLVMOrcReleaseResourceTracker(ptr) }
+    }
+}
+
+impl OrcResourceTracker {
+    pub unsafe fn transfer_to(&self, dst: &OrcResourceTracker) {
+        unsafe { LLVMOrcResourceTrackerTransferTo(self.as_raw(), dst.as_raw()) }
+    }
+
+    pub unsafe fn remove(&self) -> Result<(), Owning<Error>> {
+        unsafe { Error::check(LLVMOrcResourceTrackerRemove(self.as_raw())) }
+    }
+}
+
+impl OpaqueDrop for LLVMOrcOpaqueDefinitionGenerator {
+    unsafe fn drop_raw(ptr: *mut Self) {
+        unsafe { LLVMOrcDisposeDefinitionGenerator(ptr) }
+    }
+}
+
+impl OpaqueDrop for LLVMOrcOpaqueMaterializationUnit {
+    unsafe fn drop_raw(ptr: *mut Self) {
+        unsafe { LLVMOrcDisposeMaterializationUnit(ptr) }
+    }
+}
+impl OrcMaterializationUnit {
+    pub fn create_custom_raw(
+        name: &CStr,
+        ctx: &mut (),
+        syms: &[&LLVMOrcCSymbolFlagsMapPair],
+        init_sym: OrcSymbolStringPoolEntry,
+        materialize: LLVMOrcMaterializationUnitMaterializeFunction,
+        discard: LLVMOrcMaterializationUnitDiscardFunction,
+        destroy: LLVMOrcMaterializationUnitDestroyFunction,
+    ) -> Owning<OrcMaterializationUnit> {
+        unsafe {
+            Owning::from_raw(LLVMOrcCreateCustomMaterializationUnit(
+                name.as_ptr(),
+                ctx as *mut _ as *mut _,
+                syms.as_ptr() as _,
+                syms.len(),
+                init_sym.as_raw(),
+                materialize,
+                discard,
+                destroy,
+            ))
+        }
+    }
+}
+
+pub fn absolute_symbols<'m>(
+    syms: &[(&'m OrcSymbolStringPoolEntry, LLVMJITEvaluatedSymbol)],
+) -> &'m OrcMaterializationUnit {
+    unsafe {
+        OrcMaterializationUnit::from_raw(LLVMOrcAbsoluteSymbols(syms.as_ptr() as _, syms.len()))
+    }
+}
+
+impl OrcLazyCallThroughManager {
+    pub fn lazy_reexports(
+        &self,
+        ism: &OrcIndirectStubsManager,
+        source_ref: &OrcJitDylib,
+        callable_aliases: &[&LLVMOrcCSymbolAliasMapPair],
+    ) -> &OrcMaterializationUnit {
+        unsafe {
+            OrcMaterializationUnit::from_raw(LLVMOrcLazyReexports(
+                self.as_raw(),
+                ism.as_raw(),
+                source_ref.as_raw(),
+                callable_aliases.as_ptr() as _,
+                callable_aliases.len(),
+            ))
+        }
+    }
+}
+
+impl OpaqueDrop for LLVMOrcOpaqueMaterializationResponsibility {
+    unsafe fn drop_raw(ptr: *mut Self) {
+        unsafe { LLVMOrcDisposeMaterializationResponsibility(ptr) }
+    }
+}
+
+impl OrcMaterializationResponsibility {
+    pub fn get_target_dylib(&self) -> &OrcJitDylib {
+        unsafe {
+            OrcJitDylib::from_raw(LLVMOrcMaterializationResponsibilityGetTargetDylib(
+                self.as_raw(),
+            ))
+        }
     }
 }
 
