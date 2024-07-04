@@ -1,4 +1,4 @@
-use std::ffi::CStr;
+use std::ffi::{c_char, CStr};
 
 use llvm_sys::disassembler::*;
 
@@ -22,9 +22,9 @@ impl DisasmContext {
         tag: i32,
         info: LLVMOpInfoCallback,
         lookup: LLVMSymbolLookupCallback,
-    ) -> Owning<Self> {
+    ) -> Option<Owning<Self>> {
         unsafe {
-            Owning::from_raw(LLVMCreateDisasm(
+            Owning::from_ptr(LLVMCreateDisasm(
                 triple_name.as_ptr(),
                 disinfo as _,
                 tag,
@@ -94,7 +94,7 @@ impl OpaqueDrop for LLVMOpaqueDisasmContext {
 }
 
 impl DisasmContext {
-    pub fn instruction(&self, bytes: &[u8], pc: u64, output: &mut [u8]) -> usize {
+    pub fn instruction(&self, bytes: &[u8], pc: u64, output: &mut [c_char]) -> usize {
         unsafe {
             LLVMDisasmInstruction(
                 self.as_raw(),

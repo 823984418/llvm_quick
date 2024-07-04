@@ -42,7 +42,7 @@ dependencies = [
 
 [[package]]
 name = "llvm_quick"
-version = "181.0.0-alpha.1"
+version = "181.0.0-alpha.2"
 dependencies = [
  "llvm-sys",
 ]
