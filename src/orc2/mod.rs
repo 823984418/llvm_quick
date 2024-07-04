@@ -1,10 +1,12 @@
 use std::ffi::CStr;
+use std::ops::Deref;
+use std::ptr::NonNull;
 
 use llvm_sys::orc2::*;
 
 use crate::error::Error;
 use crate::owning::{OpaqueClone, OpaqueDrop, Owning};
-use crate::{Opaque, PhantomOpaque};
+use crate::{MemoryBuffer, Opaque, PhantomOpaque};
 
 pub mod ee;
 pub mod lljit;
@@ -351,6 +353,81 @@ impl OrcMaterializationResponsibility {
             ))
         }
     }
+
+    pub fn get_execution_session(&self) -> &OrcExecutionSession {
+        unsafe {
+            OrcExecutionSession::from_raw(LLVMOrcMaterializationResponsibilityGetExecutionSession(
+                self.as_raw(),
+            ))
+        }
+    }
+
+    pub fn get_symbols(&self) -> CSymbolFlagsMap<'_> {
+        unsafe {
+            let mut len = 0;
+            let ptr = LLVMOrcMaterializationResponsibilityGetSymbols(self.as_raw(), &mut len);
+            CSymbolFlagsMap {
+                ptr: NonNull::from(std::slice::from_raw_parts(ptr as _, len)),
+            }
+        }
+    }
+}
+
+pub struct CSymbolFlagsMap<'m> {
+    ptr: NonNull<[&'m LLVMOrcCSymbolFlagsMapPair]>,
+}
+
+impl<'m> Deref for CSymbolFlagsMap<'m> {
+    type Target = [&'m LLVMOrcCSymbolFlagsMapPair];
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { self.ptr.as_ref() }
+    }
+}
+
+impl<'m> Drop for CSymbolFlagsMap<'m> {
+    fn drop(&mut self) {
+        unsafe { LLVMOrcDisposeCSymbolFlagsMap(self.ptr.as_ptr() as _) }
+    }
+}
+
+impl OrcMaterializationResponsibility {
+    pub fn get_initializer_symbol(&self) -> &OrcSymbolStringPoolEntry {
+        unsafe {
+            OrcSymbolStringPoolEntry::from_raw(
+                LLVMOrcMaterializationResponsibilityGetInitializerSymbol(self.as_raw()),
+            )
+        }
+    }
+
+    pub fn get_requested_symbols(&self) -> Symbols<'_> {
+        unsafe {
+            let mut len = 0;
+            let ptr =
+                LLVMOrcMaterializationResponsibilityGetRequestedSymbols(self.as_raw(), &mut len);
+            Symbols {
+                ptr: NonNull::from(std::slice::from_raw_parts(ptr as _, len)),
+            }
+        }
+    }
+}
+
+pub struct Symbols<'m> {
+    ptr: NonNull<[&'m OrcSymbolStringPoolEntry]>,
+}
+
+impl<'m> Deref for Symbols<'m> {
+    type Target = [&'m OrcSymbolStringPoolEntry];
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { self.ptr.as_ref() }
+    }
+}
+
+impl<'m> Drop for Symbols<'m> {
+    fn drop(&mut self) {
+        unsafe { LLVMOrcDisposeSymbols(self.ptr.as_ptr() as _) }
+    }
 }
 
 // TODO
@@ -377,15 +454,22 @@ impl OpaqueDrop for LLVMOrcOpaqueIndirectStubsManager {
     }
 }
 
-// TODO
-
 impl OpaqueDrop for LLVMOrcOpaqueLazyCallThroughManager {
     unsafe fn drop_raw(ptr: *mut Self) {
         unsafe { LLVMOrcDisposeLazyCallThroughManager(ptr) }
     }
 }
 
-// TODO
+impl OrcDumpObjects {
+    pub fn create(dump_dir: &CStr, identifier_override: &CStr) -> Owning<OrcDumpObjects> {
+        unsafe {
+            Owning::from_raw(LLVMOrcCreateDumpObjects(
+                dump_dir.as_ptr(),
+                identifier_override.as_ptr(),
+            ))
+        }
+    }
+}
 
 impl OpaqueDrop for LLVMOrcOpaqueDumpObjects {
     unsafe fn drop_raw(ptr: *mut Self) {
@@ -393,4 +477,18 @@ impl OpaqueDrop for LLVMOrcOpaqueDumpObjects {
     }
 }
 
-// TODO
+impl OrcDumpObjects {
+    pub fn call_operator(
+        &self,
+        obj_buffers: Owning<MemoryBuffer>,
+    ) -> Result<Owning<MemoryBuffer>, Owning<Error>> {
+        unsafe {
+            let mut obj_buffers = obj_buffers.into_raw();
+            Error::check(LLVMOrcDumpObjects_CallOperator(
+                self.as_raw(),
+                &mut obj_buffers,
+            ))?;
+            Ok(Owning::from_raw(obj_buffers))
+        }
+    }
+}
