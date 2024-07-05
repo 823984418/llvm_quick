@@ -564,7 +564,7 @@ impl OrcExecutionSession {
 
     pub fn get_jit_dylib_by_name(&self, name: &CStr) -> Option<&OrcJitDylib> {
         unsafe {
-            OrcJitDylib::try_from_raw(LLVMOrcExecutionSessionGetJITDylibByName(
+            OrcJitDylib::from_ptr(LLVMOrcExecutionSessionGetJITDylibByName(
                 self.as_raw(),
                 name.as_ptr(),
             ))
