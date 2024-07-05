@@ -6,7 +6,7 @@ use llvm_sys::object::*;
 
 use crate::core::Message;
 use crate::owning::{OpaqueDrop, Owning};
-use crate::{Context, MemoryBuffer, Opaque, PhantomOpaque};
+use crate::*;
 
 #[repr(transparent)]
 pub struct SectionIterator<'b, 'm> {

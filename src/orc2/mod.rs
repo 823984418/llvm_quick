@@ -10,7 +10,7 @@ use llvm_sys::LLVMModule;
 use crate::error::Error;
 use crate::owning::{OpaqueClone, OpaqueDrop, Owning};
 use crate::target_machine::TargetMachine;
-use crate::{Context, MemoryBuffer, Module, Opaque, PhantomOpaque};
+use crate::*;
 
 pub mod ee;
 pub mod lljit;

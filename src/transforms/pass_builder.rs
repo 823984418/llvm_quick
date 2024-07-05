@@ -5,7 +5,7 @@ use llvm_sys::transforms::pass_builder::*;
 use crate::error::Error;
 use crate::owning::{OpaqueDrop, Owning};
 use crate::target_machine::TargetMachine;
-use crate::{Module, Opaque, PhantomOpaque};
+use crate::*;
 
 #[repr(transparent)]
 pub struct PassBuilderOptions {

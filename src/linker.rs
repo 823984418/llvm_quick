@@ -1,7 +1,7 @@
 use llvm_sys::linker::LLVMLinkModules2;
 
 use crate::owning::Owning;
-use crate::{Module, Opaque};
+use crate::*;
 
 impl<'c> Module<'c> {
     pub fn link_modules(&self, src: Owning<Self>) -> Result<(), ()> {

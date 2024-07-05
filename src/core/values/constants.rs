@@ -6,10 +6,7 @@ use llvm_sys::*;
 
 use crate::opaque::Opaque;
 use crate::type_tag::*;
-use crate::{
-    BasicBlock, Constant, Context, GlobalAlias, GlobalValue, Metadata, Module, Type, Value,
-    ValueMetadataEntries,
-};
+use crate::*;
 
 impl<T: TypeTag> Type<T> {
     pub fn const_null(&self) -> &Constant<T> {

@@ -5,7 +5,7 @@ use llvm_sys::LLVMOpaqueOperandBundle;
 
 use crate::owning::{OpaqueDrop, Owning};
 use crate::type_tag::*;
-use crate::{Context, Metadata, Module, Opaque, OperandBundle, Value};
+use crate::*;
 
 impl<'c> OperandBundle<'c> {
     pub fn create<T: TypeTag>(tag: &[u8], args: &[&'c Value<T>]) -> Owning<Self> {

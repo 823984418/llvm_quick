@@ -3,7 +3,7 @@ use std::mem::MaybeUninit;
 use llvm_sys::core::*;
 
 use crate::opaque::Opaque;
-use crate::type_tag::{any, fun, fun_any, FunTypeTag, TagTuple, Tuple, TypeTag, TypeTuple};
+use crate::type_tag::*;
 use crate::Type;
 
 impl<T: FunTypeTag> Type<T> {

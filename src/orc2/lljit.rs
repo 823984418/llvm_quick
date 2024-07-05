@@ -2,9 +2,7 @@ use std::ffi::{c_char, c_void, CStr};
 use std::ptr::null_mut;
 
 use llvm_sys::orc2::lljit::*;
-use llvm_sys::orc2::{
-    LLVMOrcExecutorAddress, LLVMOrcOpaqueExecutionSession, LLVMOrcOpaqueObjectLayer,
-};
+use llvm_sys::orc2::*;
 
 use crate::error::Error;
 use crate::orc2::{

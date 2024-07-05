@@ -3,8 +3,8 @@ use std::ffi::CStr;
 use llvm_sys::core::*;
 
 use crate::opaque::Opaque;
-use crate::type_tag::{any, struct_any, TypeTag};
-use crate::{Context, Type};
+use crate::type_tag::*;
+use crate::*;
 
 impl Context {
     pub fn struct_type(&self, element_types: &[Type<any>], packed: bool) -> &Type<struct_any> {

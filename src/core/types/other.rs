@@ -2,8 +2,7 @@ use std::ffi::CStr;
 
 use llvm_sys::core::*;
 
-use crate::type_tag::*;
-use crate::{Context, Opaque, Type};
+use crate::*;
 
 impl Context {
     /// Create a void type in a context.

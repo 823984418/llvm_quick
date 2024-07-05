@@ -3,7 +3,7 @@ use std::ffi::{c_char, CStr};
 use llvm_sys::disassembler::*;
 
 use crate::owning::{OpaqueDrop, Owning};
-use crate::{Opaque, PhantomOpaque};
+use crate::*;
 
 #[repr(transparent)]
 pub struct DisasmContext {

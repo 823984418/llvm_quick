@@ -1,7 +1,7 @@
 use llvm_sys::core::*;
 
 use crate::type_tag::*;
-use crate::{Context, Opaque, Type};
+use crate::*;
 
 impl<T: ArrayTypeTag> Type<T> {
     pub fn to_array_any(&self) -> &Type<array_any> {

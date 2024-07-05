@@ -4,8 +4,8 @@ use llvm_sys::core::*;
 use llvm_sys::*;
 
 use crate::opaque::Opaque;
-use crate::type_tag::{any, fun_any, metadata, TypeTag};
-use crate::{Attribute, BasicBlock, Instruction, OperandBundle, Type, Value, ValueMetadataEntries};
+use crate::type_tag::*;
+use crate::*;
 
 impl<T: TypeTag> Instruction<T> {
     pub fn has_metadata(&self) -> bool {

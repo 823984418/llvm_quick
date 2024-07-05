@@ -3,7 +3,7 @@ use std::ptr::null_mut;
 use llvm_sys::bit_reader::*;
 
 use crate::owning::Owning;
-use crate::{Context, MemoryBuffer, Module, Opaque};
+use crate::*;
 
 impl Context {
     pub fn parse_bitcode(&self, mem_buf: &MemoryBuffer) -> Result<Owning<Module>, ()> {

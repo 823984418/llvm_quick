@@ -1,8 +1,8 @@
 use llvm_sys::core::*;
 
 use crate::opaque::Opaque;
-use crate::type_tag::{any, TypeTag};
-use crate::{Use, Value};
+use crate::type_tag::*;
+use crate::*;
 
 impl<T: TypeTag> Value<T> {
     pub fn get_operand(&self, index: u32) -> Option<&Value<any>> {

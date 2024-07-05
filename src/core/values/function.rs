@@ -8,7 +8,7 @@ use llvm_sys::LLVMAttributeIndex;
 use crate::core::IntrinsicId;
 use crate::opaque::Opaque;
 use crate::type_tag::*;
-use crate::{Argument, Attribute, Context, Instruction, Module, Type, Value};
+use crate::*;
 
 impl<T: FunTypeTag> Value<T> {
     pub fn to_fun_any(&self) -> &Value<fun_any> {

@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 use llvm_sys::remarks::*;
 
 use crate::owning::{OpaqueDrop, Owning};
-use crate::{Opaque, PhantomOpaque};
+use crate::*;
 
 #[repr(transparent)]
 pub struct RemarkString {

@@ -6,7 +6,7 @@ use llvm_sys::*;
 
 use crate::core::Message;
 use crate::type_tag::*;
-use crate::{Argument, Constant, GlobalAlias, GlobalValue, Instruction, Opaque, Type, Value};
+use crate::*;
 
 pub mod constants;
 pub mod function;

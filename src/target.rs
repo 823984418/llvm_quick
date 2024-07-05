@@ -5,7 +5,7 @@ use llvm_sys::target::*;
 use crate::core::Message;
 use crate::owning::{OpaqueDrop, Owning};
 use crate::type_tag::*;
-use crate::{Context, Module, Opaque, PassManager, PhantomOpaque, Type, Value};
+use crate::*;
 
 #[repr(transparent)]
 pub struct TargetData {

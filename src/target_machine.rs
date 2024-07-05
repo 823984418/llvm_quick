@@ -6,7 +6,7 @@ use llvm_sys::target_machine::*;
 use crate::core::Message;
 use crate::owning::{OpaqueDrop, Owning};
 use crate::target::TargetData;
-use crate::{MemoryBuffer, Module, Opaque, PassManager, PhantomOpaque};
+use crate::*;
 
 #[repr(transparent)]
 pub struct TargetMachine {

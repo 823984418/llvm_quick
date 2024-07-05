@@ -3,7 +3,7 @@ use llvm_sys::LLVMPassManager;
 
 use crate::owning::{OpaqueDrop, Owning};
 use crate::type_tag::*;
-use crate::{Module, ModuleProvider, Opaque, PassManager, Value};
+use crate::*;
 
 impl PassManager {
     pub fn create() -> Owning<Self> {

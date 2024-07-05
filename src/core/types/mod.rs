@@ -5,7 +5,7 @@ use llvm_sys::*;
 
 use crate::core::Message;
 use crate::type_tag::*;
-use crate::{Context, Opaque, Type};
+use crate::*;
 
 pub mod float;
 pub mod function;

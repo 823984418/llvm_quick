@@ -4,7 +4,7 @@ use std::ptr::null;
 use llvm_sys::lto::*;
 
 use crate::owning::{OpaqueDrop, Owning};
-use crate::{Opaque, PhantomOpaque};
+use crate::*;
 
 #[inline(always)]
 unsafe fn check_error(v: bool) -> Result<(), CString> {

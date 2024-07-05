@@ -6,7 +6,7 @@ use llvm_sys::LLVMMemoryBuffer;
 
 use crate::core::Message;
 use crate::owning::{OpaqueDrop, Owning};
-use crate::{MemoryBuffer, Opaque};
+use crate::*;
 
 impl MemoryBuffer {
     pub fn create_with_contents_of_file(path: &CStr) -> Result<Owning<Self>, Message> {

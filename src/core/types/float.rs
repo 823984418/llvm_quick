@@ -1,7 +1,6 @@
 use llvm_sys::core::*;
 
-use crate::type_tag::*;
-use crate::{Context, Opaque, Type};
+use crate::*;
 
 impl Context {
     pub fn half_type(&self) -> &Type<half> {

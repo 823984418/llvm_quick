@@ -2,7 +2,7 @@ use llvm_sys::debuginfo::*;
 use llvm_sys::LLVMOpaqueDIBuilder;
 
 use crate::owning::{OpaqueDrop, Owning};
-use crate::type_tag::{FunTypeTag, TypeTag};
+use crate::type_tag::*;
 use crate::*;
 
 #[inline(always)]
