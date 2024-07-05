@@ -6,7 +6,11 @@ description = "Rust's wrapper for llvm."
 keywords = ["wrapper", "llvm", "safe"]
 license = "Apache-2.0"
 categories = ["development-tools::ffi"]
+readme = "README.md"
 repository = "https://github.com/823984418/llvm_quick"
 
 [dependencies]
 llvm-sys = "^181.0.0"
+
+[package.metadata.docs.rs]
+features = ["llvm-sys/no-llvm-linking"]
