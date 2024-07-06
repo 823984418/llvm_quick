@@ -24,7 +24,7 @@ let sum = builder.add(sum, z, c"sum.2");
 builder.return_value(sum);
 ```
 
-## 特性
+## 特点
 封装应尽可能薄且快，大多数情况下仅仅将C风格API包装为关联方法。
 
 对于不能同时保证安全性的API，尽可能保证读取访问是安全的，在这种情况下，写入函数将被标记为不安全的。

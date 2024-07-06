@@ -4,7 +4,7 @@
 
 Rust wrapper around LLVM, based on [llvm-sys](https://crates.io/crates/llvm-sys)。
 
-## 示例
+## Example
 
 ```
 let context = Context::create();
@@ -28,7 +28,7 @@ let sum = builder.add(sum, z, c"sum.2");
 builder.return_value(sum);
 ```
 
-## 特性
+## Characteristics
 
 The wrapper aims to be as thin and fast as possible, mostly just wrapping the C-style
 API as associated methods.
@@ -36,7 +36,7 @@ API as associated methods.
 Where APIs cannot safely be made safe, read-only access is made safe whenever possible,
 and write functions are marked as unsafe in those cases.
 
-## 反馈和建议
+## Feedback and Suggestions
 
 If you find any potential unsafe in the API or have suggestions for abstraction, please open an issue.
 
