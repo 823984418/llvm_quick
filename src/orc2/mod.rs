@@ -1,5 +1,6 @@
 use std::ffi::{c_void, CStr};
 use std::marker::PhantomData;
+use std::mem::size_of;
 use std::ops::Deref;
 use std::ptr::{null_mut, NonNull};
 
