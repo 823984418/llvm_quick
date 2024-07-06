@@ -1,6 +1,6 @@
 [package]
 name = "llvm_quick"
-version = "181.0.0-alpha.4"
+version = "181.0.0-alpha.5"
 edition = "2021"
 description = "Rust's wrapper for llvm."
 keywords = ["wrapper", "llvm", "safe"]
