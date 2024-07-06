@@ -7,7 +7,6 @@ use llvm_sys::orc2::*;
 use crate::error::Error;
 use crate::orc2::*;
 use crate::owning::{OpaqueDrop, Owning};
-use crate::*;
 
 #[repr(transparent)]
 pub struct OrcLLJITBuilder {
