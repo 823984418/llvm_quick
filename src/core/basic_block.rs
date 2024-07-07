@@ -44,7 +44,7 @@ impl BasicBlock {
     }
 }
 
-impl<T: FunTypeTag> Value<T> {
+impl<T: FunTypeTag> Function<T> {
     pub fn count_basic_block(&self) -> u32 {
         unsafe { LLVMCountBasicBlocks(self.as_raw()) }
     }
@@ -79,7 +79,7 @@ impl BasicBlock {
     }
 }
 
-impl<T: FunTypeTag> Value<T> {
+impl<T: FunTypeTag> Function<T> {
     pub fn get_entry_basic_block(&self) -> &BasicBlock {
         unsafe { BasicBlock::from_raw(LLVMGetEntryBasicBlock(self.as_raw())) }
     }
@@ -91,7 +91,7 @@ impl<'c> Builder<'c> {
     }
 }
 
-impl<T: FunTypeTag> Value<T> {
+impl<T: FunTypeTag> Function<T> {
     pub fn append_existing_basic_block(&self, bb: &BasicBlock) {
         unsafe { LLVMAppendExistingBasicBlock(self.as_raw(), bb.as_raw()) }
     }

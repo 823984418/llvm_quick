@@ -41,11 +41,11 @@ impl<T: FunTypeTag> Function<T> {
         unsafe { Value::from_raw(LLVMGetPersonalityFn(self.as_raw())) }
     }
 
-    pub fn set_personality_fn<F: FunTypeTag>(&self, personality_fn: Option<&Value<F>>) {
+    pub fn set_personality_fn<F: FunTypeTag>(&self, personality_fn: Option<&Function<F>>) {
         unsafe {
             LLVMSetPersonalityFn(
                 self.as_raw(),
-                personality_fn.map(Value::as_raw).unwrap_or(null_mut()),
+                personality_fn.map(Function::as_raw).unwrap_or(null_mut()),
             )
         }
     }

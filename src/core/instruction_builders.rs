@@ -145,7 +145,7 @@ impl<'c> Builder<'c> {
     pub fn invoke_raw<T: FunTypeTag>(
         &self,
         ty: &Type<T>,
-        fun: &Value<T>,
+        fun: &Function<T>,
         args: &[&Value<any>],
         then: &BasicBlock,
         catch: &BasicBlock,
@@ -167,7 +167,7 @@ impl<'c> Builder<'c> {
 
     pub fn invoke<Args: TagTuple, Output: TypeTag, const VAR: bool>(
         &self,
-        fun: &Value<fun<Args, Output, VAR>>,
+        fun: &Function<fun<Args, Output, VAR>>,
         args: Args::Values<'_>,
         then: &BasicBlock,
         catch: &BasicBlock,
@@ -175,7 +175,7 @@ impl<'c> Builder<'c> {
     ) -> &'c Instruction<Output> {
         let args = args.to_array_any();
         unsafe {
-            self.invoke_raw(fun.get_type(), fun, args.as_ref(), then, catch, name)
+            self.invoke_raw(fun.get_value_type(), fun, args.as_ref(), then, catch, name)
                 .cast_unchecked()
         }
     }
@@ -183,7 +183,7 @@ impl<'c> Builder<'c> {
     pub fn invoke_with_operand_bundles<T: FunTypeTag>(
         &self,
         ty: &Type<T>,
-        f: &Value<T>,
+        f: &Function<T>,
         args: &[&Value<any>],
         then: &BasicBlock,
         catch: &BasicBlock,
@@ -217,7 +217,7 @@ impl<'c> Builder<'c> {
     pub fn landing_pad<F: FunTypeTag>(
         &self,
         ty: &Type<any>,
-        pers_fn: &Value<F>,
+        pers_fn: &Function<F>,
         clauses: &[&Value<any>],
         name: &CStr,
     ) -> &'c Instruction<any> {
@@ -340,7 +340,7 @@ impl<T: TypeTag> Instruction<T> {
     }
 }
 
-impl<T: FunTypeTag> Value<T> {
+impl<T: FunTypeTag> Function<T> {
     pub fn get_arg_operand(&self, i: u32) -> &Value<any> {
         unsafe { Value::from_raw(LLVMGetArgOperand(self.as_raw(), i)) }
     }

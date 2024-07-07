@@ -233,7 +233,7 @@ impl<'c> ExecutionEngine<'c> {
 
     pub fn run_function<T: FunTypeTag>(
         &self,
-        f: &'c Value<T>,
+        f: &Function<T>,
         args: &[&GenericValue],
     ) -> Owning<GenericValue> {
         unsafe {
@@ -246,7 +246,7 @@ impl<'c> ExecutionEngine<'c> {
         }
     }
 
-    pub fn free_machine_code_for_function<T: FunTypeTag>(&self, f: &'c Value<T>) {
+    pub fn free_machine_code_for_function<T: FunTypeTag>(&self, f: &Function<T>) {
         unsafe { LLVMFreeMachineCodeForFunction(self.as_raw(), f.as_raw()) };
     }
 
@@ -277,7 +277,7 @@ impl<'c> ExecutionEngine<'c> {
 
     /// In fact, currently it only returns nullptr
     #[deprecated]
-    pub fn recompile_and_relink_function<F: FunTypeTag>(&self, f: &Value<F>) -> *const () {
+    pub fn recompile_and_relink_function<F: FunTypeTag>(&self, f: &Function<F>) -> *const () {
         unsafe { LLVMRecompileAndRelinkFunction(self.as_raw(), f.as_raw()) as _ }
     }
 

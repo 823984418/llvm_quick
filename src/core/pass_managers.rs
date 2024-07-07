@@ -32,7 +32,7 @@ impl PassManager {
         unsafe { LLVMInitializeFunctionPassManager(self.as_raw()) != 0 }
     }
 
-    pub fn run_function_pass_manager<T: FunTypeTag>(&self, f: &Value<T>) -> bool {
+    pub fn run_function_pass_manager<T: FunTypeTag>(&self, f: &Function<T>) -> bool {
         unsafe { LLVMRunFunctionPassManager(self.as_raw(), f.as_raw()) != 0 }
     }
 

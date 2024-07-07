@@ -1277,7 +1277,7 @@ impl<'m, 'c> DIBuilder<'m, 'c> {
     }
 }
 
-impl<T: FunTypeTag> Value<T> {
+impl<T: FunTypeTag> Function<T> {
     pub fn get_subprogram(&self) -> &DISubprogram {
         unsafe { DISubprogram::from_raw(LLVMGetSubprogram(self.as_raw())) }
     }

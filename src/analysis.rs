@@ -18,7 +18,7 @@ impl<'c> Module<'c> {
     }
 }
 
-impl<T: FunTypeTag> Value<T> {
+impl<T: FunTypeTag> Function<T> {
     pub fn verify(&self, action: LLVMVerifierFailureAction) -> bool {
         unsafe { LLVMVerifyFunction(self.as_raw(), action) != 0 }
     }
