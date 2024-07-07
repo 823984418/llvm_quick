@@ -10,8 +10,8 @@ use crate::opaque::Opaque;
 use crate::type_tag::*;
 use crate::*;
 
-impl<T: FunTypeTag> Value<T> {
-    pub fn to_fun_any(&self) -> &Value<fun_any> {
+impl<T: FunTypeTag> Function<T> {
+    pub fn to_fun_any(&self) -> &Function<fun_any> {
         unsafe { self.cast_unchecked() }
     }
 }
@@ -28,7 +28,7 @@ impl<T: FunTypeTag> Instruction<T> {
     }
 }
 
-impl<T: FunTypeTag> Value<T> {
+impl<T: FunTypeTag> Function<T> {
     pub unsafe fn delete_function(&self) {
         unsafe { LLVMDeleteFunction(self.as_raw()) }
     }
@@ -55,7 +55,7 @@ pub fn lookup_intrinsic_id(name: &[u8]) -> IntrinsicId {
     unsafe { IntrinsicId(LLVMLookupIntrinsicID(name.as_ptr() as _, name.len())) }
 }
 
-impl<T: FunTypeTag> Value<T> {
+impl<T: FunTypeTag> Function<T> {
     pub fn get_intrinsic_id(&self) -> IntrinsicId {
         unsafe { IntrinsicId(LLVMGetIntrinsicID(self.as_raw())) }
     }
@@ -127,7 +127,7 @@ impl IntrinsicId {
     }
 }
 
-impl<T: FunTypeTag> Value<T> {
+impl<T: FunTypeTag> Function<T> {
     /// Obtain the calling function of a function.
     pub fn get_function_call_conv(&self) -> u32 {
         unsafe { LLVMGetFunctionCallConv(self.as_raw()) }
@@ -205,7 +205,7 @@ impl<T: FunTypeTag> Value<T> {
     }
 }
 
-impl<T: FunTypeTag> Value<T> {
+impl<T: FunTypeTag> Function<T> {
     /// Obtain the number of parameters in a function.
     pub fn get_param_count(&self) -> u32 {
         unsafe { LLVMCountParams(self.as_raw()) }
@@ -245,7 +245,7 @@ impl<T: TypeTag> Argument<T> {
     }
 }
 
-impl<T: FunTypeTag> Value<T> {
+impl<T: FunTypeTag> Function<T> {
     pub fn get_first_param(&self) -> Option<&Value<any>> {
         unsafe { Value::from_ptr(LLVMGetFirstParam(self.as_raw())) }
     }
@@ -269,7 +269,7 @@ impl<T: TypeTag> Argument<T> {
     }
 }
 
-impl<Args: TagTuple, Output: TypeTag, const VAR: bool> Value<fun<Args, Output, VAR>> {
+impl<Args: TagTuple, Output: TypeTag, const VAR: bool> Function<fun<Args, Output, VAR>> {
     /// Obtain the parameters in a function.
     pub fn get_params(&self) -> Args::Arguments<'_> {
         unsafe {

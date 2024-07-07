@@ -102,7 +102,7 @@ impl Context {
         unsafe { BasicBlock::from_raw(LLVMCreateBasicBlockInContext(self.as_raw(), name.as_ptr())) }
     }
 
-    pub fn append_basic_block<T: FunTypeTag>(&self, f: &Value<T>, name: &CStr) -> &BasicBlock {
+    pub fn append_basic_block<T: FunTypeTag>(&self, f: &Function<T>, name: &CStr) -> &BasicBlock {
         unsafe {
             let ptr = LLVMAppendBasicBlockInContext(self.as_raw(), f.as_raw(), name.as_ptr());
             BasicBlock::from_raw(ptr)

@@ -1391,7 +1391,7 @@ impl<'c> Builder<'c> {
     pub fn call_raw<F: FunTypeTag>(
         &self,
         fun_ty: &Type<F>,
-        fun: &Value<F>,
+        fun: &Function<F>,
         args: &[&Value<any>],
         name: &CStr,
     ) -> &'c Instruction<any> {
@@ -1409,13 +1409,13 @@ impl<'c> Builder<'c> {
 
     pub fn call<Args: TagTuple, Output: TypeTag, const VAR: bool>(
         &self,
-        fun: &Value<fun<Args, Output, VAR>>,
+        fun: &Function<fun<Args, Output, VAR>>,
         args: Args::Values<'_>,
         name: &CStr,
     ) -> &'c Instruction<Output> {
         let args = args.to_array_any();
         unsafe {
-            self.call_raw(fun.get_type(), fun, args.as_ref(), name)
+            self.call_raw(fun.get_value_type(), fun, args.as_ref(), name)
                 .cast_unchecked()
         }
     }

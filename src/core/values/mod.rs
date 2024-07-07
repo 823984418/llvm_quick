@@ -230,8 +230,11 @@ impl<T: TypeTag> Value<T> {
         unsafe { Value::from_ptr(LLVMIsAGlobalObject(self.as_raw())) }
     }
 
-    pub fn is_a_function(&self) -> Option<&Value<T>> {
-        unsafe { Value::from_ptr(LLVMIsAFunction(self.as_raw())) }
+    pub fn is_a_function(&self) -> Option<&Function<T>>
+    where
+        T: FunTypeTag,
+    {
+        unsafe { Function::from_ptr(LLVMIsAFunction(self.as_raw())) }
     }
 
     pub fn is_a_global_variable(&self) -> Option<&Value<T>> {

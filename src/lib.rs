@@ -168,6 +168,31 @@ impl<T: TypeTag> Deref for GlobalValue<T> {
 }
 
 #[repr(transparent)]
+pub struct Function<T: FunTypeTag> {
+    parent: GlobalValue<T>,
+}
+
+unsafe impl<T: FunTypeTag> Opaque for Function<T> {
+    type Inner = LLVMValue;
+
+    unsafe fn try_from_raw<'a>(ptr: *mut Self::Inner) -> Option<&'a Self> {
+        unsafe {
+            let x = Value::<fun_any>::try_from_raw(ptr)?.is_a_function()?;
+            x.get_value_type().try_cast::<Type<T>>()?;
+            Some(x.cast_unchecked())
+        }
+    }
+}
+
+impl<T: FunTypeTag> Deref for Function<T> {
+    type Target = GlobalValue<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.parent
+    }
+}
+
+#[repr(transparent)]
 pub struct GlobalAlias<T: TypeTag> {
     parent: GlobalValue<T>,
 }

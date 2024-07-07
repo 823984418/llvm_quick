@@ -344,30 +344,32 @@ impl<T: TypeTag> Value<T> {
 
 impl<'c> Module<'c> {
     /// Add a function to a module under a specified name.
-    pub fn add_function<T: FunTypeTag>(&self, name: &CStr, ty: &'c Type<T>) -> &'c Value<T> {
-        unsafe { Value::from_raw(LLVMAddFunction(self.as_raw(), name.as_ptr(), ty.as_raw())) }
+    pub fn add_function<T: FunTypeTag>(&self, name: &CStr, ty: &'c Type<T>) -> &'c Function<T> {
+        unsafe { Function::from_raw(LLVMAddFunction(self.as_raw(), name.as_ptr(), ty.as_raw())) }
     }
 
     /// Obtain a Function value from a Module by its name.
-    pub fn get_named_function<T: FunTypeTag>(&self, name: &CStr) -> &'c Value<T> {
-        unsafe { Value::<any>::from_raw(LLVMGetNamedFunction(self.as_raw(), name.as_ptr())).cast() }
+    pub fn get_named_function<T: FunTypeTag>(&self, name: &CStr) -> &'c Function<T> {
+        unsafe {
+            Function::<fun_any>::from_raw(LLVMGetNamedFunction(self.as_raw(), name.as_ptr())).cast()
+        }
     }
 
-    pub fn get_first_function(&self) -> &'c Value<fun_any> {
-        unsafe { Value::from_raw(LLVMGetFirstFunction(self.as_raw())) }
+    pub fn get_first_function(&self) -> &'c Function<fun_any> {
+        unsafe { Function::from_raw(LLVMGetFirstFunction(self.as_raw())) }
     }
 
-    pub fn get_last_function(&self) -> &'c Value<fun_any> {
-        unsafe { Value::from_raw(LLVMGetLastFunction(self.as_raw())) }
+    pub fn get_last_function(&self) -> &'c Function<fun_any> {
+        unsafe { Function::from_raw(LLVMGetLastFunction(self.as_raw())) }
     }
 }
 
-impl<T: FunTypeTag> Value<T> {
-    pub fn get_next_function(&self) -> &Value<fun_any> {
-        unsafe { Value::from_raw(LLVMGetNextFunction(self.as_raw())) }
+impl<T: FunTypeTag> Function<T> {
+    pub fn get_next_function(&self) -> &Function<fun_any> {
+        unsafe { Function::from_raw(LLVMGetNextFunction(self.as_raw())) }
     }
 
-    pub fn get_previous_function(&self) -> &Value<fun_any> {
-        unsafe { Value::from_raw(LLVMGetPreviousFunction(self.as_raw())) }
+    pub fn get_previous_function(&self) -> &Function<fun_any> {
+        unsafe { Function::from_raw(LLVMGetPreviousFunction(self.as_raw())) }
     }
 }

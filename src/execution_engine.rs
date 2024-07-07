@@ -289,11 +289,11 @@ impl<'c> ExecutionEngine<'c> {
         unsafe { TargetMachine::from_raw(LLVMGetExecutionEngineTargetMachine(self.as_raw())) }
     }
 
-    pub fn add_global_mapping<T: TypeTag>(&self, global: &'c Value<T>, addr: *mut ()) {
+    pub fn add_global_mapping<T: TypeTag>(&self, global: &'c GlobalValue<T>, addr: *mut ()) {
         unsafe { LLVMAddGlobalMapping(self.as_raw(), global.as_raw(), addr as _) }
     }
 
-    pub fn get_pointer_to_global<T: TypeTag>(&self, global: &'c Value<T>) -> *mut () {
+    pub fn get_pointer_to_global<T: TypeTag>(&self, global: &'c GlobalValue<T>) -> *mut () {
         unsafe { LLVMGetPointerToGlobal(self.as_raw(), global.as_raw()) as _ }
     }
 
